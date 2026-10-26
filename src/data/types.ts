@@ -46,3 +46,25 @@ export interface DatosFlujoLab {
   cases?: CasoExtremo[];
   [key: string]: unknown;
 }
+
+export type AlertFactory = (fresh: boolean) => {
+  auth: boolean;
+  consent: boolean;
+  err: boolean;
+  sites: Record<string, unknown>[];
+};
+
+export interface RichSegment {
+  text: string;
+  weight: string;
+  color: string;
+}
+
+export type RichSegmentsFactory = (str: string) => RichSegment[];
+export type PasswordPredicate = (value: string) => boolean;
+export type PasswordRule = [string, PasswordPredicate];
+export type PasswordScorer = (value: string) => number;
+export type ScoreBand = [number, "red" | "orange" | "yellow" | "green"];
+export type LabColorConverter = (hex: string) => number[];
+export type HexColorConverter = (lab: number[]) => string;
+export type ScoreColorResolver = (score: number, kind?: "ring" | "text") => string;
