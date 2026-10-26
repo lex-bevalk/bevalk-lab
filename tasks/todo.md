@@ -158,7 +158,9 @@ comprobación final contra https://bevalk-lab.vercel.app/ (requiere quitar Verce
 - PR #1 fusionada en `main` (merge 91efc25, `--match-head-commit 0d4d8a6`).
 - Producción `bevalk-hq3lvkvv0` (alias https://bevalk-lab.vercel.app) construida desde 91efc25: mismos hashes que el build verificado
   (`index-9yMUh4ZO.js`, `index-CvLjGx0_.css`, `react-vendor-BdZgHC1P.js`, `Guton-SemiBold-CFvyU6pK.woff2`).
-- Cobertura de Vercel Authentication (`all_except_custom_domains`), observada con curl:
-  - `bevalk-lab.vercel.app` → **200 público** con `X-Robots-Tag: noindex` y meta robots. NO queda tras SSO.
-  - URL del despliegue, `bevalk-lab-bevalk.vercel.app`, `bevalk-lab-git-main-bevalk.vercel.app` y previews → 302 a SSO.
-  - Pendiente de decisión del usuario: dejarlo público (código ya en repo público) o proteger también producción (cambio de config de Vercel).
+- Cobertura de Vercel Authentication, observada con curl:
+  - Con  (Standard Protection),  respondía **200 público** (con noindex).
+  - El usuario eligió proteger producción (21:40). Cambiado a  (All Deployments, disponible en Hobby sin coste
+    según https://vercel.com/docs/deployment-protection).
+  - Tras el cambio:  (página y assets), URL del despliegue,  y
+     → 302 a .
