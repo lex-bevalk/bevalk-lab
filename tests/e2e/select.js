@@ -41,6 +41,22 @@ const triggerSelectors = {
         await trigger.click();
         const menu = page.locator('.tp-phone .odin-menu[role="listbox"]');
         await menu.waitFor({ state: 'visible' });
+        const geometryFailures = await page.locator('.tp-phone .odin-menu[role="listbox"] [role="option"]').evaluateAll(options => {
+          const failures = [];
+          const rects = options.map((option, index) => {
+            if (option.scrollHeight > option.clientHeight + 1) failures.push(`opción ${index}: scrollHeight ${option.scrollHeight} > clientHeight ${option.clientHeight} + 1`);
+            if (option.scrollWidth > option.clientWidth + 1) failures.push(`opción ${index}: scrollWidth ${option.scrollWidth} > clientWidth ${option.clientWidth} + 1`);
+            const rect = option.getBoundingClientRect();
+            return { top: rect.top, bottom: rect.bottom };
+          });
+          for (let index = 0; index < rects.length - 1; index++) {
+            if (rects[index].bottom > rects[index + 1].top + 1) {
+              failures.push(`opción ${index}: bottom ${rects[index].bottom} > top de opción ${index + 1} ${rects[index + 1].top} + 1`);
+            }
+          }
+          return failures;
+        });
+        if (geometryFailures.length) throw new Error(`Geometría inválida en ${target}: ${geometryFailures.join('; ')}`);
         const activeTarget = await evaluateLogic('return c.renderVals().sheet.target;');
         if (activeTarget !== target) throw new Error(`Se abrió ${activeTarget} al probar ${target}`);
         if (await trigger.getAttribute('aria-expanded') !== 'true') throw new Error('aria-expanded no pasó a true al abrir');

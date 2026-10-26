@@ -68,6 +68,7 @@ try {
         const menu = document.querySelector('.tp-phone .odin-menu[role="listbox"]');
         const trigger = document.querySelector(triggerSelector);
         if (!menu || !trigger) throw new Error('No se encontró el menú o su trigger para estabilizar la captura.');
+        if (menu.scrollHeight > menu.clientHeight) menu.scrollTop = 0;
         const animations = [
           ...menu.getAnimations({ subtree: true }),
           ...trigger.getAnimations({ subtree: true }),
