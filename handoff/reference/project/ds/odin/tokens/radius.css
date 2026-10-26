@@ -1,0 +1,15 @@
+/* design.md §3.2 — two token scales plus role aliases (law 0.7) */
+:root{
+  --radius-xs:2px; --radius-sm:6px; --radius-md:8px; --radius-lg:10px;
+  --radius-xl:14px; --radius-2xl:16px; --radius-3xl:24px; --radius-4xl:32px;
+  --radius-none:0px; --radius-full:9999px;
+  /* role aliases — the only radii components may use */
+  --radius-control:6px;   /* buttons, inputs, menu items, day cells fall to 8 */
+  --radius-menu:8px;      /* selects, menus, badges, textarea */
+  --radius-card:10px;     /* cards, boxes, calendar */
+  --radius-icon-frame:14px;
+  --radius-pill:9999px;   /* pills, avatars, switch, badge-number */
+  /* border widths (quirk preserved: border-7 = 6) */
+  --border-0:0px; --border-1:1px; --border-2:2px; --border-3:3px;
+  --border-4:4px; --border-5:5px; --border-6:6px; --border-7:6px; --border-8:8px;
+}

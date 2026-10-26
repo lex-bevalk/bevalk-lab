@@ -1,0 +1,8 @@
+# Local only
+.claude/settings.local.json
+fonts/
+
+# Generated
+node_modules/
+dist/
+.vercel/

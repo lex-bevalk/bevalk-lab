@@ -1,0 +1,14 @@
+/* design.md §3.4, §5, §6 */
+:root{
+  --container-3xs:256px; --container-2xs:288px; --container-xs:320px; --container-sm:384px;
+  --container-md:448px;  --container-lg:512px;  --container-xl:576px;  --container-2xl:672px;
+  --container-3xl:768px; --container-4xl:896px; --container-5xl:1024px; --container-6xl:1152px;
+  --container-7xl:1280px;
+  --breakpoint-sm:640px; /* @kind spacing */ --breakpoint-md:768px; /* @kind spacing */ --breakpoint-lg:1024px; /* @kind spacing */
+  --breakpoint-xl:1280px; /* @kind spacing */ --breakpoint-2xl:1536px; /* @kind spacing */
+  --z-base:0; /* @kind other */ --z-sticky:10; /* @kind other */ --z-dropdown:30; /* @kind other */ --z-overlay:40; /* @kind other */ --z-toast:60; /* @kind other */
+  --control-h-sm:32px; --control-h:36px; --control-h-lg:40px;
+  --control-h-xs:24px; --control-h-group-sm:28px;
+  --touch-target:44px;
+  --row-h-comfortable:48px; --row-h-compact:36px;
+}

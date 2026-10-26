@@ -1,0 +1,281 @@
+[
+ {
+  "id": "0b8ad741075020992d2f17c46ba7634b",
+  "type": "image/png",
+  "bytes": 61006,
+  "sha256": "783cbb82d87711ef8e72bf621c23ff7245ed56eb1a0fc0d16fe6a3b205ce2299",
+  "suggestedName": "0b8ad741075020992d2f17c46ba7634b.png",
+  "usedAs": [
+   "JS: welcomeImg"
+  ]
+ },
+ {
+  "id": "0fd576f14cde68f3b61ae59a9c75689b",
+  "type": "image/png",
+  "bytes": 108980,
+  "sha256": "1aca23e550b0c82ece4e7d600af1ed71459686d75f4cccd2542d6dcebaa7f147",
+  "suggestedName": "0fd576f14cde68f3b61ae59a9c75689b.png",
+  "usedAs": [
+   "img alt=\"MarIA\""
+  ]
+ },
+ {
+  "id": "18e9daa3389f4e0ad34ba0cf47528ef0",
+  "type": "image/png",
+  "bytes": 38058,
+  "sha256": "4d62aa5453389b247375f813db55d1967d1ba663f0c06dc4863da135980168f7",
+  "suggestedName": "18e9daa3389f4e0ad34ba0cf47528ef0.png",
+  "usedAs": [
+   "img alt=\"\""
+  ]
+ },
+ {
+  "id": "192fbf797cf2606b0747248a62f5762f",
+  "type": "image/png",
+  "bytes": 6213,
+  "sha256": "e16326344c902c315f64d928d646ad2c043550285878390506c319e9eaad90e6",
+  "suggestedName": "192fbf797cf2606b0747248a62f5762f.png",
+  "usedAs": [
+   "img alt=\"\""
+  ]
+ },
+ {
+  "id": "1f4970e2c03823995d4c048239166e23",
+  "type": "image/png",
+  "bytes": 106813,
+  "sha256": "dc59016ef8641636f6fe9bdb99506d38bf7c40a9a0b03a8d3936653b0c8b63b3",
+  "suggestedName": "1f4970e2c03823995d4c048239166e23.png",
+  "usedAs": [
+   "JS: fullImg"
+  ]
+ },
+ {
+  "id": "204acc6e27e22b935b4e990fd6653e13",
+  "type": "image/png",
+  "bytes": 81414,
+  "sha256": "14c37f98d5bf95245672f76c00e83a7153599ebbfbe76384ea5599ef72cd149a",
+  "suggestedName": "204acc6e27e22b935b4e990fd6653e13.png",
+  "usedAs": [
+   "JS: img"
+  ]
+ },
+ {
+  "id": "291c3afc70dd12d922337ec41b182750",
+  "type": "image/png",
+  "bytes": 81008,
+  "sha256": "1cf4258cd4d533c0070dbf724933e83c3efad1514e97ff79bdc26c03653b4b82",
+  "suggestedName": "291c3afc70dd12d922337ec41b182750.png",
+  "usedAs": [
+   "img alt=\"MarIA con gorra de policía levantando la mano\""
+  ]
+ },
+ {
+  "id": "572d2351021ad282bedc79db1a936915",
+  "type": "image/png",
+  "bytes": 85648,
+  "sha256": "5e87f235892ef1976d865c312e5864f26007d6743f3082f5274c1eed430950e5",
+  "suggestedName": "572d2351021ad282bedc79db1a936915.png",
+  "usedAs": [
+   "JS: welcomeImg",
+   "img alt=\"MarIA\""
+  ]
+ },
+ {
+  "id": "581fb0c71abe6a9d8b345ccde86d3a50",
+  "type": "image/png",
+  "bytes": 38092,
+  "sha256": "5752aae9afee8c6a718614c159bb6312883b3d41c483b0ec5224e8c26cbd417a",
+  "suggestedName": "581fb0c71abe6a9d8b345ccde86d3a50.png",
+  "usedAs": [
+   "img alt=\"\""
+  ]
+ },
+ {
+  "id": "58549e1206cacf83e26333b124ce21d9",
+  "type": "image/png",
+  "bytes": 28091,
+  "sha256": "3a430b085b230cc2362c6025965862fa6caa95f2b6959d5fe69d2a61ce08a2e6",
+  "suggestedName": "58549e1206cacf83e26333b124ce21d9.png",
+  "usedAs": [
+   "img alt=\"MarIA\""
+  ]
+ },
+ {
+  "id": "5f0e38fe03c4ba727e9b78369845276a",
+  "type": "text/javascript",
+  "bytes": 373553,
+  "sha256": "72646e574ecc776f056949d914e5f461881e639b236910680e38b097d3561634",
+  "suggestedName": "lucide-0.544.0.js",
+  "usedAs": [
+   "script (lucide icons)"
+  ]
+ },
+ {
+  "id": "60479d288d3ceef0b60c957263dbb39d",
+  "type": "image/png",
+  "bytes": 37669,
+  "sha256": "4235f5b333f90d3ab6090a915cbf0ebef2fe2db8c99b89fb761750eea06d92fc",
+  "suggestedName": "60479d288d3ceef0b60c957263dbb39d.png",
+  "usedAs": [
+   "img alt=\"\""
+  ]
+ },
+ {
+  "id": "61f12d8e69f2be60a1decf4862848ed1",
+  "type": "image/png",
+  "bytes": 58928,
+  "sha256": "c1a4e4812d37c67ade8bd437c7e76099ab284a8ffa962fd8e04315dc17b06553",
+  "suggestedName": "61f12d8e69f2be60a1decf4862848ed1.png",
+  "usedAs": []
+ },
+ {
+  "id": "6305eeea4fa6f29ebc5720e0edc7acf5",
+  "type": "image/png",
+  "bytes": 12118,
+  "sha256": "07ff490936eb4c9b022910d24caa6dae6a10d80adb3c46df42c6f22a044c726f",
+  "suggestedName": "6305eeea4fa6f29ebc5720e0edc7acf5.png",
+  "usedAs": [
+   "img alt=\"\""
+  ]
+ },
+ {
+  "id": "724972a8611b9b42c1b32beaeccf2090",
+  "type": "image/png",
+  "bytes": 58976,
+  "sha256": "5fb433ddab40a2b12b40ae44109428476c71f63aef3a28321c24e9a14792b4c8",
+  "suggestedName": "724972a8611b9b42c1b32beaeccf2090.png",
+  "usedAs": []
+ },
+ {
+  "id": "77effca3e02e95da2e7019fa1e4a6fea",
+  "type": "image/png",
+  "bytes": 7628,
+  "sha256": "8d370a3e18c7d248e1481284222baae588f1e95406c78e27585dee881ca2bf87",
+  "suggestedName": "77effca3e02e95da2e7019fa1e4a6fea.png",
+  "usedAs": [
+   "img alt=\"BeValk\""
+  ]
+ },
+ {
+  "id": "791150619651ea26e9464910b953c1d3",
+  "type": "image/png",
+  "bytes": 91881,
+  "sha256": "ba478f7996e1acebb050bf4a81bc56be04b3caf8cf2449144b45cca9b6c7f93c",
+  "suggestedName": "791150619651ea26e9464910b953c1d3.png",
+  "usedAs": [
+   "JS: img"
+  ]
+ },
+ {
+  "id": "9cd1f005160dbcdab9d131fbf70fee23",
+  "type": "image/png",
+  "bytes": 95245,
+  "sha256": "99df31bbeaddf05198cf6957f71e31d5763e194c552f9e391999b65f81c154c3",
+  "suggestedName": "9cd1f005160dbcdab9d131fbf70fee23.png",
+  "usedAs": [
+   "JS: img"
+  ]
+ },
+ {
+  "id": "bb1dcfa7f1d6b21cf106987e64565927",
+  "type": "image/png",
+  "bytes": 8586,
+  "sha256": "15985acab1e385673f7ccf1e049edde19d2fdd0e45cb689c66bce3ecf15c62eb",
+  "suggestedName": "bb1dcfa7f1d6b21cf106987e64565927.png",
+  "usedAs": [
+   "img alt=\"\"",
+   "img alt=\"MarIA\""
+  ]
+ },
+ {
+  "id": "bbec748a31b8a1830b92a9c32e5693be",
+  "type": "image/png",
+  "bytes": 59798,
+  "sha256": "6d0a3c58642fb6c6dd78e506f787f32b9a8a878850beab7bc8cbb7d79f0a1cfe",
+  "suggestedName": "bbec748a31b8a1830b92a9c32e5693be.png",
+  "usedAs": [
+   "JS: vImg",
+   "img alt=\"MarIA\""
+  ]
+ },
+ {
+  "id": "c3980f4588cf8f0c55acf85b4917a27e",
+  "type": "image/png",
+  "bytes": 11833,
+  "sha256": "30eaa59fa26f3e67e9fde92b785d5abdb98f7a34042463758130379781e3b990",
+  "suggestedName": "c3980f4588cf8f0c55acf85b4917a27e.png",
+  "usedAs": [
+   "img alt=\"\""
+  ]
+ },
+ {
+  "id": "cd4f4a795ef128c0467e693a9db02ab3",
+  "type": "image/png",
+  "bytes": 58808,
+  "sha256": "a5cf81a34b89d7949b5585cab928d61650ed844fe3f22ace3ce9bf03a912fe74",
+  "suggestedName": "cd4f4a795ef128c0467e693a9db02ab3.png",
+  "usedAs": [
+   "img alt=\"MarIA\""
+  ]
+ },
+ {
+  "id": "d78c26509efc1f93c26c1cdda2ae760b",
+  "type": "image/png",
+  "bytes": 113624,
+  "sha256": "73fe3fe61f3c7c31ce828b3ec4626d634dcc42772b4b6961843eedc0946e0038",
+  "suggestedName": "d78c26509efc1f93c26c1cdda2ae760b.png",
+  "usedAs": [
+   "JS: fullImg"
+  ]
+ },
+ {
+  "id": "dc224449346325eb2c01e9595a6417e6",
+  "type": "image/png",
+  "bytes": 862340,
+  "sha256": "ff6e81e6301db0f2c5a2e0c51fafd7c4d8d6f06741965f04ef6050914f0e4b96",
+  "suggestedName": "dc224449346325eb2c01e9595a6417e6.png",
+  "usedAs": [
+   "CSS .tp-phone background"
+  ]
+ },
+ {
+  "id": "df2288567cf278ac8ba83878074947a7",
+  "type": "image/png",
+  "bytes": 648,
+  "sha256": "bfa31d7a688c62cd22c647ce27a8d025e29d4ee712d7714359b03d32af933a13",
+  "suggestedName": "df2288567cf278ac8ba83878074947a7.png",
+  "usedAs": [
+   "img alt=\"Código QR para vincular BeValk con tu aplicación de autenticación\""
+  ]
+ },
+ {
+  "id": "e05291c447d1a9e5f5c52a3a7dbf6ec6",
+  "type": "image/png",
+  "bytes": 80571,
+  "sha256": "3b368f9f368b3a50d098b20b253507f986c6a2abd383785670fcb1613d059aab",
+  "suggestedName": "e05291c447d1a9e5f5c52a3a7dbf6ec6.png",
+  "usedAs": [
+   "img alt=\"\""
+  ]
+ },
+ {
+  "id": "efc7cf49a55551709cd5831ee9e60802",
+  "type": "image/png",
+  "bytes": 101363,
+  "sha256": "6350b7363ede23c8a94afabd5f8d58e38d40c1db95d9b0d5a8e4856c8d9610ce",
+  "suggestedName": "efc7cf49a55551709cd5831ee9e60802.png",
+  "usedAs": [
+   "JS: resImg"
+  ]
+ },
+ {
+  "id": "f2496f1f5a034f6e1a7ff934fc47fd84",
+  "type": "image/png",
+  "bytes": 108415,
+  "sha256": "4111d48fb8a070ccd809c9cc8cdb8912f339857d5ad7ce7eb8297041f9a97e9f",
+  "suggestedName": "f2496f1f5a034f6e1a7ff934fc47fd84.png",
+  "usedAs": [
+   "JS: resImg"
+  ]
+ }
+]

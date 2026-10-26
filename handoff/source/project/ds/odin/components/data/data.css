@@ -1,0 +1,53 @@
+/* Odin data display — design.md §13.14, §13.15, §11 */
+.odin-table-wrap{border:1px solid var(--color-border);border-radius:var(--radius-card);overflow-x:auto;background:var(--color-card)}
+.odin-table{width:100%;border-collapse:collapse;font-family:var(--font-sans)}
+.odin-table caption{caption-side:top;text-align:left;padding:12px;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body)}
+.odin-table th{padding:8px;text-align:left;font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground);border-bottom:1px solid var(--color-border);white-space:nowrap}
+.odin-table th:hover{background:color-mix(in srgb,var(--color-secondary) 50%,var(--color-background))}
+.odin-table td{padding:8px;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-card-foreground);border-bottom:1px solid var(--color-border);vertical-align:middle}
+.odin-table tbody tr:last-child td{border-bottom:0}
+.odin-table tbody tr:hover td{background:var(--color-surface-hover)}
+.odin-table--compact th,.odin-table--compact td{padding:6px 8px;font-size:0.8125rem;height:36px}
+.odin-table--comfortable td{height:48px}
+.odin-table td[data-numeric="true"],.odin-table th[data-numeric="true"]{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.odin-table tfoot td{font-weight:var(--font-medium);border-top:1px solid var(--color-border)}
+.odin-dt{display:flex;flex-direction:column;gap:16px}
+.odin-dt__toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.odin-dt__foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body)}
+
+/* ---- Calendar §13.15 ---- */
+.odin-cal{width:248px;padding:12px;display:flex;flex-direction:column;gap:16px;background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-sm)}
+.odin-cal--range{width:488px}
+.odin-cal__head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.odin-cal__title{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground)}
+.odin-cal__nav{width:32px;height:32px;padding:8px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:var(--radius-menu);color:var(--color-foreground);cursor:pointer}
+.odin-cal__nav:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__nav--outline{background:var(--color-background);border:1px solid var(--color-border);box-shadow:var(--shadow-xs)}
+.odin-cal__nav:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-cal__grid{display:grid;grid-template-columns:repeat(7,32px);gap:0}
+.odin-cal__dow{width:32px;height:32px;display:grid;place-content:center;font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body)}
+.odin-cal__day{width:32px;height:32px;border:0;background:transparent;border-radius:var(--radius-menu);font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground);cursor:pointer;padding:0}
+.odin-cal__day:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__day[data-outside="true"]{color:var(--color-text-body)}
+.odin-cal__day[data-selected="true"]{background:var(--color-primary);color:var(--color-primary-foreground)}
+.odin-cal__day[data-today="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__day[data-in-range="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground);border-radius:0}
+.odin-cal__day:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-cal__day:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.odin-cal__presets{display:flex;flex-direction:column;gap:4px;padding-right:12px;border-right:1px solid var(--color-border)}
+.odin-cal__preset{width:109px;height:36px;padding:8px 16px;text-align:left;border:0;background:var(--color-background);border-radius:var(--radius-menu);font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground);cursor:pointer}
+.odin-cal__preset:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__preset[aria-pressed="true"]{background:var(--color-primary);color:var(--color-primary-foreground)}
+
+/* ---- Chart §11 ---- */
+.odin-chart{display:flex;flex-direction:column;gap:16px}
+.odin-chart__plot{position:relative;display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px}
+.odin-chart__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.odin-chart__grid span{height:1px;background:var(--color-border);opacity:.7}
+.odin-chart__bar{flex:1;border-radius:4px 4px 0 0;position:relative;min-width:6px;transition:opacity var(--duration-fast) var(--ease-out)}
+.odin-chart__bar:hover{opacity:.85}
+.odin-chart__axis{display:flex;gap:8px;font:400 0.625rem/0.875rem var(--font-mono);color:var(--color-text-body)}
+.odin-chart__axis span{flex:1;text-align:center}
+.odin-chart__legend{display:flex;flex-wrap:wrap;gap:16px;font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body)}
+.odin-chart__legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.odin-chart__tip{position:absolute;background:var(--color-popover);border:1px solid var(--color-border);border-radius:var(--radius-menu);box-shadow:var(--shadow-md);padding:8px 10px;font:400 0.75rem/1rem var(--font-sans);color:var(--color-popover-foreground);pointer-events:none;white-space:nowrap;transform:translate(-50%,-100%)}

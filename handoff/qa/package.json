@@ -1,0 +1,17 @@
+{
+  "name": "bevalk-lab-qa",
+  "private": true,
+  "description": "Batería de QA del BeValk Product Experience Lab (Playwright + axe-core)",
+  "scripts": {
+    "serve": "node ../reference/serve.js 8765",
+    "qa": "node qa.js",
+    "qa:baseline": "node qa.js --baseline",
+    "invariants": "node inv.js",
+    "sweep": "node sweep.js",
+    "a11y": "node axe.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0",
+    "axe-core": "4.10.2"
+  }
+}
