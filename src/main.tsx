@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
+import { Host } from './Host';
 
-function App() {
-  return <main>BeValk Lab</main>;
-}
+const root = document.getElementById('root');
+if (!root) throw new Error('No se encontró el elemento #root');
 
-createRoot(document.getElementById('root')!).render(<App />);
+createRoot(root).render(<Host />);
