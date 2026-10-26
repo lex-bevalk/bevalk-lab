@@ -21,29 +21,66 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect code changes
+        id: changes
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          code=true
+          files=""
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            if files=$(git diff --name-only "origin/${BASE_REF}...HEAD"); then
+              if [[ -n "$files" ]] && ! printf '%s\n' "$files" | grep -Ev '^(tasks/|.*\.md$)' >/dev/null; then
+                code=false
+              fi
+            else
+              code=true
+            fi
+          fi
+
+          echo "Changed files:"
+          if [[ -n "$files" ]]; then
+            printf '%s\n' "$files"
+          else
+            echo "(empty)"
+          fi
+          echo "Run code checks: $code"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js 24
+        if: steps.changes.outputs.code == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
 
       - name: Install dependencies
+        if: steps.changes.outputs.code == 'true'
         run: npm ci
 
       - name: Install Chromium and system dependencies
+        if: steps.changes.outputs.code == 'true'
         run: npx playwright install --with-deps chromium
 
       - name: Type check
+        if: steps.changes.outputs.code == 'true'
         run: npx tsc --noEmit -p .
 
       - name: Unit tests
+        if: steps.changes.outputs.code == 'true'
         run: npm test
 
       - name: Build
+        if: steps.changes.outputs.code == 'true'
         run: npm run build
 
       - name: Start preview and reference servers
+        if: steps.changes.outputs.code == 'true'
         shell: bash
         run: |
           npm run preview > /tmp/bevalk-preview.log 2>&1 &
@@ -71,27 +108,35 @@ jobs:
           wait_for_url "http://localhost:8765/project/Main.dc.html" "Reference server"
 
       - name: E2E
+        if: steps.changes.outputs.code == 'true'
         run: npm run e2e
 
       - name: E2E baseline
+        if: steps.changes.outputs.code == 'true'
         run: npm run e2e:baseline
 
       - name: Invariants
+        if: steps.changes.outputs.code == 'true'
         run: npm run invariants
 
       - name: Sweep
+        if: steps.changes.outputs.code == 'true'
         run: npm run sweep
 
       - name: Accessibility
+        if: steps.changes.outputs.code == 'true'
         run: npm run a11y
 
       - name: Focus order
+        if: steps.changes.outputs.code == 'true'
         run: npm run focus
 
       - name: Capture visual baseline
+        if: steps.changes.outputs.code == 'true'
         run: npm run visual:baseline
 
       - name: Visual comparison
+        if: steps.changes.outputs.code == 'true'
         run: npm run visual
 
       - name: Upload failure diagnostics
@@ -105,7 +150,7 @@ jobs:
             tests/e2e/results/
 
       - name: Upload visual comparison summary
-        if: success()
+        if: success() && steps.changes.outputs.code == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: qa-visual-comparison-summary
