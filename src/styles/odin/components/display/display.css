@@ -1,0 +1,85 @@
+/* Odin display primitives — design.md §13.2, §13.3, §13.13, §13.18, §13.19, §13.21 */
+
+/* ---- Badge §13.2 ---- */
+.odin-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:2px 8px;border-radius:var(--radius-menu);border:1px solid var(--color-background);font:600 0.75rem/1rem var(--font-sans);white-space:nowrap}
+.odin-badge--default{background:var(--color-primary);color:var(--color-primary-foreground)}
+.odin-badge--secondary{background:var(--color-secondary);color:var(--color-secondary-foreground)}
+.odin-badge--outline{background:var(--color-background);border-color:var(--color-border);color:var(--color-foreground)}
+.odin-badge--destructive{background:var(--color-destructive);color:var(--color-on-fill)}
+.odin-badge--verified{background:var(--custom-verified);color:var(--color-on-fill)}
+.odin-badge--positive{background:var(--color-positive);color:var(--color-primary-foreground)}
+.odin-badge--neutral{background:var(--color-neutral-status);color:var(--color-on-neutral-status)}
+/* inverse: the app's locked-row marker. Near-black on light, near-white on dark, always the
+   opposite of the surface it sits on. Built on the accent pair so it can never collide with
+   --color-card the way a raw --neutral-900 does. Fully rounded, per the app. */
+.odin-badge--inverse{background:var(--color-accent-foreground);color:var(--color-accent);border-color:transparent;border-radius:var(--radius-pill)}
+.odin-badge-number{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;border-radius:var(--radius-pill);border:1px solid var(--color-background);font:600 0.75rem/1rem var(--font-sans)}
+
+/* ---- Avatar §13.3 ---- */
+.odin-avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-pill);background:var(--color-secondary);color:var(--color-secondary-foreground);font:400 0.875rem/1.25rem var(--font-sans);overflow:hidden;flex:0 0 auto}
+.odin-avatar img{width:100%;height:100%;object-fit:cover}
+.odin-avatar-group{display:inline-flex;align-items:center}
+.odin-avatar-group>*{margin-left:-8px;box-shadow:0 0 0 2px var(--color-background)}
+.odin-avatar-group>*:first-child{margin-left:0}
+.odin-avatar--overflow{background:var(--color-primary);color:var(--color-primary-foreground)}
+.odin-avatar-field{display:flex;align-items:center;gap:16px}
+
+/* ---- Card §13.19 ---- */
+.odin-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-xs);color:var(--color-card-foreground)}
+.odin-card--clickable{cursor:pointer;transition:border-color var(--duration-normal) var(--ease-out)}
+.odin-card--clickable:hover{border-color:var(--color-ring)}
+.odin-card__header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--color-border)}
+.odin-card__title{font:600 0.875rem/1.25rem var(--font-sans);color:var(--color-card-foreground);margin:0}
+.odin-card__desc{font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body);margin:2px 0 0}
+.odin-card__body{display:flex;flex-direction:column;gap:24px;padding:24px}
+
+/* ---- Separator §13.13 ---- */
+.odin-separator{background:var(--color-border);border:0;flex:0 0 auto}
+.odin-separator--horizontal{height:1px;width:100%}
+.odin-separator--vertical{width:1px;align-self:stretch;min-height:16px}
+
+/* ---- Alert §13.21 ---- */
+.odin-alert{display:flex;gap:10px;padding:12px 14px;border-radius:var(--radius-menu);border:1px solid transparent}
+.odin-alert__title{font:600 0.875rem/1.25rem var(--font-sans);margin:0}
+.odin-alert__body{font:400 0.8125rem/1.125rem var(--font-sans);margin:2px 0 0;color:var(--color-text-body)}
+.odin-alert--destructive{background:var(--red-50);border-color:var(--color-destructive);color:var(--red-700)}
+.odin-alert--positive{background:var(--green-50);border-color:var(--color-positive);color:var(--color-positive)}
+.odin-alert--warning{background:var(--yellow-50);border-color:var(--yellow-700);color:var(--yellow-700)}
+.odin-alert--info{background:var(--color-accent);border-color:var(--color-foreground);color:var(--color-foreground)}
+[data-theme="dark"] .odin-alert--info{color:var(--color-accent-foreground);border-color:var(--color-accent-foreground)}
+
+/* ---- Progress §13.21 ---- */
+.odin-progress{height:6px;border-radius:var(--radius-pill);background:var(--color-muted);overflow:hidden;width:100%}
+.odin-progress__fill{height:100%;background:var(--color-primary);border-radius:var(--radius-pill);transition:width var(--duration-slow) var(--ease-out)}
+.odin-progress__fill--indeterminate{width:40%;animation:odin-sweep 1.4s linear infinite}
+@keyframes odin-sweep{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+
+/* ---- Skeleton §13.21 ---- */
+.odin-skeleton{position:relative;overflow:hidden;background:color-mix(in srgb,var(--color-muted) 50%,transparent);border-radius:var(--radius-control)}
+.odin-skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--overlay-white-60),transparent);animation:odin-shimmer 1.4s linear infinite}
+@keyframes odin-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ---- Typography §13.18 ---- */
+.odin-h1{font-family:var(--heading-xl-family);font-weight:var(--heading-xl-weight);font-size:var(--heading-xl-size);line-height:var(--heading-xl-leading);color:var(--color-foreground);margin:0}
+.odin-h2{font-family:var(--heading-lg-family);font-weight:var(--heading-lg-weight);font-size:var(--heading-lg-size);line-height:var(--heading-lg-leading);color:var(--color-foreground);margin:0}
+.odin-h3{font-family:var(--heading-md-family);font-weight:var(--heading-md-weight);font-size:var(--heading-md-size);line-height:var(--heading-md-leading);color:var(--color-foreground);margin:0}
+.odin-h4{font-family:var(--heading-sm-family);font-weight:var(--heading-sm-weight);font-size:var(--heading-sm-size);line-height:var(--heading-sm-leading);color:var(--color-foreground);margin:0}
+.odin-p{font:400 1rem/1.5rem var(--font-sans);color:var(--color-text-body);margin:0;max-width:70ch;text-wrap:pretty}
+.odin-lead{font:400 1.25rem/1.75rem var(--font-sans);color:var(--color-text-body);margin:0}
+.odin-large{font:600 1.125rem/1.75rem var(--font-sans);color:var(--color-foreground)}
+.odin-small{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground)}
+.odin-muted{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body)}
+.odin-blockquote{border-left:2px solid var(--color-border);padding-left:16px;font:400 1rem/1.5rem var(--font-sans);font-style:italic;color:var(--color-text-body);margin:0}
+.odin-inline-code{font:400 0.8125rem/1.25rem var(--font-mono);background:var(--color-muted);color:var(--color-secondary-foreground);border-radius:4px;padding:1px 5px}
+.odin-code{display:block;font:400 0.8125rem/1.25rem var(--font-mono);background:var(--color-muted);color:var(--color-secondary-foreground);border-radius:var(--radius-menu);padding:12px 14px;overflow:auto}
+.odin-list{font:400 1rem/1.5rem var(--font-sans);color:var(--color-text-body);margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* ---- LP Icon frame §13.19 ---- */
+.odin-lp-icon{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;padding:16px;border-radius:var(--radius-icon-frame);background:var(--color-background);border:1px solid var(--color-border);box-shadow:var(--shadow-xs);color:var(--color-foreground)}
+
+/* ---- Empty state §15.6 ---- */
+.odin-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:48px 24px}
+.odin-empty__icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:var(--radius-pill);background:var(--color-accent);color:var(--color-accent-foreground);margin-bottom:4px}
+.odin-empty__title{font-family:var(--heading-xs-family);font-weight:var(--heading-xs-weight);font-size:var(--heading-xs-size);line-height:var(--heading-xs-leading);color:var(--color-foreground);margin:0}
+.odin-empty__body{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);margin:0;max-width:44ch}
+.odin-empty__cta{margin-top:8px}
