@@ -1,0 +1,191 @@
+import { mkdir, stat, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { chromium } from 'playwright';
+
+const VIEWPORTS = [
+  { width: 1920, height: 1080 },
+  { width: 1680, height: 916 },
+  { width: 1440, height: 900 },
+  { width: 1280, height: 800 },
+  { width: 1024, height: 768 },
+  { width: 768, height: 1024 },
+  { width: 375, height: 812 },
+];
+const DEFAULT_REFERENCE = 'http://127.0.0.1:8765/project/Main.dc.html';
+const [url = DEFAULT_REFERENCE, outArg] = process.argv.slice(2);
+if (!outArg) {
+  console.error('Uso: node tests/visual/capture.mjs <url> <outDir>');
+  process.exit(2);
+}
+
+const outDir = resolve(process.cwd(), outArg);
+await mkdir(outDir, { recursive: true });
+const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+  ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
+  : {};
+const browser = await chromium.launch(browserOptions);
+const context = await browser.newContext({ viewport: VIEWPORTS[0], reducedMotion: 'reduce', deviceScaleFactor: 1 });
+const page = await context.newPage();
+const missing = [];
+const screenshots = [];
+const GETC = `const getC = () => { if (window.__lab) return window.__lab; const el = document.querySelector('.tp-phone'); const k = Object.keys(el || {}).find(k => k.startsWith('__reactFiber')); let f = el && el[k]; while (f) { if (f.stateNode && f.stateNode.logic && f.stateNode.logic.labVals) return f.stateNode.logic; f = f.return; } return null; };`;
+
+page.on('response', response => {
+  if (response.status() !== 404) return;
+  const originalUrl = response.url();
+  let decodedUrl = originalUrl;
+  try { decodedUrl = decodeURIComponent(originalUrl); } catch {}
+  missing.push({
+    url: originalUrl,
+    status: response.status(),
+    resourceType: response.request().resourceType(),
+    templateRoute: decodedUrl.includes('{{'),
+  });
+});
+
+async function loadAt(viewport) {
+  await page.setViewportSize(viewport);
+  await page.goto(url, { waitUntil: 'load' });
+  await page.addStyleTag({ content: `
+    *, *::before, *::after {
+      animation: none !important;
+      animation-duration: 0s !important;
+      animation-delay: 0s !important;
+      transition: none !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+      scroll-behavior: auto !important;
+      caret-color: transparent !important;
+    }
+  ` });
+  await page.evaluate(() => Promise.race([
+    document.fonts.ready,
+    new Promise(resolve => setTimeout(resolve, 15000)),
+  ]));
+  await page.waitForFunction(() => document.querySelector('.lab') !== null, null, { timeout: 15000 });
+}
+
+async function logic(expression) {
+  return page.evaluate(`(() => { ${GETC} const c = getC(); if (!c) throw new Error('No se encontró la lógica del Lab'); ${expression} })()`);
+}
+
+async function settle() {
+  const deadline = Date.now() + 20000;
+  let previousShown;
+  let stableSamples = 0;
+  while (Date.now() < deadline) {
+    const state = await logic('return { shown:c.state.shown, toast:!!c.state.toast };');
+    if (!state.toast && state.shown === previousShown) stableSamples += 1;
+    else stableSamples = 0;
+    previousShown = state.shown;
+    if (stableSamples >= 3) {
+      await page.waitForTimeout(160);
+      const afterMargin = await logic('return { shown:c.state.shown, toast:!!c.state.toast };');
+      if (!afterMargin.toast && afterMargin.shown === state.shown) return;
+      previousShown = afterMargin.shown;
+      stableSamples = 0;
+    }
+    await page.waitForTimeout(100);
+  }
+  throw new Error('El anillo o el toast no se estabilizaron en 20 s');
+}
+async function capture(viewport, stem) {
+  await settle();
+  await page.evaluate(() => document.fonts.ready);
+  const name = `${viewport.width}x${viewport.height}--${stem}.png`;
+  await page.screenshot({ path: join(outDir, name), animations: 'disabled' });
+  screenshots.push(name);
+  if (screenshots.length % 50 === 0) console.log(`Progreso: ${screenshots.length} capturas`);
+}
+
+try {
+  let flows = [];
+  let caseGroups = [];
+  for (const viewport of VIEWPORTS) {
+    await loadAt(viewport);
+    if (!flows.length) {
+      flows = await logic('return c.labFlows().map(f => ({ id:f.id, code:c.labN(f) }));');
+      caseGroups = await logic(`
+        const seen = new Set(); const groups = [];
+        for (const f of c.labFlows()) for (const cs of (c.labD(f.id).cases || [])) {
+          if (!cs.cat || seen.has(cs.cat)) continue;
+          seen.add(cs.cat); groups.push({ category:cs.cat, flowId:f.id, flowCode:c.labN(f), caseId:cs.id, title:cs.t });
+        }
+        return groups;
+      `);
+    }
+
+    await capture(viewport, 'cover');
+    for (const plan of ['free', 'premium']) {
+      await logic(`c.setState({flow:null}); c.labPickPlan(${JSON.stringify(plan)});`);
+      for (const flow of flows) {
+        await logic(`const f = c.labFlows().find(x => x.id === ${JSON.stringify(flow.id)}); c.labSelect(f);`);
+        await capture(viewport, `flow-${flow.code}-${plan}`);
+      }
+    }
+    for (const group of caseGroups) {
+      await logic(`const f = c.labFlows().find(x => x.id === ${JSON.stringify(group.flowId)}); c.labSelect(f); c.labStartCase(${JSON.stringify(group.caseId)});`);
+      await page.waitForFunction(() => {
+        const el = document.querySelector('.tp-phone');
+        let c = window.__lab;
+        if (!c && el) {
+          const key = Object.keys(el).find(k => k.startsWith('__reactFiber'));
+          let fiber = key ? el[key] : null;
+          while (fiber) {
+            if (fiber.stateNode?.logic?.labVals) { c = fiber.stateNode.logic; break; }
+            fiber = fiber.return;
+          }
+        }
+        return c && !c.state.lab.prepping;
+      }, null, { timeout: 8000 });
+      await capture(viewport, `case-${slug(group.category)}-${group.flowCode}-${group.caseId}`);
+    }
+  }
+
+  const drawerViewport = VIEWPORTS.find(v => v.width === 1024);
+  await loadAt(drawerViewport);
+  await logic(`c.labLabSet({ pv:'open' });`);
+  await capture(drawerViewport, 'drawer-open');
+
+  const mobileViewport = VIEWPORTS.find(v => v.width === 375);
+  await loadAt(mobileViewport);
+  for (const tab of ['flows', 'info', 'phone']) {
+    await logic(`c.labLabSet({ tab:${JSON.stringify(tab)} });`);
+    await capture(mobileViewport, `tab-${tab}`);
+  }
+
+  const files = await Promise.all(screenshots.map(async name => ({ name, bytes: (await stat(join(outDir, name))).size })));
+  const totalBytes = files.reduce((total, file) => total + file.bytes, 0);
+  const template404 = missing.filter(item => item.templateRoute);
+  const other404 = missing.filter(item => !item.templateRoute);
+  await writeFile(join(outDir, 'network-404s.json'), JSON.stringify({
+    url,
+    total: missing.length,
+    templateRoutes: template404.length,
+    otherRoutes: other404.length,
+    template: template404,
+    other: other404,
+  }, null, 2));
+  await writeFile(join(outDir, 'capture-manifest.json'), JSON.stringify({
+    url,
+    viewports: VIEWPORTS,
+    flowCount: flows.length,
+    plans: ['free', 'premium'],
+    caseGroupCount: caseGroups.length,
+    caseGroups,
+    specialScenes: ['1024x768--drawer-open.png', '375x812--tab-flows.png', '375x812--tab-info.png', '375x812--tab-phone.png'],
+    captureCount: screenshots.length,
+    totalBytes,
+    captures: files,
+  }, null, 2));
+  console.log(`Capturas: ${screenshots.length} · ${files.length} PNG · ${(totalBytes / (1024 * 1024)).toFixed(2)} MiB`);
+  console.log(`Flujos: ${flows.length} · planes: 2 · categorías de casos: ${caseGroups.length}`);
+  console.log(`404: ${missing.length} (${template404.length} rutas {{...}}, ${other404.length} otras)`);
+  console.log(`Manifiesto: ${join(outDir, 'capture-manifest.json')}`);
+} finally {
+  await browser.close();
+}
+
+function slug(value) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}

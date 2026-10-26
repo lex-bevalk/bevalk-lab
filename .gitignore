@@ -6,3 +6,7 @@ fonts/
 node_modules/
 dist/
 .vercel/
+tests/visual/baseline/
+tests/visual/current/
+tests/visual/diff/
+tests/e2e/results/

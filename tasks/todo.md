@@ -60,14 +60,12 @@ Agrupadas por las áreas de Fase 2:
 - Assets: 27 PNG + 1 JS en `assets-manifest.json`.
 - `qa.js` y `sweep.js` cuentan warnings de consola: verificar siempre contra `preview`, nunca contra `dev`.
 
-## Decisiones pendientes del usuario (antes de Fase 1)
-1. **Vercel y pushes de `feat/port`:** cada push crea un Preview. ¿Se permite, o se pausa el proyecto hasta Fase 3?
-   Además: ¿renombrar `product-lab` → `bevalk-lab` o crear un proyecto nuevo? (Fase 3, pero condiciona la URL).
-2. **`window.__lab`:** la spec lo pide solo en desarrollo, pero exige e2e contra `preview` y producción, que son builds de producción.
-   Propuesta: activo siempre (prototipo con datos simulados) o tras un flag de build de prueba.
-3. **Baseline visual:** ~490 PNG (≈150 MB) en git. Propuesta: no versionar y regenerar desde `handoff/reference` en cada entorno (CI incluido). Alternativa: Git LFS.
-4. **Tipado de la lógica:** copia literal con `// @ts-nocheck` y solo `planWorld`, `labTrack` (núcleo puro), `scoreColor`
-   y predicados tipados y testeados (fidelidad primero) frente a tipado completo (más tiempo, más riesgo de deriva).
+## Decisiones (26 oct 2026 · el usuario aprueba "la mejor recomendación")
+1. **Pushes de `feat/port`:** permitidos (los Previews quedan tras Vercel Authentication), pero solo al cerrar cada gate, no por commit.
+   **URL:** renombrar el proyecto `product-lab` → `bevalk-lab` en Fase 3 (conserva el enlace con GitHub); si el nombre está ocupado, parar.
+2. **`window.__lab`:** activo siempre (prototipo con datos simulados), para que e2e funcione contra `preview` y producción.
+3. **Baseline visual:** no se versiona (`tests/visual/baseline/` en `.gitignore`); se regenera desde `handoff/reference` en cada entorno y en CI.
+4. **Lógica:** copia literal con `// @ts-nocheck`; `planWorld`, `labTrack` (núcleo puro), `scoreColor` y predicados tipados y con tests.
 
 ## Estrategia de porte (blueprint de Fable, validado contra el código)
 - **Plantilla → TSX por conversión mecánica**, no a mano: `tools/convert-template.mjs` parsea con Chromium (mismo parser que el runtime)
@@ -89,6 +87,15 @@ Archivos: `package.json` + lock en raíz, `vite.config.ts`, `tsconfig.json`, `in
 | 1.3 e2e adaptado + foco | `getC = window.__lab ?? fiberWalk()`, `LAB_URL` (por defecto `http://localhost:4173/`); `focus.js` compara la secuencia de tabulación | contra la referencia no da 62/62 |
 
 **Gate F1:** ref contra ref 0,00 % en todas las capturas · e2e adaptado contra referencia 62/62 · 62/62 · 17 · 0 · 0 · build sin avisos.
+
+**Resultado F1 (26 oct 2026, verificado por Claude con Chromium de Playwright 1.63) · PASS**
+- `npm run build`: sin avisos. `npm test`: sin tests todavía (llegan en 2.1-2.2).
+- Contra la referencia: e2e 62/62 · e2e:baseline 62/62 · invariants 17 PASS · sweep 0 · a11y 0 · focus idéntico (102 pasos, 100 elementos).
+- Visual ref contra ref: 550 capturas (30 flujos × 2 planes + portada + 17 categorías de caso, × 7 anchos, + drawer + 3 pestañas), 112 MiB,
+  pixelmatch 0,0000 % en las 550. 404: 78, todos de rutas `{{...}}`.
+- Pendiente antes de portar la ficha (2.3): las capturas son de viewport; el contenido bajo el pliegue de cada panel con scroll
+  propio no se compara. Añadir capturas por tramos de scroll de `.lab-scroll`.
+- npm bloquea el `postinstall` de esbuild (allowScripts); el build funciona igual. Revisar en CI.
 
 ## Fase 2 · Porte por áreas (un commit por área)
 | Tarea Codex | Entregable | Gate |
