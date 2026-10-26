@@ -75,6 +75,10 @@ jobs:
         if: steps.changes.outputs.code == 'true'
         run: npm test
 
+      - name: Middleware ESM
+        if: steps.changes.outputs.code == 'true'
+        run: npm run check-middleware-esm
+
       - name: Build
         if: steps.changes.outputs.code == 'true'
         run: npm run build
