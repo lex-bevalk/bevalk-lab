@@ -1,4 +1,4 @@
-import { mkdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -11,6 +11,9 @@ const VIEWPORTS = [
   { width: 768, height: 1024 },
   { width: 375, height: 812 },
 ];
+const SCROLL_VIEWPORTS = new Set(['1680x916', '1024x768', '375x812']);
+const MAX_CAPTURES = 1500;
+const MAX_BYTES = 400 * 1024 * 1024;
 const DEFAULT_REFERENCE = 'http://127.0.0.1:8765/project/Main.dc.html';
 const [url = DEFAULT_REFERENCE, outArg] = process.argv.slice(2);
 if (!outArg) {
@@ -23,11 +26,12 @@ await mkdir(outDir, { recursive: true });
 const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
   ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
   : {};
-const browser = await chromium.launch(browserOptions);
+const browser = await chromium.launch({ ...browserOptions, headless: true });
 const context = await browser.newContext({ viewport: VIEWPORTS[0], reducedMotion: 'reduce', deviceScaleFactor: 1 });
 const page = await context.newPage();
 const missing = [];
 const screenshots = [];
+let totalBytes = 0;
 const GETC = `const getC = () => { if (window.__lab) return window.__lab; const el = document.querySelector('.tp-phone'); const k = Object.keys(el || {}).find(k => k.startsWith('__reactFiber')); let f = el && el[k]; while (f) { if (f.stateNode && f.stateNode.logic && f.stateNode.logic.labVals) return f.stateNode.logic; f = f.return; } return null; };`;
 
 page.on('response', response => {
@@ -89,13 +93,69 @@ async function settle() {
   }
   throw new Error('El anillo o el toast no se estabilizaron en 20 s');
 }
-async function capture(viewport, stem) {
-  await settle();
+async function capture(viewport, stem, settleFirst = true) {
+  if (settleFirst) await settle();
   await page.evaluate(() => document.fonts.ready);
   const name = `${viewport.width}x${viewport.height}--${stem}.png`;
-  await page.screenshot({ path: join(outDir, name), animations: 'disabled' });
-  screenshots.push(name);
+  if (screenshots.length >= MAX_CAPTURES) throw new Error(`Presupuesto excedido: más de ${MAX_CAPTURES} capturas.`);
+  const png = await page.screenshot({ animations: 'disabled' });
+  if (totalBytes + png.length > MAX_BYTES) throw new Error(`Presupuesto excedido: más de ${MAX_BYTES / (1024 * 1024)} MiB.`);
+  await writeFile(join(outDir, name), png);
+  screenshots.push({ name, bytes: png.length });
+  totalBytes += png.length;
   if (screenshots.length % 50 === 0) console.log(`Progreso: ${screenshots.length} capturas`);
+}
+
+async function captureScrolls(viewport, stem) {
+  const viewportKey = `${viewport.width}x${viewport.height}`;
+  if (!SCROLL_VIEWPORTS.has(viewportKey)) return;
+  const tabs = viewport.width === 375 ? ['flows', 'info', 'phone'] : [null];
+  for (const tab of tabs) {
+    if (tab) {
+      await logic(`c.labLabSet({ tab:${JSON.stringify(tab)}, pv:'closed' });`);
+      await page.waitForTimeout(80);
+    } else if (viewport.width === 1024) {
+      await logic(`c.labLabSet({ pv:'open' });`);
+      await page.waitForTimeout(300);
+    }
+    await page.evaluate(() => document.querySelectorAll('.lab-scroll, .tp-scroll').forEach(element => { element.scrollTop = 0; }));
+    const regions = await page.evaluate(() => {
+      const candidates = [...document.querySelectorAll('.lab-scroll, .tp-scroll')];
+      return candidates.flatMap((element, index) => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden' || rect.width < 2 || rect.height < 2) return [];
+        const max = element.scrollHeight - element.clientHeight;
+        if (max < 2 || element.clientHeight < 2) return [];
+        const panel = element.closest('.lab-a') ? 'nav' : element.closest('.lab-b') ? 'detail' : element.closest('.lab-c') || element.matches('.tp-scroll') ? 'phone' : `panel-${index}`;
+        return [{ index, panel, max, step: element.clientHeight, segments: Math.ceil(max / element.clientHeight) + 1 }];
+      });
+    });
+    const segmentCount = Math.max(0, ...regions.map(region => region.segments));
+    for (let segment = 0; segment < segmentCount; segment += 1) {
+      await page.evaluate(({ regions, segment }) => {
+        const elements = [...document.querySelectorAll('.lab-scroll, .tp-scroll')];
+        elements.forEach(element => { element.scrollTop = 0; });
+        for (const region of regions) {
+          const element = elements[region.index];
+          if (element) element.scrollTop = Math.min(segment * region.step, region.max);
+        }
+      }, { regions: regions.map(({ index, step, max }) => ({ index, step, max })), segment });
+      await page.waitForTimeout(40);
+      const areas = [...new Set(regions.map(region => region.panel))].join('-');
+      const tabSuffix = tab ? `-${tab}` : '';
+      await capture(viewport, `${stem}-scroll-${areas}${tabSuffix}-${String(segment).padStart(2, '0')}`, false);
+    }
+    if (!tab && viewport.width === 1024) {
+      await logic(`c.labLabSet({ pv:'closed' });`);
+      await page.waitForTimeout(300);
+    }
+  }
+  if (viewport.width === 375) {
+    await logic(`c.labLabSet({ tab:'flows', pv:'closed' });`);
+    await page.waitForTimeout(80);
+  }
+  await page.evaluate(() => document.querySelectorAll('.lab-scroll, .tp-scroll').forEach(element => { element.scrollTop = 0; }));
 }
 
 try {
@@ -116,11 +176,14 @@ try {
     }
 
     await capture(viewport, 'cover');
+    await captureScrolls(viewport, 'cover');
     for (const plan of ['free', 'premium']) {
       await logic(`c.setState({flow:null}); c.labPickPlan(${JSON.stringify(plan)});`);
       for (const flow of flows) {
         await logic(`const f = c.labFlows().find(x => x.id === ${JSON.stringify(flow.id)}); c.labSelect(f);`);
-        await capture(viewport, `flow-${flow.code}-${plan}`);
+        const stem = `flow-${flow.code}-${plan}`;
+        await capture(viewport, stem);
+        await captureScrolls(viewport, stem);
       }
     }
     for (const group of caseGroups) {
@@ -154,8 +217,7 @@ try {
     await capture(mobileViewport, `tab-${tab}`);
   }
 
-  const files = await Promise.all(screenshots.map(async name => ({ name, bytes: (await stat(join(outDir, name))).size })));
-  const totalBytes = files.reduce((total, file) => total + file.bytes, 0);
+  const files = screenshots;
   const template404 = missing.filter(item => item.templateRoute);
   const other404 = missing.filter(item => !item.templateRoute);
   await writeFile(join(outDir, 'network-404s.json'), JSON.stringify({
@@ -169,6 +231,8 @@ try {
   await writeFile(join(outDir, 'capture-manifest.json'), JSON.stringify({
     url,
     viewports: VIEWPORTS,
+    scrollViewports: [...SCROLL_VIEWPORTS],
+    scrollCapturePolicy: 'Por escena cover/flow, los .lab-scroll y .tp-scroll visibles avanzan simultáneamente, cada uno en pasos de su clientHeight, para capturar todos sus tramos con un solo PNG por paso; a 375px se recorren por separado las pestañas flows/info/phone y a 1024px se abre la vista previa.',
     flowCount: flows.length,
     plans: ['free', 'premium'],
     caseGroupCount: caseGroups.length,
