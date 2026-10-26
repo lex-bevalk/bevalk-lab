@@ -73,6 +73,9 @@ Agrupadas por las áreas de Fase 2:
 7. **Merge `feat/port` → `main`:** autorizado solo con el gate final completo en verde; después, verificación contra producción.
 8. **Acceso:** mantener Vercel Authentication; antes de cerrar, confirmar qué URLs cubre.
 9. **2.4:** informe por área al usuario sin esperar respuesta entre áreas.
+10. **Guton:** se versiona en el repo público (decisión del usuario, 26 oct 2026); `.gitignore` ancla `/fonts/` a la raíz.
+11. **Verificación de producción:** por equivalencia de artefactos (hashes de Vite en el log de Vercel = build limpio del repo = `dist`
+    verificado en local y en CI), sin bypass de Vercel Authentication. El modo auto bloqueó crear el bypass y el usuario eligió esta vía.
 
 ## Estrategia de porte (blueprint de Fable, validado contra el código)
 - **Plantilla → TSX por conversión mecánica**, no a mano: `tools/convert-template.mjs` parsea con Chromium (mismo parser que el runtime)
