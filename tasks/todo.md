@@ -152,3 +152,15 @@ comprobación final contra https://bevalk-lab.vercel.app/ (requiere quitar Verce
 6. Iconos cuyo nombre viene de los datos: `Icon` falla ruidoso y el sweep lo detecta.
 7. Los 404 de `{{ }}` desaparecen en el porte (permitido por la spec).
 8. Vercel: cada push despliega; la URL de la spec exige renombrar o crear el proyecto `bevalk-lab`.
+
+## Resultado Fase 3 (26 oct 2026, 21:35)
+- CI `qa` run 40386492563 (head 0d4d8a6, ubuntu-latest): 17/17 pasos verdes; visual 1.470/1.470, 0 px distintos, 0 ausentes.
+- PR #1 fusionada en `main` (merge 91efc25, `--match-head-commit 0d4d8a6`).
+- Producción `bevalk-hq3lvkvv0` (alias https://bevalk-lab.vercel.app) construida desde 91efc25: mismos hashes que el build verificado
+  (`index-9yMUh4ZO.js`, `index-CvLjGx0_.css`, `react-vendor-BdZgHC1P.js`, `Guton-SemiBold-CFvyU6pK.woff2`).
+- Cobertura de Vercel Authentication, observada con curl:
+  - Con `all_except_custom_domains` (Standard Protection), `bevalk-lab.vercel.app` respondía **200 público** (con noindex).
+  - El usuario eligió proteger producción (21:40). Cambiado a `ssoProtection.deploymentType: "all"` (All Deployments, disponible en Hobby
+    sin coste según https://vercel.com/docs/deployment-protection).
+  - Tras el cambio: `bevalk-lab.vercel.app` (página y assets), URL del despliegue, `bevalk-lab-bevalk.vercel.app` y
+    `bevalk-lab-git-main-bevalk.vercel.app` → 302 a `vercel.com/sso-api`.
