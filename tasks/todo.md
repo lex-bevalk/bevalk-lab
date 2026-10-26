@@ -67,6 +67,13 @@ Agrupadas por las áreas de Fase 2:
 3. **Baseline visual:** no se versiona (`tests/visual/baseline/` en `.gitignore`); se regenera desde `handoff/reference` en cada entorno y en CI.
 4. **Lógica:** copia literal con `// @ts-nocheck`; `planWorld`, `labTrack` (núcleo puro), `scoreColor` y predicados tipados y con tests.
 
+## Autorizaciones (26 oct 2026, 17:30 · el usuario: "prosigue automáticamente hasta finalizar todo el plan")
+5. **`@types/react` y `@types/react-dom`:** aprobados como devDependencies; `tsc --noEmit` entra en el gate.
+6. **Fase 3:** autorizada entera sin parar (renombrar a `bevalk-lab`, `vercel.json`, noindex, Previews por PR, CI `qa.yml`). Si el nombre está ocupado o algo falla, parar.
+7. **Merge `feat/port` → `main`:** autorizado solo con el gate final completo en verde; después, verificación contra producción.
+8. **Acceso:** mantener Vercel Authentication; antes de cerrar, confirmar qué URLs cubre.
+9. **2.4:** informe por área al usuario sin esperar respuesta entre áreas.
+
 ## Estrategia de porte (blueprint de Fable, validado contra el código)
 - **Plantilla → TSX por conversión mecánica**, no a mano: `tools/convert-template.mjs` parsea con Chromium (mismo parser que el runtime)
   y emite TSX con la misma semántica (truthiness de `sc-if`, keys por índice en `sc-for`, acceso tolerante a undefined, `sc-interp`,
@@ -113,6 +120,15 @@ Archivos: `package.json` + lock en raíz, `vite.config.ts`, `tsconfig.json`, `in
   `planWorld` puro devuelve copia en vez de mutar; los 3 llamadores usan el valor devuelto (equivalente).
 - Navegador (`vite preview`): `window.__lab` presente, 30 flujos, `prem-amitad`/Premium, anillo 81, 0 errores de consola.
 - Pendiente: `tsc --noEmit` exige `@types/react` y `@types/react-dom` (decisión del usuario). 4 módulos de datos con `@ts-nocheck` (ver followups).
+
+**Resultado 2.3 + 2.4 (26 oct 2026, verificado por Claude contra `vite preview`, baseline con Chromium de Playwright) · PASS**
+- `tsc --noEmit` 0 errores (con `@types/react` 18.3.31 y `@types/react-dom` 18.3.7); `npm test` 118/118; build sin avisos
+  (`chunkSizeWarningLimit` 1198 kB, bundle único con carga eager); 0 rutas `/_blob/` en `src`, `public`, `dist`.
+- Conversor y `copy-odin` idempotentes: 58 archivos, 0 cambios en la segunda pasada; misma salida con Chrome local y Chromium de Playwright.
+- e2e 62/62 · baseline 62/62 · invariants 17/0 · sweep 0 · a11y 0 · focus idéntico (102 pasos, 100 elementos) · cajas 35/35 a ±1 px.
+- Visual: 1.470/1.470 capturas (incluye tramos bajo el pliegue), 0 píxeles distintos en todas; 0 404 en la app (74 en la referencia, todos `{{…}}`).
+  Control negativo: dos capturas distintas del baseline → 125.039 px distintos (la comparación discrimina).
+- 2.4 por áreas (`tests/visual/review-areas.mjs`, 375×812, 2 planes): 86/86 estados, 8/8 áreas, máximo 0,00 %. Sin arreglos necesarios.
 
 Tras cada área: `npm run build`, e2e contra `npm run preview`, comparación visual; resumen y capturas que difieran al usuario.
 
