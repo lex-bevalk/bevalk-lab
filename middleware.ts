@@ -1,12 +1,12 @@
 import { next } from '@vercel/functions';
-import { createNeonRateLimitStore } from './server/neon-rate-limit';
+import { createNeonRateLimitStore } from './server/neon-rate-limit.js';
 import {
   classifyRequest,
   handleLoginPost,
   isPublicLoginRequest,
   requestPathAndQuery
-} from './server/passwall';
-import { SESSION_COOKIE, verifySession } from './server/session';
+} from './server/passwall.js';
+import { SESSION_COOKIE, verifySession } from './server/session.js';
 
 export const config = { runtime: 'nodejs' };
 

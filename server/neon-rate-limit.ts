@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { RATE_LIMIT_WINDOW_MS, type RateLimitRecord, type RateLimitStore } from './rate-limit';
+import { RATE_LIMIT_WINDOW_MS, type RateLimitRecord, type RateLimitStore } from './rate-limit.js';
 
 interface NeonRateLimitRow {
   hits: number;

@@ -3,11 +3,11 @@ import {
   sessionCookie,
   signSession,
   type SessionRole
-} from './session';
+} from './session.js';
 import {
   isRateLimited,
   type RateLimitStore
-} from './rate-limit';
+} from './rate-limit.js';
 
 export const LOGIN_LOGO_PATH = '/assets/77effca3e02e95da2e7019fa1e4a6fea.png';
 
