@@ -1,0 +1,7 @@
+# Comparación de estilos
+
+`src/styles/main.css` se genera al ejecutar `tools/convert-template.mjs` a partir del `<style>` de `<helmet>` en la plantilla ya preprocesada; conserva los estilos del Lab y del móvil en un único archivo. El conversor sustituye las URLs `/_blob/<id>` por `/assets/<suggestedName>` según `handoff/reference/assets-manifest.json` y añade al final las reglas de `style-hover`/`style-active`.
+
+La comparación literal confirma que el CSS de `handoff/source/src/lab.css` está incluido sin cambios en `src/styles/main.css` (`lab.css` completo, 2.920 bytes). El CSS generado tiene 5.337 bytes y tres bloques `@media`; `lab.css` tiene dos. El CSS restante proviene del `<helmet>` de la referencia y contiene reglas globales y del móvil, entre ellas `.tp-phone`, `.tp-scroll`, animaciones/propiedades de scroll y el tercer breakpoint. Por ello el resultado equivale a `lab.css` más el CSS global y móvil que acompaña a la plantilla, con las reglas pseudo generadas añadidas; no sustituye estilos por una implementación nueva.
+
+La referencia también enlaza `ds/odin/styles.css`; `src/main.tsx` carga primero `src/styles/odin/styles.css` y después `main.css`, respetando el orden de carga original. El CSS Odin referencia `../assets/brand/app-background.png`, que no está incluido en `handoff/reference`; se deja intacta la URL faltante y se externaliza durante el build para no generar un asset inexistente.
