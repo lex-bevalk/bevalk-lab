@@ -105,6 +105,15 @@ Archivos: `package.json` + lock en raíz, `vite.config.ts`, `tsconfig.json`, `in
 | 2.3 Conversor + shell | `tools/convert-template.mjs`, `src/ui/**`, `src/styles/odin/**`, `lab.css`, mapa de iconos (error ruidoso si falta uno) | build sin avisos; cajas de `.lab`, `.lab-a/b/c`, `.tp-phone` ±1 px en los 7 anchos; e2e completo |
 | 2.4 a-h Áreas del móvil | revisión estructural y visual por área; arreglos solo en el conversor | >0,5 % tras 2 iteraciones → `tasks/followups.md` y reporte |
 
+**Resultado 2.1 + 2.2 (26 oct 2026, verificado por Claude) · PASS**
+- `npm test` 118/118 (datos idénticos a la referencia evaluada en VM, puras, smoke de 3 casos con `reached` igual al original).
+- `npm run build` sin avisos (chunk `react-vendor` separado). 27 PNG en `public/assets`, 0 rutas `/_blob/` en `src`, `public` y `dist`.
+- Generadores idempotentes (`extract-data`, `extract-logic`, `copy-assets`): `git status` vacío tras regenerar.
+- `LabLogic.ts` = clase original salvo: imports, `planWorld`/`labTrack` delegados en `pure.ts`, `paint`/`waitLucide` no-op, rutas de imagen.
+  `planWorld` puro devuelve copia en vez de mutar; los 3 llamadores usan el valor devuelto (equivalente).
+- Navegador (`vite preview`): `window.__lab` presente, 30 flujos, `prem-amitad`/Premium, anillo 81, 0 errores de consola.
+- Pendiente: `tsc --noEmit` exige `@types/react` y `@types/react-dom` (decisión del usuario). 4 módulos de datos con `@ts-nocheck` (ver followups).
+
 Tras cada área: `npm run build`, e2e contra `npm run preview`, comparación visual; resumen y capturas que difieran al usuario.
 
 **Gate F2 (criterios de aceptación de la spec):** build sin avisos · e2e 62/62 · baseline 62/62 · invariants 17 · sweep 0 · a11y 0 ·
