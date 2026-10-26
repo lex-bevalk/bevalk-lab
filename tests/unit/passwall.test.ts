@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { classifyRequest, handleLoginPost, isPublicLoginAsset, isPublicLoginRequest, safeNextPath } from '../../server/passwall';
 import {
   isRateLimited,
@@ -16,6 +17,17 @@ const LOGIN_ENV = {
   SESSION_SECRET,
   DATABASE_URL: 'postgres://test-only.invalid/passwall'
 };
+
+describe('JavaScript package scopes', () => {
+  it('uses ESM at the root and CommonJS for e2e scripts', () => {
+    // Vercel middleware.js needs the root ESM scope; e2e scripts keep a nested CommonJS scope.
+    const rootPackage = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+    const e2ePackage = JSON.parse(readFileSync(new URL('../e2e/package.json', import.meta.url), 'utf8'));
+
+    expect(rootPackage.type).toBe('module');
+    expect(e2ePackage.type).toBe('commonjs');
+  });
+});
 
 function loginRequest(password: string, next = '/workspace?tab=one', address = '192.0.2.10'): Request {
   return new Request('https://bevalk.test/login', {
