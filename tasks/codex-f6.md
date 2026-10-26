@@ -1,7 +1,7 @@
 # Codex · F1 · Passwall con pantalla de login de BeValk
 
 ## Contexto
-Worktree `C:\Users\lexsa\Desktop\bevalk-lab-passwall`, rama `feat/passwall` (desde `main`). No cambies de rama, no hagas commit ni push. Sin red:
+Repo `C:\Users\lexsa\Desktop\bevalk-lab`, rama `feat/passwall` (desde `main`). No cambies de rama, no hagas commit ni push. Sin red:
 Claude ya instaló y fijó `@vercel/functions@3.9.11`, `@neondatabase/serverless@1.2.0` y `@types/node@24.19.2` (dev). Ninguna otra dependencia.
 No escribas en `dist/` (compila con `npx vite build --outDir <tmp fuera del repo>`). No toques Vercel ni GitHub. No añadas
 `--configLoader runner` a `package.json`. No ejecutes servidores ni la batería e2e/visual (el equipo anda corto de memoria): Claude la corre.
