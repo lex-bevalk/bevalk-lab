@@ -57,6 +57,31 @@ const walk = (node, visit) => {
 };
 const nodes = [];
 walk(template.root, node => { if (node.type === 'element') nodes.push(node); });
+const optionTargetsByHandler = new Map([
+  ['pr.sec.pick', 'prsec'],
+  ['pr.del.pick', 'prdel'],
+  ['pr.fb.pick', 'prfb'],
+  ['sop.pickAsunto', 'sop'],
+  ['sos.pickHelp', 'sos'],
+]);
+const optionSelectNodes = new Map();
+const optionTriggerNodes = nodes.filter(node => node.tag === 'button' && attr(node, 'aria-haspopup') === 'dialog');
+if (optionTriggerNodes.length !== 5) {
+  throw new Error('La plantilla contiene ' + optionTriggerNodes.length + ' botones aria-haspopup="dialog"; se esperaban exactamente 5.');
+}
+for (const node of optionTriggerNodes) {
+  const handler = (attr(node, 'sc-camel-on-click') || attr(node, 'onclick') || attr(node, 'onClick') || '')
+    .replace(/^\s*\{\{\s*|\s*\}\}\s*$/g, '').trim();
+  const target = optionTargetsByHandler.get(handler);
+  const id = attr(node, 'data-dc-tpl');
+  if (!target || !id || optionSelectNodes.has(id)) {
+    throw new Error('No se pudo mapear de forma única el trigger aria-haspopup="dialog": ' + (handler || '(sin onClick)'));
+  }
+  optionSelectNodes.set(id, target);
+}
+if (new Set(optionSelectNodes.values()).size !== optionTargetsByHandler.size) {
+  throw new Error('Los cinco triggers aria-haspopup="dialog" no cubren los cinco targets esperados.');
+}
 const findNode = predicate => nodes.find(predicate);
 const hasClass = (node, value) => (attr(node, 'class') || '').split(/\s+/).includes(value);
 const tabsNode = findNode(node => hasClass(node, 'lab-tabs'));
@@ -379,8 +404,13 @@ function renderNode(node, scope, replacements = new Map()) {
       ', ' + (refAttribute === undefined ? 'false, undefined' : 'true, ' + JSON.stringify(refAttribute)) + ')}'
     : '';
   const children = node.children.map(child => renderNode(child, scope, replacements)).join('');
-  if (voidTags.has(tag.toLowerCase())) return '<' + tag + ' {...' + propExpression + '}' + styleProps + ' />';
-  return '<' + tag + ' {...' + propExpression + '}' + styleProps + '>' + children + '</' + tag + '>';
+  const rendered = voidTags.has(tag.toLowerCase())
+    ? '<' + tag + ' {...' + propExpression + '}' + styleProps + ' />'
+    : '<' + tag + ' {...' + propExpression + '}' + styleProps + '>' + children + '</' + tag + '>';
+  const optionTarget = id && optionSelectNodes.get(id);
+  return optionTarget
+    ? '<OptSelect vals={' + scope + '} target=' + JSON.stringify(optionTarget) + '>' + rendered + '</OptSelect>'
+    : rendered;
 }
 
 const runtimeSource = String.raw`// Generado por tools/convert-template.mjs. No editar a mano.
@@ -606,6 +636,7 @@ function generatedImports(body, runtimePath, iconPath) {
   const usedHelpers = runtimeHelpers.filter(helper => body.includes(helper + '('));
   if (usedHelpers.length) imports.push("import { " + usedHelpers.join(', ') + " } from '" + runtimePath + "';");
   if (/<Icon\s/.test(body)) imports.push("import { Icon } from '" + iconPath + "';");
+  if (/<OptSelect\s/.test(body)) imports.push("import { OptSelect } from '" + (runtimePath === '../runtime' ? '../../OptSelect' : '../OptSelect') + "';");
   return imports;
 }
 function componentSource(name, body, importScreens = false) {

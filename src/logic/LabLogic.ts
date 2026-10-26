@@ -2612,7 +2612,7 @@ export class LabLogic extends DCLogic {
     const optList = optTarget === "sos" ? SOS_HELP : optTarget === "sop" ? SOP_ASUNTOS : optTarget === "prdel" ? PR_DEL : optTarget === "prsec" ? PR_SEC.map(x => x[1]) : optTarget === "prfb" ? PR_FB.map(x => x[0]) : [];
     const optCur = optTarget === "sos" ? s.sos.help : optTarget === "sop" ? s.sop.asunto : optTarget === "prdel" ? s.pr.del.reason : optTarget === "prsec" ? ((PR_SEC.find(x => x[0] === s.pr.sec) || [])[1] || "") : optTarget === "prfb" ? ((s.pr.fb || {}).topic || "") : "";
     const sheetBase = sheetKind === "opts"
-      ? {visible:true, title: s.sheet.title || "", body:"", hasList:false, list:[], hasPrimary:false, primaryLabel:"", primary:() => {},
+      ? {visible:false, target: optTarget, title: s.sheet.title || "", body:"", hasList:false, list:[], hasPrimary:false, primaryLabel:"", primary:() => {},
          hasOpts:true, titleAlign:"left",
          opts: optList.map(label => ({label, selected: label === optCur,
            bg: label === optCur ? "var(--color-accent)" : "transparent",
