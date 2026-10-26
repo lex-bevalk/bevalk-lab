@@ -9,5 +9,6 @@ dist/
 tests/visual/baseline/
 tests/visual/current/
 tests/visual/diff/
+tests/visual/own/current/
 tests/e2e/results/
 tools/area-review-results.json
