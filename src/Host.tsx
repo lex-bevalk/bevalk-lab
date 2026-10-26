@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { type StateUpdate } from './logic/DCLogic';
 import { LabLogic } from './logic/LabLogic';
 import { defaultProps, type LabProps } from './props';
+import { GeneratedRoot } from './ui/generated/Root';
 
 type HostProps = Partial<LabProps>;
 type HostState = { version: number };
@@ -45,6 +46,6 @@ export class Host extends Component<HostProps, HostState> {
   }
 
   render() {
-    return <main>BeValk Lab</main>;
+    return <GeneratedRoot vals={this.logic.renderVals()} />;
   }
 }
