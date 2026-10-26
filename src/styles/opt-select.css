@@ -2,4 +2,4 @@
 .lab-optsel [data-icon="chevron-down"]{transition:transform var(--duration-normal) var(--ease-out)}
 .lab-optsel > [data-open="true"] [data-icon="chevron-down"]{transform:rotate(180deg)}
 .lab-optsel .odin-menu{top:100%;left:0}
-.lab-optsel .odin-menu__item{font:400 1rem/1.5rem var(--font-sans);min-height:44px;padding:10px 40px 10px 12px}
+.lab-optsel .odin-menu__item{font:400 1rem/1.5rem var(--font-sans);min-height:44px;padding:10px 40px 10px 12px;flex-shrink:0;overflow-wrap:anywhere}
