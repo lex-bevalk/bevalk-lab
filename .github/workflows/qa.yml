@@ -131,6 +131,10 @@ jobs:
         if: steps.changes.outputs.code == 'true'
         run: npm run focus
 
+      - name: Select dropdowns
+        if: steps.changes.outputs.code == 'true'
+        run: npm run e2e:select
+
       - name: Capture visual baseline
         if: steps.changes.outputs.code == 'true'
         run: npm run visual:baseline
