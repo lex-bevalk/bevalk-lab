@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --port 4173 --strictPort",
     "test": "vitest run",
+    "check-middleware-esm": "node tools/check-middleware-esm.mjs",
     "e2e": "node tests/e2e/qa.js",
     "e2e:baseline": "node tests/e2e/qa.js --baseline",
     "invariants": "node tests/e2e/inv.js",

@@ -3,6 +3,7 @@
 /fonts/
 
 # Generated
+.tmp/
 node_modules/
 dist/
 .vercel/
