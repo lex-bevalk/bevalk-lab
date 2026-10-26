@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const GETC = `const getC = () => { if (window.__lab) return window.__lab; const el = document.querySelector('.tp-phone'); const k = Object.keys(el || {}).find(k => k.startsWith('__reactFiber')); let f = el && el[k]; while (f) { if (f.stateNode && f.stateNode.logic && f.stateNode.logic.labVals) return f.stateNode.logic; f = f.return; } return null; };`;
 (async () => {
-  const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
+  const b = await chromium.launch({ headless: true }); const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
   await p.goto((process.env.LAB_URL || 'http://localhost:4173/')); await p.waitForTimeout(2200);
   await p.addScriptTag({ content: fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8') });
   const run = async label => {

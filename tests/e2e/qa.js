@@ -70,7 +70,7 @@ const SPEC = {
 (async () => {
   const baseline = process.argv[2] === '--baseline';
   const only = baseline ? null : process.argv[2];
-  const b = await chromium.launch();
+  const b = await chromium.launch({ headless: true });
   const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
   let errs = [];
   p.on('console', m => { const t = m.text(); if ((m.type() === 'error' || m.type() === 'warning') && !/status of 404|TUNNEL|Failed to load resource/.test(t)) errs.push(t); });

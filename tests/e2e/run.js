@@ -4,7 +4,7 @@ const { chromium } = require('playwright');
 (async () => {
   const [,, w, h, pre, stepsFile] = process.argv;
   const steps = JSON.parse(require('fs').readFileSync(stepsFile, 'utf8'));
-  const b = await chromium.launch();
+  const b = await chromium.launch({ headless: true });
   const p = await b.newPage({ viewport: { width: +w, height: +h } });
   const errs = [];
   p.on('console', m => { const t = m.text(); if ((m.type() === 'error' || m.type() === 'warning') && !/status of 404|TUNNEL|Failed to load resource/.test(t)) errs.push(m.type() + ': ' + t); });

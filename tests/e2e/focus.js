@@ -9,7 +9,7 @@ const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
   : {};
 
 (async () => {
-  const browser = await chromium.launch(browserOptions);
+  const browser = await chromium.launch({ ...browserOptions, headless: true });
   async function sequenceFor(url) {
     const page = await browser.newPage({ viewport: { width: 1680, height: 916 }, reducedMotion: 'reduce' });
     await page.goto(url, { waitUntil: 'load' });
