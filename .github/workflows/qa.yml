@@ -89,7 +89,7 @@ jobs:
         run: |
           npm run preview > /tmp/bevalk-preview.log 2>&1 &
           echo $! > /tmp/bevalk-preview.pid
-          node handoff/reference/serve.js 8765 > /tmp/bevalk-reference.log 2>&1 &
+          node tools/serve-reference.cjs 8765 > /tmp/bevalk-reference.log 2>&1 &
           echo $! > /tmp/bevalk-reference.pid
 
           wait_for_url() {
