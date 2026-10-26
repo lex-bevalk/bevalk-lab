@@ -5,15 +5,15 @@ import pixelmatch from 'pixelmatch';
 import pngjs from 'pngjs';
 
 const { PNG } = pngjs;
-const [baselineArg, currentArg] = process.argv.slice(2);
+const [baselineArg, currentArg, diffArg] = process.argv.slice(2);
 if (!baselineArg || !currentArg) {
-  console.error('Uso: node tests/visual/compare.mjs <baselineDir> <currentDir>');
+  console.error('Uso: node tests/visual/compare.mjs <baselineDir> <currentDir> [diffDir]');
   process.exit(2);
 }
 const baselineDir = resolve(process.cwd(), baselineArg);
 const currentDir = resolve(process.cwd(), currentArg);
 const visualDir = resolve(fileURLToPath(new URL('.', import.meta.url)));
-const diffDir = join(visualDir, 'diff');
+const diffDir = diffArg ? resolve(process.cwd(), diffArg) : join(visualDir, 'diff');
 const threshold = 0.1;
 const maxDifferentPercent = 0.5;
 await mkdir(diffDir, { recursive: true });

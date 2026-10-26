@@ -25,6 +25,7 @@ const triggerSelectors = {
 const viewports = [{ width: 1680, height: 916 }, { width: 375, height: 812 }];
 const browser = await chromium.launch(executablePath ? { executablePath, headless: true } : { headless: true });
 const page = await browser.newPage({ viewport: viewports[0], deviceScaleFactor: 1, reducedMotion: 'reduce' });
+await page.emulateMedia({ reducedMotion: 'reduce' });
 const captures = [];
 try {
   await mkdir(currentDir, { recursive: true });
@@ -61,6 +62,21 @@ try {
       await page.locator('.tp-phone .odin-menu[role="listbox"]').waitFor({ state: 'visible' });
       const activeTarget = await page.evaluate(() => window.__lab.renderVals().sheet.target);
       if (activeTarget !== target) throw new Error(`Se abrió ${activeTarget} al capturar ${target}.`);
+      await page.evaluate(async triggerSelector => {
+        await document.fonts.ready;
+        await new Promise(requestAnimationFrame);
+        const menu = document.querySelector('.tp-phone .odin-menu[role="listbox"]');
+        const trigger = document.querySelector(triggerSelector);
+        if (!menu || !trigger) throw new Error('No se encontró el menú o su trigger para estabilizar la captura.');
+        const animations = [
+          ...menu.getAnimations({ subtree: true }),
+          ...trigger.getAnimations({ subtree: true }),
+        ];
+        await Promise.all(animations
+          .filter(animation => animation.playState !== 'finished' && animation.effect?.getComputedTiming().iterations !== Infinity)
+          .map(animation => animation.finished.catch(() => {})));
+        await new Promise(requestAnimationFrame);
+      }, triggerSelectors[target]);
       const name = `${target}--${viewport.width}x${viewport.height}.png`;
       await page.screenshot({ path: resolve(currentDir, name), animations: 'disabled' });
       captures.push({ target, name, viewport });
@@ -80,7 +96,7 @@ try {
   baselineExists = true;
 } catch {}
 if (baselineExists) {
-  const result = spawnSync(process.execPath, ['tests/visual/compare.mjs', 'tests/visual/own/baseline', 'tests/visual/own/current'], { cwd: root, stdio: 'inherit' });
+  const result = spawnSync(process.execPath, ['tests/visual/compare.mjs', 'tests/visual/own/baseline', 'tests/visual/own/current', 'tests/visual/own/diff'], { cwd: root, stdio: 'inherit' });
   if (result.error) throw result.error;
   if (result.status !== 0) process.exitCode = result.status || 1;
 } else {
