@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview --port 4173 --strictPort",
+    "serve:reference": "node tools/serve-reference.cjs 8765",
     "test": "vitest run",
     "check-middleware-esm": "node tools/check-middleware-esm.mjs",
     "e2e": "node tests/e2e/qa.js",
