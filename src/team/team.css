@@ -273,30 +273,6 @@ body {
   font-weight: var(--font-medium);
 }
 
-.comments-select {
-  position: relative;
-  display: block;
-  color: var(--color-text-body);
-}
-
-.comments-select select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding-right: 36px;
-}
-
-.comments-select .odin-select__chev {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-}
-
-.comments-select select:disabled + .odin-select__chev {
-  opacity: var(--state-disabled-opacity);
-}
-
 .comments-filters select,
 .comments-filters input {
   width: 100%;

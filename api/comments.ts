@@ -5,6 +5,7 @@ import { verifySession, SESSION_COOKIE } from '../server/session.js';
 import {
   createNeonCommentsStore,
   validateCommentCreate,
+  validateReplyCreate,
   validateCommentDelete,
   validateCommentFilters,
   validateCommentStatus,
@@ -143,6 +144,24 @@ export function createCommentsApi(dependencies: CommentsApiDependencies = {}) {
       if (!env.DATABASE_URL) return genericError();
       const parsed = await parseJson(request);
       if (!parsed.ok) return parsed.response;
+      const isReply = typeof parsed.value === 'object'
+        && parsed.value !== null
+        && !Array.isArray(parsed.value)
+        && (parsed.value as Record<string, unknown>).comment_id !== undefined
+        && (parsed.value as Record<string, unknown>).comment_id !== null;
+      if (isReply) {
+        const input = validateReplyCreate(parsed.value);
+        if (!input.ok) return json({ error: 'invalid', field: input.field }, 400);
+        try {
+          const { comments, rateLimit } = stores(env.DATABASE_URL);
+          const limited = await takeWriteSlot(request, rateLimit);
+          if (limited) return limited;
+          const reply = await comments.createReply(input.value);
+          return reply ? json(reply, 201) : json({ error: 'not_found' }, 404);
+        } catch {
+          return genericError();
+        }
+      }
       const input = validateCommentCreate(parsed.value);
       if (!input.ok) return json({ error: 'invalid', field: input.field }, 400);
       try {
