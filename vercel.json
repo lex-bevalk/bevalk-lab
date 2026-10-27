@@ -22,6 +22,14 @@
     {
       "source": "/changelog",
       "destination": "/team.html"
+    },
+    {
+      "source": "/comments",
+      "destination": "/team.html"
+    },
+    {
+      "source": "/review",
+      "destination": "/review.html"
     }
   ]
 }
