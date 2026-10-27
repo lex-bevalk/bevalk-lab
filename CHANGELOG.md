@@ -4,6 +4,11 @@ Cambios relevantes del BeValk Product Experience Lab. Formato basado en [Keep a 
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-27
+
+### Changed
+- Los selectores de Seguridad, Eliminar cuenta, Tu opinión importa, Soporte técnico y Revisión de tu caso abren un desplegable en lugar de un panel inferior, y se manejan con teclado.
+
 ## [1.1.0] - 2026-10-27
 
 ### Added
