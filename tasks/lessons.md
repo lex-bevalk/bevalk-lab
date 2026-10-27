@@ -14,3 +14,7 @@
 - Capas propias sobre el prototipo: el prototipo usa z-index hasta 60 (`.lab-c` 50 en móvil). Las capas de review van en `calc(var(--z-toast) + 100)` y se verifican con captura a 375 px, no solo en escritorio.
 - Si un control tiene texto visible, su nombre accesible debe contenerlo (WCAG 2.5.3): no poner `aria-label` distinto del texto.
 - El clasificador de auto mode bloquea `gh pr merge` aunque el usuario lo autorice en el chat: el merge lo lanza el usuario con `! gh pr merge ...` o con una regla en `/permissions`.
+- La cuenta activa de `gh` es global y otras sesiones la devuelven a lexsantor. El repo fija `credential.https://github.com.username lex-bevalk`: con otra cuenta activa el push falla en lugar de subir con la cuenta equivocada. Arreglo: `gh auth switch -u lex-bevalk`.
+- `review.html` a 375 px no muestra el móvil al cargar: en e2e y capturas, cargar a 1440, reducir el viewport y pulsar la pestaña "Móvil".
+- Un componente con estado propio (borrador, `<details>` abierto) dentro de un popover que cambia de comentario necesita `key` por id, o arrastra el borrador al siguiente y lo envía al comentario equivocado.
+- Una tarea de Codex que queda "running" bloquea `--resume-last` de cualquier tarea nueva: lanzar con `--fresh` y dar el contexto completo en el prompt.
