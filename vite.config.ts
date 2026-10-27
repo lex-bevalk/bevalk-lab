@@ -12,11 +12,12 @@ export default defineConfig({
       external: id => id.includes('app-background.png'),
       input: {
         index: resolve(process.cwd(), 'index.html'),
-        login: resolve(process.cwd(), 'login.html')
+        login: resolve(process.cwd(), 'login.html'),
+        team: resolve(process.cwd(), 'team.html')
       },
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom']
+          'react-vendor': ['react', 'react-dom', 'react/jsx-runtime']
         }
       }
     }
