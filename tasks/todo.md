@@ -76,6 +76,13 @@ Agrupadas por las áreas de Fase 2:
 10. **Guton:** se versiona en el repo público (decisión del usuario, 26 oct 2026); `.gitignore` ancla `/fonts/` a la raíz.
 11. **Verificación de producción:** por equivalencia de artefactos (hashes de Vite en el log de Vercel = build limpio del repo = `dist`
     verificado en local y en CI), sin bypass de Vercel Authentication. El modo auto bloqueó crear el bypass y el usuario eligió esta vía.
+12. **Producción protegida** (26 oct, 21:40): Vercel Authentication en All Deployments. Se volverá a Standard solo cuando el login de app
+    esté desplegado y verificado (ver `tasks/plan-equipo.md`).
+13. **Selectores → dropdown Odin** (26 oct, 22:15): primera divergencia de producto; blueprint en `tasks/codex-f5.md`. Merges de mantenimiento
+    con CI en verde autorizados ("adelante con todas tus recomendaciones").
+14. **Changelog, acceso y comentarios** (26 oct, 22:45): plan en `tasks/plan-equipo.md`. Aprobadas `@vercel/functions`,
+    `@neondatabase/serverless` y `@types/node` y la provisión de Neon vía Marketplace. Modo comentario en `/review` (`/` intacto).
+    Plan Vercel: el usuario decide **seguir en Hobby** asumiendo el riesgo de uso comercial (Hobby es "non-commercial, personal use only").
 
 ## Estrategia de porte (blueprint de Fable, validado contra el código)
 - **Plantilla → TSX por conversión mecánica**, no a mano: `tools/convert-template.mjs` parsea con Chromium (mismo parser que el runtime)

@@ -2,7 +2,7 @@
   "name": "bevalk-lab",
   "private": true,
   "type": "module",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -16,8 +16,10 @@
     "sweep": "node tests/e2e/sweep.js",
     "a11y": "node tests/e2e/axe.js",
     "focus": "node tests/e2e/focus.js",
+    "e2e:select": "node tests/e2e/select.js",
     "visual:baseline": "node tests/visual/capture.mjs http://127.0.0.1:8765/project/Main.dc.html tests/visual/baseline",
     "visual": "node tests/visual/visual.mjs",
+    "visual:own": "node tests/visual/own-capture.mjs",
     "check-login-assets": "node tools/check-login-assets.mjs",
     "copy-odin": "node tools/copy-odin.mjs",
     "convert-template": "node tools/convert-template.mjs"

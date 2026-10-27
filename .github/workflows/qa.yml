@@ -135,6 +135,10 @@ jobs:
         if: steps.changes.outputs.code == 'true'
         run: npm run focus
 
+      - name: Select dropdowns
+        if: steps.changes.outputs.code == 'true'
+        run: npm run e2e:select
+
       - name: Capture visual baseline
         if: steps.changes.outputs.code == 'true'
         run: npm run visual:baseline
@@ -142,6 +146,20 @@ jobs:
       - name: Visual comparison
         if: steps.changes.outputs.code == 'true'
         run: npm run visual
+
+      - name: Own visual (dropdowns)
+        if: steps.changes.outputs.code == 'true'
+        run: npm run visual:own
+
+      - name: Upload own visual artifacts
+        if: always() && steps.changes.outputs.code == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-own-visual
+          if-no-files-found: ignore
+          path: |
+            tests/visual/own/current/
+            tests/visual/own/diff/
 
       - name: Upload failure diagnostics
         if: failure()
