@@ -34,6 +34,23 @@ export interface CommentItem {
   flow: string | null;
   plan: string | null;
   status: CommentStatus;
+  replies: ReplyItem[];
+}
+
+export interface ReplyRecord {
+  id: string;
+  comment_id: string;
+  created_at: Date | string;
+  author: string;
+  body: string;
+}
+
+export interface ReplyItem {
+  id: string;
+  comment_id: string;
+  created_at: string;
+  author: string;
+  body: string;
 }
 
 export interface CommentFilters {
@@ -53,9 +70,16 @@ export interface CommentCreateInput {
   plan: string | null;
 }
 
+export interface ReplyCreateInput {
+  comment_id: string;
+  author: string;
+  body: string;
+}
+
 export interface CommentsStore {
   list(filters: CommentFilters): Promise<CommentItem[]>;
   create(input: CommentCreateInput, deleteTokenHash: string): Promise<CommentItem>;
+  createReply(input: ReplyCreateInput): Promise<ReplyItem | null>;
   updateStatus(id: string, status: CommentStatus): Promise<CommentItem | null>;
   deleteTokenHash(id: string): Promise<string | null | undefined>;
   remove(id: string): Promise<boolean>;
@@ -90,13 +114,10 @@ function optionalShortString(
 export function validateCommentCreate(value: unknown): Validation<CommentCreateInput> {
   if (!isPlainRecord(value)) return { ok: false, field: 'body' };
 
-  if (typeof value.author !== 'string') return { ok: false, field: 'author' };
-  const author = value.author.trim();
-  if (author.length < 1 || author.length > 60 || anyControlCharacters.test(author)) return { ok: false, field: 'author' };
-
-  if (typeof value.body !== 'string') return { ok: false, field: 'body' };
-  const body = value.body.trim();
-  if (body.length < 1 || body.length > 2000 || /[\u0000-\u0009\u000B-\u001F\u007F]/.test(body)) return { ok: false, field: 'body' };
+  const author = validateAuthor(value.author);
+  if (!author.ok) return author;
+  const body = validateBody(value.body);
+  if (!body.ok) return body;
 
   if (typeof value.screen !== 'string' || !screenSet.has(value.screen)) return { ok: false, field: 'screen' };
   if (typeof value.x !== 'number' || !Number.isFinite(value.x) || value.x < 0 || value.x > 1) return { ok: false, field: 'x' };
@@ -116,8 +137,8 @@ export function validateCommentCreate(value: unknown): Validation<CommentCreateI
   return {
     ok: true,
     value: {
-      author,
-      body,
+      author: author.value,
+      body: body.value,
       screen: value.screen as CommentScreen,
       tpl: tpl.value,
       x: value.x,
@@ -126,6 +147,33 @@ export function validateCommentCreate(value: unknown): Validation<CommentCreateI
       plan: plan.value
     }
   };
+}
+
+function validateAuthor(value: unknown): Validation<string> {
+  if (typeof value !== 'string') return { ok: false, field: 'author' };
+  const author = value.trim();
+  return author.length < 1 || author.length > 60 || anyControlCharacters.test(author)
+    ? { ok: false, field: 'author' }
+    : { ok: true, value: author };
+}
+
+function validateBody(value: unknown): Validation<string> {
+  if (typeof value !== 'string') return { ok: false, field: 'body' };
+  const body = value.trim();
+  return body.length < 1 || body.length > 2000 || /[\u0000-\u0009\u000B-\u001F\u007F]/.test(body)
+    ? { ok: false, field: 'body' }
+    : { ok: true, value: body };
+}
+
+export function validateReplyCreate(value: unknown): Validation<ReplyCreateInput> {
+  if (!isPlainRecord(value) || typeof value.comment_id !== 'string' || !UUID_PATTERN.test(value.comment_id)) {
+    return { ok: false, field: 'comment_id' };
+  }
+  const author = validateAuthor(value.author);
+  if (!author.ok) return author;
+  const body = validateBody(value.body);
+  if (!body.ok) return body;
+  return { ok: true, value: { comment_id: value.comment_id, author: author.value, body: body.value } };
 }
 
 export function validateCommentFilters(params: URLSearchParams): Validation<CommentFilters> {
@@ -184,7 +232,18 @@ function toCommentItem(row: CommentRecord): CommentItem {
     y: Number(row.y),
     flow: row.flow,
     plan: row.plan,
-    status: row.status
+    status: row.status,
+    replies: []
+  };
+}
+
+function toReplyItem(row: ReplyRecord): ReplyItem {
+  return {
+    id: row.id,
+    comment_id: row.comment_id,
+    created_at: new Date(row.created_at).toISOString(),
+    author: row.author,
+    body: row.body
   };
 }
 
@@ -210,6 +269,14 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
         status text not null default 'todo' check (status in ('todo','in_progress','done','wont_do'))
       )`)
       .then(() => sql`ALTER TABLE comments ADD COLUMN IF NOT EXISTS delete_token_hash text`)
+      .then(() => sql`CREATE TABLE IF NOT EXISTS comment_replies (
+        id uuid primary key default gen_random_uuid(),
+        comment_id uuid not null references comments(id) on delete cascade,
+        created_at timestamptz not null default now(),
+        author text not null,
+        body text not null
+      )`)
+      .then(() => sql`CREATE INDEX IF NOT EXISTS comment_replies_comment_id_idx ON comment_replies (comment_id, created_at)`)
       .then(() => undefined)
       .catch(error => {
         if (tableReady === pending) tableReady = null;
@@ -217,6 +284,25 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
       });
     tableReady = pending;
     return pending;
+  }
+
+  async function attachReplies(items: CommentItem[]): Promise<CommentItem[]> {
+    if (items.length === 0) return items;
+    const ids = items.map(item => item.id);
+    const rows = await sql`
+      SELECT id, comment_id, created_at, author, body
+      FROM comment_replies
+      WHERE comment_id = ANY(${ids}::uuid[])
+      ORDER BY created_at ASC
+    ` as ReplyRecord[];
+    const grouped = new Map<string, ReplyItem[]>();
+    for (const row of rows) {
+      const reply = toReplyItem(row);
+      const replies = grouped.get(reply.comment_id) ?? [];
+      replies.push(reply);
+      grouped.set(reply.comment_id, replies);
+    }
+    return items.map(item => ({ ...item, replies: grouped.get(item.id) ?? [] }));
   }
 
   return {
@@ -234,7 +320,7 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
         ORDER BY created_at DESC
         LIMIT 500
       ` as CommentRecord[];
-      return rows.map(toCommentItem);
+      return attachReplies(rows.map(toCommentItem));
     },
 
     async create(input, deleteTokenHash): Promise<CommentItem> {
@@ -248,6 +334,17 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
       return toCommentItem(rows[0]);
     },
 
+    async createReply(input): Promise<ReplyItem | null> {
+      await ensureTable();
+      const rows = await sql`
+        INSERT INTO comment_replies (comment_id, author, body)
+        SELECT ${input.comment_id}::uuid, ${input.author}, ${input.body}
+        WHERE EXISTS (SELECT 1 FROM comments WHERE id = ${input.comment_id}::uuid)
+        RETURNING id, comment_id, created_at, author, body
+      ` as ReplyRecord[];
+      return rows[0] ? toReplyItem(rows[0]) : null;
+    },
+
     async updateStatus(id, status): Promise<CommentItem | null> {
       await ensureTable();
       const rows = await sql`
@@ -255,7 +352,7 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
         WHERE id = ${id}::uuid
         RETURNING id, created_at, updated_at, author, body, screen, tpl, x, y, flow, plan, status
       ` as CommentRecord[];
-      return rows[0] ? toCommentItem(rows[0]) : null;
+      return rows[0] ? (await attachReplies([toCommentItem(rows[0])]))[0] : null;
     },
 
     async deleteTokenHash(id): Promise<string | null | undefined> {

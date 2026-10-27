@@ -25,7 +25,7 @@ export function evaluateGeneratedData(names: string[]) {
   const dataDirectory = path.join(root, 'src/data');
   const declarations = new Map<string, string>();
   for (const file of readdirSync(dataDirectory).filter(name => name.endsWith('.ts') && name !== 'index.ts' && name !== 'types.ts')) {
-    const module = readFileSync(path.join(dataDirectory, file), 'utf8');
+    const module = readFileSync(path.join(dataDirectory, file), 'utf8').replace(/\r\n/g, '\n');
     const starts = [...module.matchAll(/^export const ([A-Za-z_$][\w$]*)/gm)];
     starts.forEach((match, index) => {
       const end = starts[index + 1]?.index ?? module.length;

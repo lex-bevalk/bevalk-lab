@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ChangeEvent, type SelectHTMLAttributes } from 'react';
-import { ArrowUpRight, ChevronDown, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { ArrowUpRight, Trash2 } from 'lucide-react';
 import {
   COMMENT_STATUSES,
   COMMENT_STATUS_LABELS,
@@ -8,6 +8,8 @@ import {
   type CommentStatus
 } from '../comments/constants';
 import { deleteTokenFor, forgetDeleteToken } from '../comments/deleteTokens';
+import NativeSelect from '../comments/NativeSelect';
+import Replies, { type ReplyItem } from '../comments/Replies';
 
 interface CommentItem {
   id: string;
@@ -22,6 +24,7 @@ interface CommentItem {
   flow: string | null;
   plan: string | null;
   status: CommentStatus;
+  replies: ReplyItem[];
 }
 
 interface CommentsResponse {
@@ -64,29 +67,20 @@ function StatusBadge({ status }: { status: CommentStatus }) {
   return <span className={`comments-status comments-status--${status}`}>{COMMENT_STATUS_LABELS[status]}</span>;
 }
 
-function NativeSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
-  return (
-    <span className="comments-select">
-      <select {...props} className="odin-select__trigger">
-        {props.children}
-      </select>
-      <ChevronDown className="odin-select__chev" size={16} aria-hidden="true" />
-    </span>
-  );
-}
-
 function CommentCard({
   item,
   owner,
   canDelete,
   onStatusChange,
-  onDelete
+  onDelete,
+  onReplied
 }: {
   item: CommentItem;
   owner: boolean;
   canDelete: boolean;
   onStatusChange: (id: string, status: CommentStatus) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  onReplied: (commentId: string, reply: ReplyItem) => void;
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -141,6 +135,11 @@ function CommentCard({
         <div><dt>Plan</dt><dd>{item.plan ? COMMENT_PLAN_LABELS[item.plan] ?? item.plan : '—'}</dd></div>
       </dl>
       <p className="comments-card__body">{item.body}</p>
+      <Replies
+        commentId={item.id}
+        replies={item.replies ?? []}
+        onReplied={reply => onReplied(item.id, reply)}
+      />
       {error && <p className="comments-card__error" role="alert">{error}</p>}
       <footer className="comments-card__footer">
         {confirmingDelete ? (
@@ -229,7 +228,7 @@ export default function CommentsPage() {
       })
       .then(result => {
         setRole(result.role);
-        setItems(result.items);
+        setItems(result.items.map(item => ({ ...item, replies: item.replies ?? [] })));
       })
       .catch(reason => {
         if (reason instanceof DOMException && reason.name === 'AbortError') return;
@@ -251,6 +250,12 @@ export default function CommentsPage() {
     if (!response.ok) throw new Error('Status update failed.');
     const result = await response.json() as CommentItem;
     setItems(current => current.map(item => item.id === id ? result : item));
+  }
+
+  function onReplied(commentId: string, reply: ReplyItem) {
+    setItems(current => current.map(item => item.id === commentId
+      ? { ...item, replies: [...(item.replies ?? []), reply] }
+      : item));
   }
 
   async function deleteComment(id: string) {
@@ -315,6 +320,7 @@ export default function CommentsPage() {
                 canDelete={role === 'owner' || Boolean(deleteTokenFor(item.id))}
                 onStatusChange={updateStatus}
                 onDelete={deleteComment}
+                onReplied={onReplied}
               />
             ))}
           </div>

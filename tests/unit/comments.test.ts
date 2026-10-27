@@ -10,8 +10,10 @@ import {
   validateCommentDelete,
   validateCommentFilters,
   validateCommentStatus,
+  validateReplyCreate,
   equalHex,
-  type CommentRecord
+  type CommentRecord,
+  type ReplyRecord
 } from '../../server/comments';
 import { MemoryRateLimitStore, type RateLimitStore } from '../../server/rate-limit';
 import { SESSION_COOKIE, signSession } from '../../server/session';
@@ -76,12 +78,31 @@ function testCommentRow(overrides: Partial<CommentRecord> = {}): CommentRecord {
   };
 }
 
-function sqlHarness() {
+function testReplyRow(overrides: Partial<ReplyRecord> = {}): ReplyRecord {
+  return {
+    id: 'af9f8ad0-15ec-4ed3-a748-c50c9a1d7854',
+    comment_id: testCommentRow().id,
+    created_at: new Date(NOW + 2000),
+    author: 'Luis',
+    body: 'De acuerdo',
+    ...overrides
+  };
+}
+
+function sqlHarness(options: { commentRows?: CommentRecord[]; replyRows?: ReplyRecord[] } = {}) {
   const calls: SqlCall[] = [];
   const sql: NeonSqlClient = async (strings, ...values) => {
     const query = strings.join('?');
     calls.push({ query, values });
-    if (query.includes('ALTER TABLE comments')) return [];
+    if (query.includes('ALTER TABLE comments') || query.includes('CREATE TABLE IF NOT EXISTS comment_replies') || query.includes('CREATE INDEX IF NOT EXISTS comment_replies')) return [];
+    if (query.includes('INSERT INTO comment_replies')) {
+      if (values[0] === MISSING_ID) return [];
+      return [testReplyRow({ comment_id: String(values[0]), author: String(values[1]), body: String(values[2]) })];
+    }
+    if (query.includes('FROM comment_replies')) {
+      const ids = values[0] as string[];
+      return (options.replyRows ?? []).filter(reply => ids.includes(reply.comment_id));
+    }
     if (query.includes('INSERT INTO comments')) return [testCommentRow({ delete_token_hash: String(values[8]) })];
     if (query.includes('UPDATE comments')) {
       if (values[1] === MISSING_ID) return [];
@@ -92,7 +113,7 @@ function sqlHarness() {
       return [{ delete_token_hash: DELETE_TOKEN_HASH }];
     }
     if (query.includes('DELETE FROM comments')) return values[0] === MISSING_ID ? [] : [{ id: values[0] as string }];
-    if (query.includes('SELECT id, created_at')) return [testCommentRow()];
+    if (query.includes('SELECT id, created_at')) return options.commentRows ?? [testCommentRow()];
     return [];
   };
   return { calls, sql };
@@ -106,8 +127,10 @@ function createHarnessApi(options: {
   role?: 'team' | 'owner';
   sql?: NeonSqlClient;
   rateLimitStore?: RateLimitStore;
+  commentRows?: CommentRecord[];
+  replyRows?: ReplyRecord[];
 } = {}) {
-  const { sql, calls } = sqlHarness();
+  const { sql, calls } = sqlHarness({ commentRows: options.commentRows, replyRows: options.replyRows });
   const commentsSql = options.sql ?? sql;
   const rateLimitStore = options.rateLimitStore ?? new MemoryRateLimitStore();
   const api = createCommentsApi({
@@ -178,6 +201,17 @@ describe('comment validation', () => {
     [{ ...VALID_INPUT, plan: 'enterprise' }, 'plan']
   ])('rejects invalid field %s', (input, field) => {
     expect(validateCommentCreate(input)).toEqual({ ok: false, field });
+  });
+
+  it('validates reply ids, names, and bodies with the comment text rules', () => {
+    expect(validateReplyCreate({ comment_id: testCommentRow().id, author: ' Luis ', body: ' De acuerdo ' })).toEqual({
+      ok: true,
+      value: { comment_id: testCommentRow().id, author: 'Luis', body: 'De acuerdo' }
+    });
+    expect(validateReplyCreate({ comment_id: 'bad-id', author: 'Luis', body: 'Ok' })).toEqual({ ok: false, field: 'comment_id' });
+    expect(validateReplyCreate({ comment_id: testCommentRow().id, author: 'L'.repeat(61), body: 'Ok' })).toEqual({ ok: false, field: 'author' });
+    expect(validateReplyCreate({ comment_id: testCommentRow().id, author: 'Luis', body: 'B'.repeat(2001) })).toEqual({ ok: false, field: 'body' });
+    expect(validateReplyCreate({ comment_id: testCommentRow().id, author: 'Luis', body: 'mal\u0001 texto' })).toEqual({ ok: false, field: 'body' });
   });
 
   it('keeps its screen whitelist aligned with generated data-screen-label values', () => {
@@ -273,6 +307,67 @@ describe('comments API authorization and writes', () => {
     expect(await response.json()).toMatchObject({ id: testCommentRow().id, author: 'Ana', status: 'todo' });
     expect(calls.some(call => call.query.includes('INSERT INTO comments'))).toBe(true);
     expect(response.headers.get('cache-control')).toBe('no-store');
+  });
+
+  it.each(['team', 'owner'] as const)('allows %s to create a reply without returning a delete token', async role => {
+    const { api, cookie, calls } = createHarnessApi({ role });
+    const response = await api.POST(request('POST', {
+      cookie: await cookie,
+      json: { comment_id: testCommentRow().id, author: ' Luis ', body: ' De acuerdo ' },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body).toMatchObject({
+      id: testReplyRow().id,
+      comment_id: testCommentRow().id,
+      author: 'Luis',
+      body: 'De acuerdo'
+    });
+    expect(body).not.toHaveProperty('delete_token');
+    expect(calls.some(call => call.query.includes('INSERT INTO comment_replies'))).toBe(true);
+    expect(calls.some(call => call.query.includes('INSERT INTO comments'))).toBe(false);
+  });
+
+  it('treats comment_id payloads as replies, returns 404 for a missing parent, and rate-limits before reply SQL', async () => {
+    const input = { comment_id: testCommentRow().id, author: 'Ana', body: 'Respuesta', screen: 'Inicio', x: 0.2, y: 0.3 };
+    const normal = createHarnessApi();
+    const created = await normal.api.POST(request('POST', {
+      cookie: await normal.cookie,
+      json: input,
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(created.status).toBe(201);
+    expect(await created.json()).not.toHaveProperty('delete_token');
+    expect(normal.calls.some(call => call.query.includes('INSERT INTO comment_replies'))).toBe(true);
+    expect(normal.calls.some(call => call.query.includes('INSERT INTO comments'))).toBe(false);
+
+    const missing = createHarnessApi();
+    const notFound = await missing.api.POST(request('POST', {
+      cookie: await missing.cookie,
+      json: { comment_id: MISSING_ID, author: 'Ana', body: 'Respuesta' },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(notFound.status).toBe(404);
+    expect(await notFound.json()).toEqual({ error: 'not_found' });
+
+    const exhausted: RateLimitStore = {
+      get: vi.fn(async () => ({ hits: COMMENT_WRITE_LIMIT, resetAt: NOW + 60_000 })),
+      increment: vi.fn(async () => ({ hits: COMMENT_WRITE_LIMIT + 1, resetAt: NOW + 60_000 })),
+      clear: vi.fn(async () => undefined)
+    };
+    const limited = createHarnessApi({ rateLimitStore: exhausted });
+    const rateLimited = await limited.api.POST(request('POST', {
+      cookie: await limited.cookie,
+      json: { comment_id: testCommentRow().id, author: 'Ana', body: 'Respuesta' },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(rateLimited.status).toBe(429);
+    expect(limited.calls.some(call => call.query.includes('INSERT INTO comment_replies'))).toBe(false);
   });
 
   it('allows only an owner to update status and returns 404 for an unknown id', async () => {
@@ -404,15 +499,26 @@ describe('comments API authorization and writes', () => {
 });
 
 describe('comments API SQL', () => {
-  it('lists with parameterized optional filters and a 500-item limit', async () => {
+  it('creates the replies table after the comment alteration and adds its index', async () => {
     const { api, cookie, calls } = createHarnessApi();
+    expect((await api.GET(request('GET', { cookie: await cookie }))).status).toBe(200);
+    const table = calls.find(call => call.query.includes('CREATE TABLE IF NOT EXISTS comment_replies'));
+    const index = calls.find(call => call.query.includes('CREATE INDEX IF NOT EXISTS comment_replies_comment_id_idx'));
+    expect(table?.query).toContain('references comments(id) on delete cascade');
+    expect(calls.findIndex(call => call.query.includes('ALTER TABLE comments'))).toBeLessThan(calls.findIndex(call => call.query.includes('CREATE TABLE IF NOT EXISTS comment_replies')));
+    expect(index?.query).toContain('ON comment_replies (comment_id, created_at)');
+  });
+
+  it('lists with parameterized optional filters and a 500-item limit', async () => {
+    const reply = testReplyRow();
+    const { api, cookie, calls } = createHarnessApi({ replyRows: [reply] });
     const response = await api.GET(request('GET', {
       cookie: await cookie,
       url: `${BASE_URL}?screen=Inicio&status=todo&author=Ana`
     }));
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body).toMatchObject({ role: 'team', items: [{ author: 'Ana' }] });
+    expect(body).toMatchObject({ role: 'team', items: [{ author: 'Ana', replies: [{ id: reply.id, body: reply.body }] }] });
     const select = calls.find(call => call.query.includes('SELECT id, created_at'));
     expect(select).toBeDefined();
     expect(select?.query).toContain('ORDER BY created_at DESC');
@@ -427,5 +533,28 @@ describe('comments API SQL', () => {
     expect(select?.values).toContain('todo');
     expect(select?.values).toContain('Ana');
     expect(JSON.stringify(body)).not.toContain('delete_token_hash');
+    const replyQuery = calls.filter(call => call.query.includes('FROM comment_replies'));
+    expect(replyQuery).toHaveLength(1);
+    expect(replyQuery[0].query).toContain('ANY(?::uuid[])');
+    expect(replyQuery[0].query).not.toContain(testCommentRow().id);
+    expect(replyQuery[0].values[0]).toEqual([testCommentRow().id]);
+  });
+
+  it('does not query replies for an empty comment list and attaches replies to PATCH results', async () => {
+    const empty = createHarnessApi({ commentRows: [] });
+    const emptyList = await empty.api.GET(request('GET', { cookie: await empty.cookie }));
+    expect((await emptyList.json()).items).toEqual([]);
+    expect(empty.calls.some(call => call.query.includes('FROM comment_replies'))).toBe(false);
+
+    const reply = testReplyRow();
+    const owner = createHarnessApi({ role: 'owner', replyRows: [reply] });
+    const updated = await owner.api.PATCH(request('PATCH', {
+      cookie: await owner.cookie,
+      json: { id: testCommentRow().id, status: 'done' },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(updated.status).toBe(200);
+    expect(await updated.json()).toMatchObject({ status: 'done', replies: [{ id: reply.id, comment_id: testCommentRow().id }] });
   });
 });

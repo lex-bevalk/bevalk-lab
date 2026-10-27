@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
-import { ArrowUpRight, MessageSquarePlus, X } from 'lucide-react';
-import { COMMENT_STATUS_LABELS, type CommentStatus } from '../comments/constants';
-import { rememberDeleteToken } from '../comments/deleteTokens';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { ArrowUpRight, MessageSquarePlus, Trash2, X } from 'lucide-react';
+import { COMMENT_STATUSES, COMMENT_STATUS_LABELS, type CommentStatus } from '../comments/constants';
+import { deleteTokenFor, forgetDeleteToken, rememberDeleteToken } from '../comments/deleteTokens';
+import NativeSelect from '../comments/NativeSelect';
+import Replies, { type ReplyItem } from '../comments/Replies';
+import { readStoredName, writeStoredName } from '../comments/authorName';
 
 interface ReviewComment {
   id: string;
@@ -16,6 +19,7 @@ interface ReviewComment {
   flow: string | null;
   plan: string | null;
   status: CommentStatus;
+  replies: ReplyItem[];
 }
 
 interface ReviewTarget {
@@ -56,7 +60,6 @@ interface PendingPin {
   plan: string | null;
 }
 
-const NAME_STORAGE_KEY = 'bevalk-comment-author';
 const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   day: 'numeric',
   month: 'short',
@@ -199,14 +202,6 @@ function useVisibleScreen(): VisibleScreen | null {
   return target;
 }
 
-function readStoredName(): string {
-  try { return window.localStorage.getItem(NAME_STORAGE_KEY) ?? ''; } catch { return ''; }
-}
-
-function writeStoredName(name: string): void {
-  try { window.localStorage.setItem(NAME_STORAGE_KEY, name); } catch { /* Storage is optional in private browsing. */ }
-}
-
 function errorMessage(status: number): string {
   if (status === 401) return 'Tu sesión ha caducado. Vuelve a entrar.';
   if (status === 429) return 'Has enviado muchos comentarios seguidos. Espera unos minutos.';
@@ -224,15 +219,19 @@ function commentHref(item: ReviewComment): string {
 function popoverPosition(item: ReviewComment, target: ReviewTarget): CSSProperties {
   const anchorX = target.left + item.x * target.width;
   const anchorY = target.top + item.y * target.height;
+  const maxHeight = Math.max(160, Math.min(520, window.innerHeight - 24));
   return {
-    left: Math.max(12, Math.min(anchorX + 18, window.innerWidth - 336)),
-    top: Math.max(12, Math.min(anchorY + 18, window.innerHeight - 240))
+    left: Math.max(12, Math.min(anchorX + 18, window.innerWidth - 332)),
+    top: Math.max(12, Math.min(anchorY + 18, window.innerHeight - maxHeight - 12)),
+    maxHeight
   };
 }
 
 export default function Review() {
   const target = useVisibleScreen();
   const toggleRef = useRef<HTMLButtonElement>(null);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const [mode, setMode] = useState(false);
@@ -243,7 +242,14 @@ export default function Review() {
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
-  const [activeComment, setActiveComment] = useState<ReviewComment | null>(null);
+  const [role, setRole] = useState<'team' | 'owner'>('team');
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const activeComment = comments.find(comment => comment.id === activeId) ?? null;
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [popoverError, setPopoverError] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [successNotice, setSuccessNotice] = useState('');
   const [highlightId, setHighlightId] = useState(() => new URLSearchParams(window.location.search).get('c'));
   const toggleAnchored = Boolean(
     target
@@ -264,7 +270,10 @@ export default function Review() {
         if (!response.ok) throw new Error('Comments could not be loaded.');
         return response.json() as Promise<{ role: 'team' | 'owner'; items: ReviewComment[] }>;
       })
-      .then(result => setComments(result.items))
+      .then(result => {
+        setRole(result.role);
+        setComments(result.items.map(item => ({ ...item, replies: item.replies ?? [] })));
+      })
       .catch(reason => {
         if (!(reason instanceof DOMException && reason.name === 'AbortError')) setComments([]);
       });
@@ -304,17 +313,22 @@ export default function Review() {
 
   useEffect(() => {
     const onEscape = (event: globalThis.KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (!dialogOpen && !mode && !activeComment) return;
+      if (event.key !== 'Escape'
+        || (event.target instanceof HTMLTextAreaElement && event.target.closest('.replies__form') && event.target.value)) return;
+      if (!dialogOpen && !mode && !activeId) return;
       event.preventDefault();
       event.stopPropagation();
       if (dialogOpen) closeDialog();
-      else if (activeComment) setActiveComment(null);
+      else if (activeId) setActiveId(null);
       else setMode(false);
     };
     document.addEventListener('keydown', onEscape);
     return () => document.removeEventListener('keydown', onEscape);
-  }, [activeComment, closeDialog, dialogOpen, mode]);
+  }, [activeId, closeDialog, dialogOpen, mode]);
+
+  useEffect(() => {
+    if (confirmingDelete) cancelDeleteRef.current?.focus();
+  }, [confirmingDelete]);
 
   function startComment(clientX: number, clientY: number) {
     if (!target) return;
@@ -366,6 +380,63 @@ export default function Review() {
     }
   }
 
+  async function changeStatus(event: ChangeEvent<HTMLSelectElement>) {
+    if (!activeComment || statusSaving) return;
+    const id = activeComment.id;
+    const status = event.currentTarget.value as CommentStatus;
+    setStatusSaving(true);
+    setPopoverError('');
+    try {
+      const response = await fetch('/api/comments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status })
+      });
+      if (!response.ok) {
+        setPopoverError('No se pudo actualizar el estado. Inténtalo de nuevo.');
+        return;
+      }
+      const updated = await response.json() as ReviewComment;
+      setComments(current => current.map(comment => comment.id === id ? { ...updated, replies: updated.replies ?? comment.replies ?? [] } : comment));
+    } catch {
+      setPopoverError('No se pudo actualizar el estado. Inténtalo de nuevo.');
+    } finally {
+      setStatusSaving(false);
+    }
+  }
+
+  async function deleteActiveComment() {
+    if (!activeComment || deleting) return;
+    const id = activeComment.id;
+    const token = deleteTokenFor(id);
+    setDeleting(true);
+    setPopoverError('');
+    try {
+      const response = await fetch('/api/comments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, ...(token ? { token } : {}) })
+      });
+      if (response.status !== 200 && response.status !== 404) {
+        if (response.status === 429) setPopoverError('Has intentado borrar demasiados comentarios seguidos. Espera unos minutos.');
+        else if (response.status === 403) setPopoverError('No tienes permiso para eliminar este comentario.');
+        else setPopoverError('No se pudo eliminar este comentario. Inténtalo de nuevo.');
+        return;
+      }
+      setComments(current => current.filter(comment => comment.id !== id));
+      forgetDeleteToken(id);
+      setHighlightId(current => current === id ? null : current);
+      setActiveId(null);
+      setConfirmingDelete(false);
+      setSuccessNotice('Comentario eliminado');
+      window.requestAnimationFrame(() => toggleRef.current?.focus());
+    } catch {
+      setPopoverError('No se pudo eliminar este comentario. Inténtalo de nuevo.');
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   function onDialogKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     if (event.key !== 'Tab') return;
     const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
@@ -396,7 +467,7 @@ export default function Review() {
         } : undefined}
         onClick={() => {
           setMode(current => !current);
-          setActiveComment(null);
+          setActiveId(null);
         }}
       >
         {mode ? <X aria-hidden="true" size={18} /> : <MessageSquarePlus aria-hidden="true" size={18} />}
@@ -433,11 +504,13 @@ export default function Review() {
               key={comment.id}
               type="button"
               aria-label={`Comentario ${index + 1} en ${target.label}: ${comment.author}`}
-              aria-pressed={activeComment?.id === comment.id}
+              aria-pressed={activeId === comment.id}
               data-testid="review-pin"
               style={{ left: target.left + comment.x * target.width, top: target.top + comment.y * target.height }}
               onClick={() => {
-                setActiveComment(comment);
+                setActiveId(comment.id);
+                setPopoverError('');
+                setConfirmingDelete(false);
                 setHighlightId(comment.id);
               }}
             >
@@ -449,16 +522,76 @@ export default function Review() {
 
       {activeComment && target && (
         <aside className="review-popover odin-popover" aria-label={`Comentario de ${activeComment.author}`} style={popoverPosition(activeComment, target)}>
-          <button className="review-popover__close" type="button" aria-label="Cerrar comentario" onClick={() => setActiveComment(null)}>
+          <button className="review-popover__close" type="button" aria-label="Cerrar comentario" onClick={() => setActiveId(null)}>
             <X aria-hidden="true" size={16} />
           </button>
           <p className="review-popover__author">{activeComment.author}</p>
           <time className="review-popover__date" dateTime={activeComment.created_at}>{dateFormatter.format(new Date(activeComment.created_at))}</time>
           <p className="review-popover__body">{activeComment.body}</p>
-          <StatusLine status={activeComment.status} />
-          <a className="review-popover__link" href={commentHref(activeComment)}>Ver todos <ArrowUpRight aria-hidden="true" size={15} /></a>
+          <div className="review-popover__state">
+            {role === 'owner' ? (
+              <NativeSelect
+                aria-label={`Estado de ${activeComment.author}`}
+                className={`review-popover__status review-popover__status--${activeComment.status}`}
+                wrapperClassName="review-popover__status-control"
+                disabled={statusSaving}
+                value={activeComment.status}
+                onChange={changeStatus}
+              >
+                {COMMENT_STATUSES.map(status => <option key={status} value={status}>{COMMENT_STATUS_LABELS[status]}</option>)}
+              </NativeSelect>
+            ) : <StatusLine status={activeComment.status} />}
+          </div>
+          {popoverError && <p className="review-popover__error" role="alert">{popoverError}</p>}
+          <Replies
+            key={activeComment.id}
+            commentId={activeComment.id}
+            replies={activeComment.replies ?? []}
+            onReplied={reply => setComments(current => current.map(comment => comment.id === reply.comment_id
+              ? { ...comment, replies: [...(comment.replies ?? []), reply] }
+              : comment))}
+          />
+          <div className="review-popover__actions">
+            {role === 'owner' || deleteTokenFor(activeComment.id) ? (
+              confirmingDelete ? (
+                <div className="review-popover__delete-confirmation">
+                  <p>¿Eliminar este comentario?</p>
+                  <button className="odin-btn odin-btn--destructive odin-btn--sm" type="button" disabled={deleting} onClick={deleteActiveComment}>Sí, eliminar</button>
+                  <button
+                    ref={cancelDeleteRef}
+                    className="odin-btn odin-btn--outline odin-btn--sm"
+                    type="button"
+                    disabled={deleting}
+                    onClick={() => {
+                      setConfirmingDelete(false);
+                      window.requestAnimationFrame(() => deleteButtonRef.current?.focus());
+                    }}
+                  >No</button>
+                </div>
+              ) : (
+                <button
+                  ref={deleteButtonRef}
+                  className="odin-btn odin-btn--outline odin-btn--sm"
+                  type="button"
+                  onClick={() => {
+                    setPopoverError('');
+                    setSuccessNotice('');
+                    setConfirmingDelete(true);
+                  }}
+                >
+                  <Trash2 aria-hidden="true" size={16} />
+                  Eliminar
+                </button>
+              )
+            ) : <span />}
+            <a className="odin-btn odin-btn--outline odin-btn--sm review-popover__all" href={commentHref(activeComment)}>
+              Ver todos <ArrowUpRight aria-hidden="true" size={15} />
+            </a>
+          </div>
         </aside>
       )}
+
+      <span className="review-sr-only" role="status">{successNotice}</span>
 
       {dialogOpen && (
         <div className="review-modal-layer">

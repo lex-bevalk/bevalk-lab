@@ -4,6 +4,12 @@ Cambios relevantes del BeValk Product Experience Lab. Formato basado en [Keep a 
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-10-27
+
+### Added
+- Respuestas a comentarios desde el popover de `/review` y desde `/comments`, para owner y equipo.
+- Cambiar el estado y eliminar un comentario desde su propio popover en `/review`.
+
 ## [1.4.0] - 2026-10-27
 
 ### Added
