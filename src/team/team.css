@@ -273,6 +273,30 @@ body {
   font-weight: var(--font-medium);
 }
 
+.comments-select {
+  position: relative;
+  display: block;
+  color: var(--color-text-body);
+}
+
+.comments-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+}
+
+.comments-select .odin-select__chev {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.comments-select select:disabled + .odin-select__chev {
+  opacity: var(--state-disabled-opacity);
+}
+
 .comments-filters select,
 .comments-filters input {
   width: 100%;
@@ -340,11 +364,16 @@ body {
   font-size: var(--text-xs);
 }
 
+.comments-status-control .comments-select {
+  display: inline-block;
+}
+
 .comments-status-control .odin-select__trigger {
   width: auto;
   min-width: 132px;
   height: 36px;
   padding: 6px 10px;
+  padding-right: 36px;
   font-size: var(--text-xs);
 }
 
@@ -386,6 +415,9 @@ body {
 }
 
 .comments-card__footer { justify-content: flex-end; margin-top: var(--space-4); }
+.comments-card__delete-confirmation { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); }
+.comments-card__delete-confirmation p { margin: 0 var(--space-2) 0 0; color: var(--color-text-body); font-size: var(--text-sm); }
+.comments-card__delete-confirmation .odin-btn--destructive { color: var(--color-background); }
 .comments-card__error { margin: var(--space-3) 0 0; color: var(--color-destructive); font-size: var(--text-sm); }
 .comments-notice { margin: var(--space-6) 0; color: var(--color-text-body); }
 

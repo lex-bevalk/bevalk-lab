@@ -4,6 +4,17 @@ Cambios relevantes del BeValk Product Experience Lab. Formato basado en [Keep a 
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-10-27
+
+### Added
+- Borrar comentarios: el autor los suyos desde su navegador y el owner cualquiera.
+
+### Changed
+- El botón Comentar está bajo el móvil del prototipo.
+
+### Fixed
+- Los selectores de `/comments` muestran el chevron con su margen.
+
 ## [1.3.0] - 2026-10-27
 
 ### Added

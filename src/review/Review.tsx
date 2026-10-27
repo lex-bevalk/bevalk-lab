@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { ArrowUpRight, MessageSquarePlus, X } from 'lucide-react';
 import { COMMENT_STATUS_LABELS, type CommentStatus } from '../comments/constants';
+import { rememberDeleteToken } from '../comments/deleteTokens';
 
 interface ReviewComment {
   id: string;
@@ -29,6 +30,14 @@ interface ReviewTarget {
   hitTop: number;
   hitWidth: number;
   hitHeight: number;
+}
+
+interface VisibleScreen extends ReviewTarget {
+  phoneLeft: number;
+  phoneWidth: number;
+  phoneBottom: number;
+  viewportWidth: number;
+  viewportHeight: number;
 }
 
 interface LabBridge {
@@ -86,8 +95,8 @@ function isVisible(element: HTMLElement, phoneRect: DOMRect): boolean {
     && rect.top < phoneRect.bottom;
 }
 
-function useVisibleScreen(): ReviewTarget | null {
-  const [target, setTarget] = useState<ReviewTarget | null>(null);
+function useVisibleScreen(): VisibleScreen | null {
+  const [target, setTarget] = useState<VisibleScreen | null>(null);
 
   useEffect(() => {
     const root = document.getElementById('root') ?? document.body;
@@ -121,7 +130,7 @@ function useVisibleScreen(): ReviewTarget | null {
       const hitTop = Math.max(rect.top, phoneRect.top);
       const hitRight = Math.min(rect.right, phoneRect.right);
       const hitBottom = Math.min(rect.bottom, phoneRect.bottom);
-      const next: ReviewTarget = {
+      const next: VisibleScreen = {
         element,
         label: element.getAttribute('data-screen-label') ?? '',
         tpl: element.getAttribute('data-dc-tpl'),
@@ -132,7 +141,12 @@ function useVisibleScreen(): ReviewTarget | null {
         hitLeft,
         hitTop,
         hitWidth: Math.max(0, hitRight - hitLeft),
-        hitHeight: Math.max(0, hitBottom - hitTop)
+        hitHeight: Math.max(0, hitBottom - hitTop),
+        phoneLeft: phoneRect.left,
+        phoneWidth: phoneRect.width,
+        phoneBottom: phoneRect.bottom,
+        viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight
       };
 
       setTarget(previous => {
@@ -143,7 +157,12 @@ function useVisibleScreen(): ReviewTarget | null {
           && Math.abs(previous.left - next.left) < 0.25
           && Math.abs(previous.top - next.top) < 0.25
           && Math.abs(previous.width - next.width) < 0.25
-          && Math.abs(previous.height - next.height) < 0.25) return previous;
+          && Math.abs(previous.height - next.height) < 0.25
+          && Math.abs(previous.phoneLeft - next.phoneLeft) < 0.25
+          && Math.abs(previous.phoneWidth - next.phoneWidth) < 0.25
+          && Math.abs(previous.phoneBottom - next.phoneBottom) < 0.25
+          && previous.viewportWidth === next.viewportWidth
+          && previous.viewportHeight === next.viewportHeight) return previous;
         return next;
       });
 
@@ -226,6 +245,12 @@ export default function Review() {
   const [error, setError] = useState('');
   const [activeComment, setActiveComment] = useState<ReviewComment | null>(null);
   const [highlightId, setHighlightId] = useState(() => new URLSearchParams(window.location.search).get('c'));
+  const toggleAnchored = Boolean(
+    target
+    && target.viewportWidth >= 1280
+    && target.phoneWidth > 0
+    && target.phoneBottom + 56 <= target.viewportHeight
+  );
 
   const commentsForScreen = useMemo(
     () => target ? comments.filter(comment => comment.screen === target.label) : [],
@@ -328,9 +353,10 @@ export default function Review() {
         setError(errorMessage(response.status));
         return;
       }
-      const result = await response.json() as ReviewComment;
-      setComments(current => [result, ...current]);
-      setHighlightId(result.id);
+      const { delete_token, ...item } = await response.json() as ReviewComment & { delete_token: string };
+      rememberDeleteToken(item.id, delete_token);
+      setComments(current => [item, ...current]);
+      setHighlightId(item.id);
       setPendingPin(null);
       closeDialog();
     } catch {
@@ -361,9 +387,13 @@ export default function Review() {
     <>
       <button
         ref={toggleRef}
-        className="review-toggle odin-btn odin-btn--primary"
+        className={`review-toggle odin-btn odin-btn--primary${toggleAnchored ? ' review-toggle--anchored' : ''}`}
         type="button"
         aria-pressed={mode}
+        style={toggleAnchored && target ? {
+          left: target.phoneLeft + target.phoneWidth / 2,
+          top: target.phoneBottom + 8
+        } : undefined}
         onClick={() => {
           setMode(current => !current);
           setActiveComment(null);
