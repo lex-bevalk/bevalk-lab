@@ -61,6 +61,13 @@ logic = replaceExactOnce(
   '? {visible:false, target: optTarget, title: s.sheet.title || "", body:"", hasList:false',
   'sheet opts → dropdown Odin'
 );
+// Divergencia F8: el botón de eliminar cuenta usa el rojo destructivo de Odin para cumplir AA.
+logic = replaceExactOnce(
+  logic,
+  'primaryBg: footer && footer.danger ? "#EF4444" : "var(--color-primary)",',
+  'primaryBg: footer && footer.danger ? "var(--color-destructive)" : "var(--color-primary)",',
+  'contraste del botón Eliminar cuenta'
+);
 for (const asset of manifest) {
   if (asset.type === 'image/png') logic = logic.replaceAll(`/_blob/${asset.id}`, `/assets/${asset.suggestedName}`);
 }
