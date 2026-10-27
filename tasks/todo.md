@@ -171,3 +171,12 @@ comprobación final contra https://bevalk-lab.vercel.app/ (requiere quitar Verce
     sin coste según https://vercel.com/docs/deployment-protection).
   - Tras el cambio: `bevalk-lab.vercel.app` (página y assets), URL del despliegue, `bevalk-lab-bevalk.vercel.app` y
     `bevalk-lab-git-main-bevalk.vercel.app` → 302 a `vercel.com/sso-api`.
+
+## Resultado plan de equipo (27 oct 2026)
+- Acceso: el usuario pasó Deployment Protection a Standard; producción pública tras el passwall propio (PR #5). Sin sesión:
+  `/`, `/changelog`, `/review`, `/review.html`, `/comments` → 302 a `/login?next=`; `/api/*` → 401; `/login` → 200. Los Preview siguen tras SSO de Vercel.
+- v1.1.0 `/changelog` (PR #6) · v1.2.0 selectores → dropdown de Odin (PR #4, aceptado por el usuario en producción) ·
+  v1.2.1 "Eliminar cuenta" con `--color-destructive`, contraste 4,83:1 (PR #8) · v1.3.0 comentarios en `/review` y estados en `/comments` (PR #7, merge efc54b3).
+- CI final PR #7 (run 40487448963): visual 1.470/1.470 a 0 px, visual propio 10/10, e2e:select 5/5, e2e:review verde; 163 tests unitarios.
+- Seguridad comentarios: sin hallazgos CRITICAL/HIGH/MEDIUM; 4 LOW aceptados (autor de texto libre, sin tope global de filas, DDL en runtime, `tpl`/`flow` sin lista blanca).
+- Pendiente del usuario: prueba real con las dos contraseñas (equipo crea comentario sin poder cambiar estado; owner cambia estado).

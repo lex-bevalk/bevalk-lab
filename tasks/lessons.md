@@ -8,3 +8,9 @@
 - Vercel Authentication en `all_except_custom_domains` NO protege el alias de producción `<proyecto>.vercel.app`: responde 200 público. Comprobar la cobertura con `curl -sI` sobre cada alias, no deducirla de `ssoProtection`.
 - Routing Middleware de Vercel sin framework: el `package.json` raíz debe declarar `"type": "module"` o el `middleware.js` compilado falla al cargar (500 MIDDLEWARE_INVOCATION_FAILED). Vitest y `vite preview` no lo detectan: el middleware solo se prueba de verdad en un Preview de Vercel. Los scripts CommonJS quedan aislados con `tests/e2e/package.json` `{"type":"commonjs"}`.
 - Con `"type": "module"` en la raíz, `handoff/reference/serve.js` (CommonJS, solo lectura) se arranca con `node tools/serve-reference.cjs 8765` (`npm run serve:reference`), no directamente.
+- Playwright `page.route`: el último handler registrado gana. Para pasar al mock anterior usar `route.fallback()`; `route.continue()` va a la red y se salta los mocks.
+- Locators por nombre accesible hacen coincidencia por subcadena ("Comentar" casa con "Comentario 1"): usar `exact: true`.
+- Antes de afirmar con axe sobre un texto, contar los elementos que lo comparten (había dos "Eliminar cuenta"); y hacer control negativo con el valor antiguo para ver que el test falla.
+- Capas propias sobre el prototipo: el prototipo usa z-index hasta 60 (`.lab-c` 50 en móvil). Las capas de review van en `calc(var(--z-toast) + 100)` y se verifican con captura a 375 px, no solo en escritorio.
+- Si un control tiene texto visible, su nombre accesible debe contenerlo (WCAG 2.5.3): no poner `aria-label` distinto del texto.
+- El clasificador de auto mode bloquea `gh pr merge` aunque el usuario lo autorice en el chat: el merge lo lanza el usuario con `! gh pr merge ...` o con una regla en `/permissions`.
