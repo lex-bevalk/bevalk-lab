@@ -10,9 +10,12 @@ dist/
 tests/visual/baseline/
 tests/visual/current/
 tests/visual/diff/
+tests/visual/own/current/
+tests/visual/own/diff/
 tests/e2e/results/
 tools/area-review-results.json
 
+.vercel
 .env*
 .agents/
 .claude/

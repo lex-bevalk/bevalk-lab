@@ -12,3 +12,7 @@ No detecté diferencias de datos ajenas a la sustitución autorizada de rutas ni
 - [x] `handoff/reference/project/ds/odin/tokens/brand.css` referencia `../assets/brand/app-background.png`, pero ese archivo no existe en el material de referencia. Se conserva la URL relativa original; el build la deja externa para que no falle intentando copiar un asset ausente. Si se recibe el asset de marca, añadirlo en su ruta original y quitar la excepción de `vite.config.ts`.
   (26 oct, 22:00) Sin impacto: la clase `.odin-app-bg` no la usan ni el Lab ni la referencia. Se mantiene Odin tal cual; queda pendiente solo pedir el asset a diseño (usuario).
 - [x] El baseline de referencia registró 79 respuestas 404 de imágenes con rutas literales `{{…}}`; el porte no hace esas solicitudes. En 2.4 se confirma que son peticiones inválidas causadas por valores de plantilla sin resolver en la referencia: no entregan imágenes ni afectan el render. Se dejan omitidas; 1.470 comparaciones visuales dieron 0,00% de diferencia y la app no tuvo 404.
+
+## Selectores → dropdown (26 oct 2026)
+
+- [x] Contraste del botón destructivo de "Eliminar cuenta". (27 oct) El pie usa `var(--color-destructive)` (#DC2626, 4,83:1) y `tests/e2e/select.js` comprueba el contraste del botón con axe.

@@ -42,10 +42,32 @@ function replaceMethod(source, name, replacement) {
   return source.slice(0, body.start) + replacement + source.slice(body.end);
 }
 
+function replaceExactOnce(source, needle, replacement, label) {
+  const first = source.indexOf(needle);
+  if (first === -1 || first !== source.lastIndexOf(needle)) {
+    throw new Error(`La aguja exacta de ${label} no aparece una sola vez.`);
+  }
+  return source.slice(0, first) + replacement + source.slice(first + needle.length);
+}
+
 const html = await readFile(sourcePath, 'utf8');
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
 const lines = html.split(/\r?\n/);
 let logic = lines.slice(firstLine - 1, lastLine).join('\n').trimEnd();
+// Divergencia F5: el sheet opts solo aporta datos al dropdown y no debe montar el drawer.
+logic = replaceExactOnce(
+  logic,
+  '? {visible:true, title: s.sheet.title || "", body:"", hasList:false',
+  '? {visible:false, target: optTarget, title: s.sheet.title || "", body:"", hasList:false',
+  'sheet opts → dropdown Odin'
+);
+// Divergencia F8: el botón de eliminar cuenta usa el rojo destructivo de Odin para cumplir AA.
+logic = replaceExactOnce(
+  logic,
+  'primaryBg: footer && footer.danger ? "#EF4444" : "var(--color-primary)",',
+  'primaryBg: footer && footer.danger ? "var(--color-destructive)" : "var(--color-primary)",',
+  'contraste del botón Eliminar cuenta'
+);
 for (const asset of manifest) {
   if (asset.type === 'image/png') logic = logic.replaceAll(`/_blob/${asset.id}`, `/assets/${asset.suggestedName}`);
 }

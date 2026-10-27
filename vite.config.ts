@@ -7,7 +7,7 @@ export default defineConfig({
   build: {
     modulePreload: { polyfill: false },
     // Prototipo de una página con carga eager: permitir el chunk mayor resultante.
-    chunkSizeWarningLimit: 1198,
+    chunkSizeWarningLimit: 1201,
     rollupOptions: {
       external: id => id.includes('app-background.png'),
       input: {
