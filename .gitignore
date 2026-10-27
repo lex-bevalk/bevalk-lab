@@ -3,6 +3,7 @@
 /fonts/
 
 # Generated
+.tmp/
 node_modules/
 dist/
 .vercel/
@@ -19,3 +20,4 @@ tools/area-review-results.json
 .agents/
 .claude/
 skills-lock.json
+tests/visual/own/current/

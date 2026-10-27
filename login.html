@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#4900AC" />
+    <title>Acceso · BeValk Product Experience Lab</title>
+  </head>
+  <body>
+    <main class="login-layout">
+      <section class="brand-panel" aria-labelledby="brand-title">
+        <div class="brand-content">
+          <p class="eyebrow">BEVALK · PRODUCT EXPERIENCE LAB</p>
+          <h1 id="brand-title">El prototipo de BeValk, listo para revisar</h1>
+          <p class="brand-description">Navega los flujos de la app, compara Freemium y Premium y pon a prueba cada caso antes de construirlo.</p>
+          <ul class="value-list">
+            <li>
+              <span class="value-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></span>
+              <span>30 flujos en 8 grupos funcionales, de la primera apertura a Mi Familia</span>
+            </li>
+            <li>
+              <span class="value-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></span>
+              <span>Freemium y Premium, lado a lado</span>
+            </li>
+            <li>
+              <span class="value-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></span>
+              <span>62 casos extremos ejecutables</span>
+            </li>
+          </ul>
+        </div>
+        <p class="brand-footer">Acceso restringido al equipo de BeValk</p>
+      </section>
+
+      <section class="form-panel" aria-labelledby="form-title">
+        <div class="login-card">
+          <img class="brand-logo" src="/assets/77effca3e02e95da2e7019fa1e4a6fea.png" alt="BeValk" width="120" />
+          <h2 id="form-title">Introduce la contraseña</h2>
+          <p class="form-intro">Usa la contraseña que te ha compartido el equipo.</p>
+          <p class="form-error" id="login-error" role="alert" aria-live="assertive" hidden></p>
+          <form method="post" action="/login">
+            <input type="hidden" name="next" id="login-next" value="/" />
+            <label for="password">Contraseña</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required autofocus />
+            <button type="submit">Acceder</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/login/main.ts"></script>
+  </body>
+</html>
