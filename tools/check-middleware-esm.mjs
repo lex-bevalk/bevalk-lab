@@ -26,6 +26,8 @@ try {
 
   const sourceFiles = [
     path.join(repoRoot, 'middleware.ts'),
+    path.join(repoRoot, 'api', 'comments.ts'),
+    path.join(repoRoot, 'src', 'comments', 'constants.ts'),
     ...await findTypeScriptFiles(path.join(repoRoot, 'server'))
   ];
 
@@ -55,8 +57,12 @@ try {
   for (const key of environmentKeys) delete process.env[key];
 
   const { default: middleware, config } = await import(pathToFileURL(path.join(tempDir, 'middleware.js')));
+  const api = await import(pathToFileURL(path.join(tempDir, 'api', 'comments.js')));
   assert.equal(typeof middleware, 'function', 'middleware default export must be a function');
   assert.equal(config?.runtime, 'nodejs', 'middleware config.runtime must be nodejs');
+  assert.equal(typeof api.GET, 'function', 'api/comments.ts must export GET');
+  assert.equal(typeof api.POST, 'function', 'api/comments.ts must export POST');
+  assert.equal(typeof api.PATCH, 'function', 'api/comments.ts must export PATCH');
 
   const homeResponse = await middleware(new Request('https://example.test/'));
   assert.equal(homeResponse.status, 302, 'unauthenticated / must redirect with status 302');
@@ -67,7 +73,7 @@ try {
   assert.equal(loginResponse.status, 200, 'GET /login next() response must have status 200');
   assert.equal(loginResponse.headers.get('x-middleware-next'), '1', 'GET /login must return the next() response');
 
-  console.log('Middleware ESM check passed: imports, exports, redirect, and public login response verified.');
+  console.log('Middleware and comments API ESM check passed: relative imports, exports, redirect, and public login response verified.');
 } catch (error) {
   console.error(`Middleware ESM check failed: ${error?.stack ?? error}`);
   process.exitCode = 1;

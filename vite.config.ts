@@ -13,7 +13,8 @@ export default defineConfig({
       input: {
         index: resolve(process.cwd(), 'index.html'),
         login: resolve(process.cwd(), 'login.html'),
-        team: resolve(process.cwd(), 'team.html')
+        team: resolve(process.cwd(), 'team.html'),
+        review: resolve(process.cwd(), 'review.html')
       },
       output: {
         manualChunks: {

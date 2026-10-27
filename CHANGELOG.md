@@ -4,6 +4,11 @@ Cambios relevantes del BeValk Product Experience Lab. Formato basado en [Keep a 
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-27
+
+### Added
+- Comentarios con marcas en `/review` y gestión de estados en `/comments`.
+
 ## [1.1.0] - 2026-10-27
 
 ### Added
