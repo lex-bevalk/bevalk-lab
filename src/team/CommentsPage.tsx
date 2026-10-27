@@ -1,5 +1,5 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { useEffect, useRef, useState, type ChangeEvent, type SelectHTMLAttributes } from 'react';
+import { ArrowUpRight, ChevronDown, Trash2 } from 'lucide-react';
 import {
   COMMENT_STATUSES,
   COMMENT_STATUS_LABELS,
@@ -7,6 +7,7 @@ import {
   SCREEN_LABELS,
   type CommentStatus
 } from '../comments/constants';
+import { deleteTokenFor, forgetDeleteToken } from '../comments/deleteTokens';
 
 interface CommentItem {
   id: string;
@@ -63,17 +64,40 @@ function StatusBadge({ status }: { status: CommentStatus }) {
   return <span className={`comments-status comments-status--${status}`}>{COMMENT_STATUS_LABELS[status]}</span>;
 }
 
+function NativeSelect(props: SelectHTMLAttributes<HTMLSelectElement>) {
+  return (
+    <span className="comments-select">
+      <select {...props} className="odin-select__trigger">
+        {props.children}
+      </select>
+      <ChevronDown className="odin-select__chev" size={16} aria-hidden="true" />
+    </span>
+  );
+}
+
 function CommentCard({
   item,
   owner,
-  onStatusChange
+  canDelete,
+  onStatusChange,
+  onDelete
 }: {
   item: CommentItem;
   owner: boolean;
+  canDelete: boolean;
   onStatusChange: (id: string, status: CommentStatus) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const cancelDeleteRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (confirmingDelete) cancelDeleteRef.current?.focus();
+  }, [confirmingDelete]);
 
   async function changeStatus(event: ChangeEvent<HTMLSelectElement>) {
     const next = event.currentTarget.value as CommentStatus;
@@ -99,15 +123,14 @@ function CommentCard({
           {owner ? (
             <label className="comments-status-control">
               <span>Estado</span>
-              <select
+              <NativeSelect
                 aria-label={`Estado de ${item.author}`}
-                className="odin-select__trigger"
                 disabled={saving}
                 onChange={changeStatus}
                 value={item.status}
               >
                 {COMMENT_STATUSES.map(status => <option key={status} value={status}>{COMMENT_STATUS_LABELS[status]}</option>)}
-              </select>
+              </NativeSelect>
             </label>
           ) : <StatusBadge status={item.status} />}
         </div>
@@ -120,6 +143,53 @@ function CommentCard({
       <p className="comments-card__body">{item.body}</p>
       {error && <p className="comments-card__error" role="alert">{error}</p>}
       <footer className="comments-card__footer">
+        {confirmingDelete ? (
+          <div className="comments-card__delete-confirmation">
+            <p>¿Eliminar este comentario?</p>
+            <button
+              className="odin-btn odin-btn--destructive odin-btn--sm"
+              type="button"
+              disabled={deleting}
+              onClick={async () => {
+                setDeleting(true);
+                setError('');
+                try {
+                  await onDelete(item.id);
+                } catch (reason) {
+                  setError(reason instanceof Error ? reason.message : 'No se pudo eliminar este comentario. Inténtalo de nuevo.');
+                  setDeleting(false);
+                }
+              }}
+            >
+              Sí, eliminar
+            </button>
+            <button
+              ref={cancelDeleteRef}
+              className="odin-btn odin-btn--outline odin-btn--sm"
+              type="button"
+              disabled={deleting}
+              onClick={() => {
+                setConfirmingDelete(false);
+                window.requestAnimationFrame(() => deleteButtonRef.current?.focus());
+              }}
+            >
+              No
+            </button>
+          </div>
+        ) : canDelete ? (
+          <button
+            ref={deleteButtonRef}
+            className="odin-btn odin-btn--outline odin-btn--sm"
+            type="button"
+            onClick={() => {
+              setError('');
+              setConfirmingDelete(true);
+            }}
+          >
+            <Trash2 aria-hidden="true" size={16} />
+            Eliminar
+          </button>
+        ) : null}
         <a className="odin-btn odin-btn--outline odin-btn--sm" href={reviewHref(item)}>
           Ir <ArrowUpRight aria-hidden="true" size={16} />
         </a>
@@ -136,6 +206,12 @@ export default function CommentsPage() {
   const [role, setRole] = useState<'team' | 'owner'>('team');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [successNotice, setSuccessNotice] = useState('');
+  const noticeRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (successNotice) noticeRef.current?.focus();
+  }, [successNotice]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -177,6 +253,24 @@ export default function CommentsPage() {
     setItems(current => current.map(item => item.id === id ? result : item));
   }
 
+  async function deleteComment(id: string) {
+    setSuccessNotice('');
+    const token = deleteTokenFor(id);
+    const response = await fetch('/api/comments', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, ...(token ? { token } : {}) })
+    });
+    if (response.status !== 200 && response.status !== 404) {
+      if (response.status === 429) throw new Error('Has intentado borrar demasiados comentarios seguidos. Espera unos minutos.');
+      if (response.status === 403) throw new Error('No tienes permiso para eliminar este comentario.');
+      throw new Error('No se pudo eliminar este comentario. Inténtalo de nuevo.');
+    }
+    setItems(current => current.filter(item => item.id !== id));
+    forgetDeleteToken(id);
+    setSuccessNotice('Comentario eliminado');
+  }
+
   return (
     <>
       <CommentsHeader />
@@ -188,17 +282,17 @@ export default function CommentsPage() {
         <section className="comments-filters" aria-label="Filtrar comentarios">
           <label>
             <span>Pantalla</span>
-            <select className="odin-select__trigger" value={screen} onChange={event => setScreen(event.currentTarget.value)}>
+              <NativeSelect value={screen} onChange={event => setScreen(event.currentTarget.value)}>
               <option value="">Todas</option>
               {SCREEN_LABELS.map(label => <option key={label} value={label}>{label}</option>)}
-            </select>
+              </NativeSelect>
           </label>
           <label>
             <span>Estado</span>
-            <select className="odin-select__trigger" value={status} onChange={event => setStatus(event.currentTarget.value)}>
+              <NativeSelect value={status} onChange={event => setStatus(event.currentTarget.value)}>
               <option value="">Todos</option>
               {COMMENT_STATUSES.map(value => <option key={value} value={value}>{COMMENT_STATUS_LABELS[value]}</option>)}
-            </select>
+              </NativeSelect>
           </label>
           <label>
             <span>Autor</span>
@@ -206,13 +300,23 @@ export default function CommentsPage() {
           </label>
         </section>
         {error && <p className="comments-notice" role="alert">{error}</p>}
+        {successNotice && <p ref={noticeRef} className="comments-notice" role="status" tabIndex={-1}>{successNotice}</p>}
         {loading ? (
           <p className="comments-notice" role="status">Cargando comentarios…</p>
         ) : error ? null : items.length === 0 ? (
           <p className="comments-notice">No hay comentarios que coincidan con estos filtros.</p>
         ) : (
           <div className="comments-list">
-            {items.map(item => <CommentCard key={item.id} item={item} owner={role === 'owner'} onStatusChange={updateStatus} />)}
+            {items.map(item => (
+              <CommentCard
+                key={item.id}
+                item={item}
+                owner={role === 'owner'}
+                canDelete={role === 'owner' || Boolean(deleteTokenFor(item.id))}
+                onStatusChange={updateStatus}
+                onDelete={deleteComment}
+              />
+            ))}
           </div>
         )}
       </main>

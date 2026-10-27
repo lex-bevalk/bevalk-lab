@@ -33,6 +33,24 @@
   font-weight: var(--font-semibold);
 }
 
+.review-toggle--anchored {
+  bottom: auto;
+  transform: translateX(-50%);
+}
+
+@media (min-width: 1280px) {
+  #root .lab-c > :has(.tp-phone) {
+    margin-bottom: 64px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .review-toggle {
+    left: auto;
+    right: 16px;
+  }
+}
+
 .review-target {
   position: fixed;
   z-index: var(--review-z-target);

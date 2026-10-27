@@ -18,6 +18,7 @@ export interface CommentRecord {
   flow: string | null;
   plan: string | null;
   status: CommentStatus;
+  delete_token_hash?: string | null;
 }
 
 export interface CommentItem {
@@ -54,8 +55,10 @@ export interface CommentCreateInput {
 
 export interface CommentsStore {
   list(filters: CommentFilters): Promise<CommentItem[]>;
-  create(input: CommentCreateInput): Promise<CommentItem>;
+  create(input: CommentCreateInput, deleteTokenHash: string): Promise<CommentItem>;
   updateStatus(id: string, status: CommentStatus): Promise<CommentItem | null>;
+  deleteTokenHash(id: string): Promise<string | null | undefined>;
+  remove(id: string): Promise<boolean>;
 }
 
 export type Validation<T> = { ok: true; value: T } | { ok: false; field: string };
@@ -63,6 +66,8 @@ export type Validation<T> = { ok: true; value: T } | { ok: false; field: string 
 const screenSet = new Set<string>(SCREEN_LABELS);
 const statusSet = new Set<string>(COMMENT_STATUSES);
 const anyControlCharacters = /[\u0000-\u001F\u007F]/;
+export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const DELETE_TOKEN_PATTERN = /^[0-9a-f]{64}$/i;
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -150,13 +155,36 @@ export function validateCommentStatus(value: unknown): Validation<CommentStatus>
     : { ok: false, field: 'status' };
 }
 
+export function validateCommentDelete(value: unknown): Validation<{ id: string; token: string | null }> {
+  if (!isPlainRecord(value) || typeof value.id !== 'string' || !UUID_PATTERN.test(value.id)) {
+    return { ok: false, field: 'id' };
+  }
+  if (value.token === undefined) return { ok: true, value: { id: value.id, token: null } };
+  if (typeof value.token !== 'string' || !DELETE_TOKEN_PATTERN.test(value.token)) return { ok: false, field: 'token' };
+  return { ok: true, value: { id: value.id, token: value.token } };
+}
+
+export function equalHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let difference = 0;
+  for (let index = 0; index < a.length; index += 1) difference |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  return difference === 0;
+}
+
 function toCommentItem(row: CommentRecord): CommentItem {
   return {
-    ...row,
+    id: row.id,
     created_at: new Date(row.created_at).toISOString(),
     updated_at: new Date(row.updated_at).toISOString(),
+    author: row.author,
+    body: row.body,
+    screen: row.screen,
+    tpl: row.tpl,
     x: Number(row.x),
-    y: Number(row.y)
+    y: Number(row.y),
+    flow: row.flow,
+    plan: row.plan,
+    status: row.status
   };
 }
 
@@ -181,6 +209,7 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
         plan text,
         status text not null default 'todo' check (status in ('todo','in_progress','done','wont_do'))
       )`)
+      .then(() => sql`ALTER TABLE comments ADD COLUMN IF NOT EXISTS delete_token_hash text`)
       .then(() => undefined)
       .catch(error => {
         if (tableReady === pending) tableReady = null;
@@ -208,12 +237,12 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
       return rows.map(toCommentItem);
     },
 
-    async create(input): Promise<CommentItem> {
+    async create(input, deleteTokenHash): Promise<CommentItem> {
       await ensureTable();
       const rows = await sql`
-        INSERT INTO comments (author, body, screen, tpl, x, y, flow, plan)
-        VALUES (${input.author}, ${input.body}, ${input.screen}, ${input.tpl}, ${input.x}, ${input.y}, ${input.flow}, ${input.plan})
-        RETURNING id, created_at, updated_at, author, body, screen, tpl, x, y, flow, plan, status
+        INSERT INTO comments (author, body, screen, tpl, x, y, flow, plan, delete_token_hash)
+        VALUES (${input.author}, ${input.body}, ${input.screen}, ${input.tpl}, ${input.x}, ${input.y}, ${input.flow}, ${input.plan}, ${deleteTokenHash})
+        RETURNING id, created_at, updated_at, author, body, screen, tpl, x, y, flow, plan, status, delete_token_hash
       ` as CommentRecord[];
       if (!rows[0]) throw new Error('Comment insert returned no row.');
       return toCommentItem(rows[0]);
@@ -227,6 +256,18 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
         RETURNING id, created_at, updated_at, author, body, screen, tpl, x, y, flow, plan, status
       ` as CommentRecord[];
       return rows[0] ? toCommentItem(rows[0]) : null;
+    },
+
+    async deleteTokenHash(id): Promise<string | null | undefined> {
+      await ensureTable();
+      const rows = await sql`SELECT delete_token_hash FROM comments WHERE id = ${id}::uuid` as Array<{ delete_token_hash: string | null }>;
+      return rows[0]?.delete_token_hash;
+    },
+
+    async remove(id): Promise<boolean> {
+      await ensureTable();
+      const rows = await sql`DELETE FROM comments WHERE id = ${id}::uuid RETURNING id` as Array<{ id: string }>;
+      return rows.length > 0;
     }
   };
 }

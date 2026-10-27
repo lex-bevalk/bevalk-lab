@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SCREEN_LABELS, type CommentStatus } from '../../src/comments/constants';
@@ -6,8 +7,10 @@ import { createCommentsApi, COMMENT_WRITE_LIMIT, COMMENT_WRITE_WINDOW_MS } from 
 import {
   createNeonCommentsStore,
   validateCommentCreate,
+  validateCommentDelete,
   validateCommentFilters,
   validateCommentStatus,
+  equalHex,
   type CommentRecord
 } from '../../server/comments';
 import { MemoryRateLimitStore, type RateLimitStore } from '../../server/rate-limit';
@@ -18,6 +21,9 @@ const SESSION_SECRET = 'comments-test-session-secret-with-enough-entropy';
 const DATABASE_URL = 'postgres://comments-test.invalid/lab';
 const NOW = Date.UTC(2026, 9, 27, 12);
 const BASE_URL = 'https://bevalk.test/api/comments';
+const MISSING_ID = '00000000-0000-4000-8000-000000000000';
+const DELETE_TOKEN = 'a'.repeat(64);
+const DELETE_TOKEN_HASH = createHash('sha256').update(DELETE_TOKEN).digest('hex');
 const VALID_INPUT = {
   author: ' Ana ',
   body: ' Revisar este punto ',
@@ -65,6 +71,7 @@ function testCommentRow(overrides: Partial<CommentRecord> = {}): CommentRecord {
     flow: 'nuevo',
     plan: 'premium',
     status: 'todo',
+    delete_token_hash: DELETE_TOKEN_HASH,
     ...overrides
   };
 }
@@ -74,11 +81,17 @@ function sqlHarness() {
   const sql: NeonSqlClient = async (strings, ...values) => {
     const query = strings.join('?');
     calls.push({ query, values });
-    if (query.includes('INSERT INTO comments')) return [testCommentRow()];
+    if (query.includes('ALTER TABLE comments')) return [];
+    if (query.includes('INSERT INTO comments')) return [testCommentRow({ delete_token_hash: String(values[8]) })];
     if (query.includes('UPDATE comments')) {
-      if (values[1] === '00000000-0000-4000-8000-000000000000') return [];
+      if (values[1] === MISSING_ID) return [];
       return [testCommentRow({ status: values[0] as CommentStatus, updated_at: new Date(NOW + 1000) })];
     }
+    if (query.includes('SELECT delete_token_hash FROM comments')) {
+      if (values[0] === MISSING_ID) return [];
+      return [{ delete_token_hash: DELETE_TOKEN_HASH }];
+    }
+    if (query.includes('DELETE FROM comments')) return values[0] === MISSING_ID ? [] : [{ id: values[0] as string }];
     if (query.includes('SELECT id, created_at')) return [testCommentRow()];
     return [];
   };
@@ -182,6 +195,23 @@ describe('comment validation', () => {
     });
     expect(validateCommentFilters(new URLSearchParams('screen=unknown'))).toEqual({ ok: false, field: 'screen' });
   });
+
+  it('validates comment deletion ids and optional 64-character hex tokens', () => {
+    expect(validateCommentDelete({ id: testCommentRow().id })).toEqual({ ok: true, value: { id: testCommentRow().id, token: null } });
+    expect(validateCommentDelete({ id: testCommentRow().id, token: DELETE_TOKEN })).toEqual({
+      ok: true,
+      value: { id: testCommentRow().id, token: DELETE_TOKEN }
+    });
+    expect(validateCommentDelete({ id: 'bad-id' })).toEqual({ ok: false, field: 'id' });
+    expect(validateCommentDelete({ id: testCommentRow().id, token: 'x'.repeat(64) })).toEqual({ ok: false, field: 'token' });
+    expect(validateCommentDelete({ id: testCommentRow().id, token: 'a'.repeat(63) })).toEqual({ ok: false, field: 'token' });
+  });
+
+  it('compares equal-length hex strings without returning early on differing characters', () => {
+    expect(equalHex('a'.repeat(64), 'a'.repeat(64))).toBe(true);
+    expect(equalHex('a'.repeat(64), 'b'.repeat(64))).toBe(false);
+    expect(equalHex('a'.repeat(64), 'a'.repeat(63))).toBe(false);
+  });
 });
 
 describe('comments API authorization and writes', () => {
@@ -210,6 +240,25 @@ describe('comments API authorization and writes', () => {
       origin: 'https://other.test'
     }));
     expect(badOrigin.status).toBe(403);
+  });
+
+  it('returns a one-time delete token on creation without exposing the stored hash', async () => {
+    const { api, cookie, calls } = createHarnessApi();
+    const response = await api.POST(request('POST', {
+      cookie: await cookie,
+      json: VALID_INPUT,
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    const body = await response.json() as Record<string, unknown>;
+    expect(response.status).toBe(201);
+    expect(body.delete_token).toMatch(/^[0-9a-f]{64}$/);
+    expect(body).not.toHaveProperty('delete_token_hash');
+    const insert = calls.find(call => call.query.includes('INSERT INTO comments'));
+    expect(insert).toBeDefined();
+    expect(insert?.query).toContain('delete_token_hash');
+    expect(insert?.values[8]).toMatch(/^[0-9a-f]{64}$/);
+    expect(calls.some(call => call.query.includes('ALTER TABLE comments ADD COLUMN IF NOT EXISTS delete_token_hash'))).toBe(true);
   });
 
   it('allows team and owner to create a valid comment with status 201', async () => {
@@ -272,6 +321,86 @@ describe('comments API authorization and writes', () => {
     expect(response.status).toBe(429);
     expect(calls.some(call => call.query.includes('INSERT INTO comments'))).toBe(false);
   });
+
+  it('deletes comments with the owner role or the matching team token', async () => {
+    const team = createHarnessApi();
+    const teamResponse = await team.api.DELETE(request('DELETE', {
+      cookie: await team.cookie,
+      json: { id: testCommentRow().id, token: DELETE_TOKEN },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(teamResponse.status).toBe(200);
+    expect(await teamResponse.json()).toEqual({ id: testCommentRow().id });
+    expect(team.calls.some(call => call.query.includes('DELETE FROM comments'))).toBe(true);
+
+    const owner = createHarnessApi({ role: 'owner' });
+    const ownerResponse = await owner.api.DELETE(request('DELETE', {
+      cookie: await owner.cookie,
+      json: { id: testCommentRow().id },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(ownerResponse.status).toBe(200);
+    expect(await ownerResponse.json()).toEqual({ id: testCommentRow().id });
+  });
+
+  it('checks DELETE authentication, media type, origin, id, token and team token requirement', async () => {
+    const { api, cookie, calls } = createHarnessApi();
+    expect((await api.DELETE(request('DELETE'))).status).toBe(401);
+    expect((await api.DELETE(request('DELETE', { cookie: await cookie, origin: 'https://bevalk.test' }))).status).toBe(415);
+    expect((await api.DELETE(request('DELETE', {
+      cookie: await cookie,
+      json: { id: testCommentRow().id, token: DELETE_TOKEN },
+      contentType: 'application/json',
+      origin: 'https://other.test'
+    }))).status).toBe(403);
+
+    const deleteRequest = async (payload: unknown) => request('DELETE', {
+      cookie: await cookie,
+      json: payload,
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    });
+    expect((await api.DELETE(await deleteRequest({ id: 'invalid' }))).status).toBe(400);
+    expect(await (await api.DELETE(await deleteRequest({ id: testCommentRow().id, token: 'bad' }))).json()).toEqual({ error: 'invalid', field: 'token' });
+    expect((await api.DELETE(await deleteRequest({ id: testCommentRow().id }))).status).toBe(403);
+    expect(calls.some(call => call.query.includes('SELECT delete_token_hash'))).toBe(false);
+  });
+
+  it('rejects a wrong team token, returns 404 for missing ids, and rate-limits before comment SQL', async () => {
+    const wrongToken = createHarnessApi();
+    expect((await wrongToken.api.DELETE(request('DELETE', {
+      cookie: await wrongToken.cookie,
+      json: { id: testCommentRow().id, token: 'b'.repeat(64) },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }))).status).toBe(403);
+    expect(wrongToken.calls.some(call => call.query.includes('DELETE FROM comments'))).toBe(false);
+
+    const missing = createHarnessApi({ role: 'owner' });
+    expect((await missing.api.DELETE(request('DELETE', {
+      cookie: await missing.cookie,
+      json: { id: MISSING_ID },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }))).status).toBe(404);
+
+    const exhausted: RateLimitStore = {
+      get: vi.fn(async () => ({ hits: COMMENT_WRITE_LIMIT, resetAt: NOW + 60_000 })),
+      increment: vi.fn(async () => ({ hits: COMMENT_WRITE_LIMIT + 1, resetAt: NOW + 60_000 })),
+      clear: vi.fn(async () => undefined)
+    };
+    const limited = createHarnessApi({ rateLimitStore: exhausted });
+    expect((await limited.api.DELETE(request('DELETE', {
+      cookie: await limited.cookie,
+      json: { id: testCommentRow().id, token: DELETE_TOKEN },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }))).status).toBe(429);
+    expect(limited.calls.some(call => call.query.includes('SELECT delete_token_hash'))).toBe(false);
+    expect(limited.calls.some(call => call.query.includes('DELETE FROM comments'))).toBe(false);
+  });
 });
 
 describe('comments API SQL', () => {
@@ -282,11 +411,13 @@ describe('comments API SQL', () => {
       url: `${BASE_URL}?screen=Inicio&status=todo&author=Ana`
     }));
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ role: 'team', items: [{ author: 'Ana' }] });
+    const body = await response.json();
+    expect(body).toMatchObject({ role: 'team', items: [{ author: 'Ana' }] });
     const select = calls.find(call => call.query.includes('SELECT id, created_at'));
     expect(select).toBeDefined();
     expect(select?.query).toContain('ORDER BY created_at DESC');
     expect(select?.query).toContain('LIMIT 500');
+    expect(select?.query).not.toContain('delete_token_hash');
     expect(select?.query).toContain('screen = ?');
     expect(select?.query).toContain('status = ?');
     expect(select?.query).toContain('author = ?');
@@ -295,5 +426,6 @@ describe('comments API SQL', () => {
     expect(select?.values).toContain('Inicio');
     expect(select?.values).toContain('todo');
     expect(select?.values).toContain('Ana');
+    expect(JSON.stringify(body)).not.toContain('delete_token_hash');
   });
 });

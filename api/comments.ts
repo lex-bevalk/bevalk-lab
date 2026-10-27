@@ -5,8 +5,11 @@ import { verifySession, SESSION_COOKIE } from '../server/session.js';
 import {
   createNeonCommentsStore,
   validateCommentCreate,
+  validateCommentDelete,
   validateCommentFilters,
   validateCommentStatus,
+  UUID_PATTERN,
+  equalHex,
   type CommentsStore
 } from '../server/comments.js';
 
@@ -56,10 +59,15 @@ function hasSameOrigin(request: Request): boolean {
   }
 }
 
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  const hex = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+  return hex;
+}
+
 async function writeRateLimitKey(request: Request): Promise<string> {
   const address = clientAddressKey(request.headers);
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(address));
-  const hex = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+  const hex = await sha256Hex(address);
   return `comments-write:ip:${hex}`;
 }
 
@@ -141,7 +149,9 @@ export function createCommentsApi(dependencies: CommentsApiDependencies = {}) {
         const { comments, rateLimit } = stores(env.DATABASE_URL);
         const limited = await takeWriteSlot(request, rateLimit);
         if (limited) return limited;
-        return json(await comments.create(input.value), 201);
+        const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2, '0')).join('');
+        const item = await comments.create(input.value, await sha256Hex(token));
+        return json({ ...item, delete_token: token }, 201);
       } catch {
         return genericError();
       }
@@ -161,7 +171,7 @@ export function createCommentsApi(dependencies: CommentsApiDependencies = {}) {
       }
       const record = value as Record<string, unknown>;
       const id = typeof record.id === 'string' ? record.id : '';
-      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+      if (!UUID_PATTERN.test(id)) {
         return json({ error: 'invalid', field: 'id' }, 400);
       }
       const status = validateCommentStatus(record.status);
@@ -172,6 +182,32 @@ export function createCommentsApi(dependencies: CommentsApiDependencies = {}) {
         if (limited) return limited;
         const item = await comments.updateStatus(id, status.value);
         return item ? json(item) : json({ error: 'not_found' }, 404);
+      } catch {
+        return genericError();
+      }
+    },
+
+    async DELETE(request: Request): Promise<Response> {
+      const auth = await authenticate(request);
+      if (auth instanceof Response) return auth;
+      const parsed = await parseJson(request);
+      if (!parsed.ok) return parsed.response;
+      const input = validateCommentDelete(parsed.value);
+      if (!input.ok) return json({ error: 'invalid', field: input.field }, 400);
+      if (auth.role === 'team' && !input.value.token) return json({ error: 'forbidden' }, 403);
+      const env = environment();
+      if (!env.DATABASE_URL) return genericError();
+      try {
+        const { comments, rateLimit } = stores(env.DATABASE_URL);
+        const limited = await takeWriteSlot(request, rateLimit);
+        if (limited) return limited;
+        const storedHash = await comments.deleteTokenHash(input.value.id);
+        if (storedHash === undefined) return json({ error: 'not_found' }, 404);
+        if (auth.role === 'team' && (storedHash === null || !equalHex(storedHash, await sha256Hex(input.value.token!)))) {
+          return json({ error: 'forbidden' }, 403);
+        }
+        if (!await comments.remove(input.value.id)) return json({ error: 'not_found' }, 404);
+        return json({ id: input.value.id });
       } catch {
         return genericError();
       }
@@ -191,4 +227,8 @@ export async function POST(request: Request): Promise<Response> {
 
 export async function PATCH(request: Request): Promise<Response> {
   return handlers.PATCH(request);
+}
+
+export async function DELETE(request: Request): Promise<Response> {
+  return handlers.DELETE(request);
 }

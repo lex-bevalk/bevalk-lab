@@ -63,6 +63,7 @@ try {
   assert.equal(typeof api.GET, 'function', 'api/comments.ts must export GET');
   assert.equal(typeof api.POST, 'function', 'api/comments.ts must export POST');
   assert.equal(typeof api.PATCH, 'function', 'api/comments.ts must export PATCH');
+  assert.equal(typeof api.DELETE, 'function', 'api/comments.ts must export DELETE');
 
   const homeResponse = await middleware(new Request('https://example.test/'));
   assert.equal(homeResponse.status, 302, 'unauthenticated / must redirect with status 302');
