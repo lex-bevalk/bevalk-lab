@@ -180,3 +180,11 @@ comprobación final contra https://bevalk-lab.vercel.app/ (requiere quitar Verce
 - CI final PR #7 (run 40487448963): visual 1.470/1.470 a 0 px, visual propio 10/10, e2e:select 5/5, e2e:review verde; 163 tests unitarios.
 - Seguridad comentarios: sin hallazgos CRITICAL/HIGH/MEDIUM; 4 LOW aceptados (autor de texto libre, sin tope global de filas, DDL en runtime, `tpl`/`flow` sin lista blanca).
 - Pendiente del usuario: prueba real con las dos contraseñas (equipo crea comentario sin poder cambiar estado; owner cambia estado).
+
+## Resultado v1.4.0 y v1.5.0 (27-28 oct 2026)
+- v1.4.0 (PR #10, merge 22c7ca1): chevron con margen en los selectores de `/comments`; borrar comentarios (owner cualquiera, equipo los suyos con token de borrado); botón Comentar bajo el móvil a 1280 px o más.
+- v1.5.0 (PR #11, merge f1559e2): respuestas a comentarios para owner y equipo en el popover de `/review` y en `/comments`; estado desde el popover (solo owner) y Eliminar con confirmación inline. Tabla `comment_replies` con cascada, GET en 2 consultas.
+- Decisiones del usuario: badge como selector de estados con Eliminar como botón aparte; cambiar estado sigue siendo solo del owner; respuestas sin editar ni borrar sueltas.
+- CI PR #11 (run 40589931665): visual 1.470/1.470, visual propio 10/10, e2e:select 5/5, e2e:review verde; 175 tests unitarios.
+- Producción verificada por el usuario el 28 oct: respuestas y cambio de estado funcionan. Sin sesión: `/comments` y `/review` 302 a login, `/api/comments` 401.
+- Riesgo aceptado: respuestas, estados y borrados comparten el cupo de 30 escrituras cada 10 min por IP.
