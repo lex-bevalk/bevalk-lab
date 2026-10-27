@@ -15,4 +15,4 @@ No detecté diferencias de datos ajenas a la sustitución autorizada de rutas ni
 
 ## Selectores → dropdown (26 oct 2026)
 
-- [ ] Contraste del botón destructivo de la referencia: "Eliminar cuenta" (texto blanco sobre `--color-destructive` #ef4444) da 3,76:1 y WCAG AA pide 4,5:1. Lo detectó axe en `tests/e2e/select.js` al auditar Perfil > Eliminar cuenta, un estado que la batería de paridad no recorre. Viene de la referencia: se replica y se propone al usuario oscurecer el token (p. ej. #dc2626 da 4,83:1) como cambio de diseño aparte.
+- [x] Contraste del botón destructivo de "Eliminar cuenta". (27 oct) El pie usa `var(--color-destructive)` (#DC2626, 4,83:1) y `tests/e2e/select.js` comprueba el contraste del botón con axe.

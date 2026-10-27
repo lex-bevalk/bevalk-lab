@@ -38,6 +38,20 @@ const triggerSelectors = {
         const triggerSelector = triggerSelectors[target];
         const trigger = page.locator(triggerSelector);
         await trigger.waitFor({ state: 'visible' });
+        if (target === 'prdel') {
+          const violations = await page.evaluate(async () => {
+            const buttons = [...document.querySelectorAll('.tp-phone [data-screen-label="Perfil"] button')]
+              .filter(element => element.textContent.trim() === 'Eliminar cuenta' && element.closest('.lab-optsel') === null);
+            if (buttons.length !== 1) throw new Error(`Se esperaba un único botón de pie "Eliminar cuenta"; encontrados: ${buttons.length}`);
+            const button = buttons[0];
+            const result = await window.axe.run(button, {
+              runOnly: ['color-contrast'],
+              resultTypes: ['violations'],
+            });
+            return result.violations.map(item => `${item.id} (${item.impact})`);
+          });
+          if (violations.length) throw new Error('axe encontró violaciones de contraste en Eliminar cuenta: ' + violations.join(', '));
+        }
         await trigger.click();
         const menu = page.locator('.tp-phone .odin-menu[role="listbox"]');
         await menu.waitFor({ state: 'visible' });

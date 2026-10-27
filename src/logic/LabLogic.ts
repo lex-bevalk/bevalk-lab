@@ -3024,7 +3024,7 @@ export class LabLogic extends DCLogic {
           hasFooter: !!footer,
           secondaryLabel: footer ? footer.secondaryLabel : "", secondary: footer ? footer.secondary : () => {},
           primaryLabel: footer ? footer.primaryLabel : "", primary: footer ? footer.primary : () => {},
-          primaryBg: footer && footer.danger ? "#EF4444" : "var(--color-primary)",
+          primaryBg: footer && footer.danger ? "var(--color-destructive)" : "var(--color-primary)",
           primaryOpacity: off ? "0.55" : "1", primaryCursor: off ? "not-allowed" : "pointer", primaryDisabled: off ? "true" : "false"
         };
       })(),

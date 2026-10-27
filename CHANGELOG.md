@@ -4,6 +4,11 @@ Cambios relevantes del BeValk Product Experience Lab. Formato basado en [Keep a 
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-10-27
+
+### Fixed
+- El botón "Eliminar cuenta" usa el rojo de Odin y cumple el contraste AA.
+
 ## [1.2.0] - 2026-10-27
 
 ### Changed
