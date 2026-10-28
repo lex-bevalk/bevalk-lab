@@ -15,7 +15,7 @@ jobs:
     timeout-minutes: 180
     continue-on-error: true
     env:
-      LAB_URL: http://localhost:4173/
+      LAB_URL: http://localhost:4173/concept.html
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
             cat /tmp/bevalk-reference.log || true
             return 1
           }
-          wait_for_url "http://localhost:4173/"
+          wait_for_url "http://localhost:4173/concept.html"
           wait_for_url "http://localhost:8765/project/Main.dc.html"
 
       - name: Capture handoff baseline

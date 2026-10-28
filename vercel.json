@@ -30,6 +30,14 @@
     {
       "source": "/review",
       "destination": "/review.html"
+    },
+    {
+      "source": "/concept",
+      "destination": "/concept.html"
+    },
+    {
+      "source": "/concept/review",
+      "destination": "/concept-review.html"
     }
   ]
 }

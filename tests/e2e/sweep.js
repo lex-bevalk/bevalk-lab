@@ -5,7 +5,7 @@ const { chromium } = require('playwright');
   const errs = [];
   p.on('console', m => { const t = m.text(); if ((m.type() === 'error' || m.type() === 'warning') && !/status of 404|TUNNEL|Failed to load resource/.test(t)) errs.push(t); });
   p.on('pageerror', e => errs.push('pageerror: ' + e.message));
-  await p.goto((process.env.LAB_URL || 'http://localhost:4173/'), { waitUntil: 'load' });
+  await p.goto((process.env.LAB_URL || 'http://localhost:4173/concept.html'), { waitUntil: 'load' });
   await p.waitForTimeout(2200);
   const n = await p.evaluate(() => document.querySelectorAll('.lab-a button[aria-current]').length);
   const out = [];

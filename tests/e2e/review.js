@@ -3,7 +3,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
-const baseUrl = (process.env.LAB_URL || 'http://127.0.0.1:4173').replace(/\/$/, '');
+const baseUrl = (process.env.LAB_URL || 'http://localhost:4173/concept.html')
+  .replace(/\/concept\.html\/?$/, '')
+  .replace(/\/$/, '');
 const teamHtml = path.resolve(process.env.LAB_DIST_DIR || path.resolve(__dirname, '../../dist'), 'team.html');
 const savedComments = [];
 const createdId = '2c6849e1-7a08-4b81-8b6c-4f50f8b2a729';
@@ -125,7 +127,7 @@ async function assertAxe(page, selector, label) {
   });
 
   try {
-    await page.goto(`${baseUrl}/review.html`, { waitUntil: 'load' });
+    await page.goto(`${baseUrl}/concept-review.html`, { waitUntil: 'load' });
     await page.locator('.tp-phone').waitFor({ state: 'visible' });
     const stage = page.locator('#root .lab-c > :has(.tp-phone)');
     assert.equal(await stage.count(), 1, 'the review spacing selector should match the stage');
@@ -271,7 +273,7 @@ async function assertAxe(page, selector, label) {
 
     savedComments.push(commentFixture({ id: luisId, author: 'Luis', body: 'Comentario de Luis' }));
     role = 'owner';
-    await page.goto(`${baseUrl}/review.html?c=${createdId}`, { waitUntil: 'load' });
+    await page.goto(`${baseUrl}/concept-review.html?c=${createdId}`, { waitUntil: 'load' });
     await page.getByTestId('review-pin').first().waitFor({ state: 'visible' });
     const ownerReviewPin = page.getByRole('button', { name: `Comentario 1 en ${screenLabel}: Ana`, exact: true });
     await ownerReviewPin.click();
@@ -320,7 +322,7 @@ async function assertAxe(page, selector, label) {
     await page.waitForFunction(() => document.activeElement?.textContent?.trim() === 'Comentario eliminado');
 
     role = 'owner';
-    await page.goto(`${baseUrl}/review.html`, { waitUntil: 'load' });
+    await page.goto(`${baseUrl}/concept-review.html`, { waitUntil: 'load' });
     const luisPin = page.getByRole('button', { name: `Comentario 1 en ${screenLabel}: Luis`, exact: true });
     await luisPin.waitFor({ state: 'visible' });
     await luisPin.click();

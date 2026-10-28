@@ -5,6 +5,7 @@ import { deleteTokenFor, forgetDeleteToken, rememberDeleteToken } from '../comme
 import NativeSelect from '../comments/NativeSelect';
 import Replies, { type ReplyItem } from '../comments/Replies';
 import { readStoredName, writeStoredName } from '../comments/authorName';
+import { labBridge } from './bridges';
 
 interface ReviewComment {
   id: string;
@@ -44,13 +45,6 @@ interface VisibleScreen extends ReviewTarget {
   viewportHeight: number;
 }
 
-interface LabBridge {
-  state?: { flow?: string | null; labPlan?: string | null; simPlan?: string | null };
-  world?: () => { plan?: string };
-  labFlows?: () => Array<{ id: string }>;
-  labSelect?: (flow: { id: string }, options?: { plan?: string }) => void;
-}
-
 interface PendingPin {
   x: number;
   y: number;
@@ -68,20 +62,8 @@ const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   minute: '2-digit'
 });
 
-function labBridge(): LabBridge | undefined {
-  return (window as unknown as { __lab?: LabBridge }).__lab;
-}
-
 function currentLabContext(): { flow: string | null; plan: string | null } {
-  const lab = labBridge();
-  try {
-    return {
-      flow: lab?.state?.flow || null,
-      plan: lab?.world?.()?.plan || lab?.state?.labPlan || lab?.state?.simPlan || null
-    };
-  } catch {
-    return { flow: lab?.state?.flow || null, plan: lab?.state?.labPlan || lab?.state?.simPlan || null };
-  }
+  return labBridge()?.current() ?? { flow: null, plan: null };
 }
 
 function isVisible(element: HTMLElement, phoneRect: DOMRect): boolean {
@@ -213,7 +195,8 @@ function commentHref(item: ReviewComment): string {
   if (item.flow) params.set('flow', item.flow);
   if (item.plan) params.set('plan', item.plan);
   params.set('c', item.id);
-  return `/review?${params.toString()}`;
+  const reviewPath = labBridge()?.proto === 'concept' ? '/concept/review' : '/review';
+  return `${reviewPath}?${params.toString()}`;
 }
 
 function popoverPosition(item: ReviewComment, target: ReviewTarget): CSSProperties {
@@ -288,12 +271,8 @@ export default function Review() {
     let attempts = 0;
     let timer = 0;
     const selectFlow = () => {
-      const lab = labBridge();
-      const flow = lab?.labFlows?.().find(candidate => candidate.id === flowId);
-      if (lab?.labSelect && flow) {
-        lab.labSelect(flow, plan === 'free' || plan === 'premium' ? { plan } : undefined);
-        return;
-      }
+      const bridge = labBridge();
+      if (bridge?.select(flowId, plan === 'free' || plan === 'premium' ? plan : undefined)) return;
       attempts += 1;
       if (attempts < 30) timer = window.setTimeout(selectFlow, 50);
     };

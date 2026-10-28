@@ -8,7 +8,7 @@ const currentDir = resolve(root, 'tests/visual/own/current');
 const baselineDir = resolve(root, 'tests/visual/own/baseline');
 const familyCurrentDir = resolve(root, 'tests/visual/own/family/current');
 const familyBaselineDir = resolve(root, 'tests/visual/own/family/baseline');
-const appUrl = process.env.LAB_URL || 'http://localhost:4173/';
+const appUrl = process.env.LAB_URL || 'http://localhost:4173/concept.html';
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 const targets = {
   prsec: 'c.prGo("seguridad", c.prSecReset()); if (!c.renderVals().pr.isSeg) throw new Error("No se llegó a Seguridad");',

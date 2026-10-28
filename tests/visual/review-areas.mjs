@@ -7,7 +7,7 @@ import pngjs from 'pngjs';
 const { PNG } = pngjs;
 const root = resolve(process.cwd());
 const referenceUrl = process.env.REFERENCE_URL || 'http://127.0.0.1:8765/project/Main.dc.html';
-const appUrl = process.env.LAB_URL || 'http://localhost:4173/';
+const appUrl = process.env.LAB_URL || 'http://localhost:4173/concept.html';
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 const viewport = { width: 375, height: 812 };
 const threshold = 0.1;

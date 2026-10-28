@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 
 const referenceUrl = process.env.REFERENCE_URL || 'http://127.0.0.1:8765/project/Main.dc.html';
-const appUrl = process.env.LAB_URL || 'http://localhost:4173/';
+const appUrl = process.env.LAB_URL || 'http://localhost:4173/concept.html';
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 const viewports = [
   { width: 1920, height: 1080 }, { width: 1680, height: 916 }, { width: 1440, height: 900 },
