@@ -225,3 +225,12 @@ Rama `feat/mi-familia-flujos`. Spec Codex: `tasks/codex-f12.md` (fase A) y `task
     Los cambios visuales intencionados se etiquetan `cambio-visual`; el humo informa y adjunta sus diferencias sin bloquear.
     La suite completa contra `handoff` y `e2e:baseline` se lanza manualmente o a diario a las 03:00 UTC en `main`.
     La acción completa conserva la caché de capturas de referencia hasta que cambien `handoff` o el capturador.
+
+## Resultado v1.6.0 (28 oct 2026) · CERRADA
+- PR #13 (merge 016e9d2): Mi Familia completo, 36 flujos de familia en 8 grupos (57 en el Lab). 26 de `Lab.dc.html` y 10 de casos
+  límite. Se conservan los 19 casos de familia ya validados. Plantilla fuente `design/familia/Main.dc.html` + `convert-template`.
+- CI de la PR #13 (run 40712501475): verde en 8 min 5 s (antes ~50 min). E2E 3 min 38 s, sweep 1 min 28 s, humo visual 31 s.
+- Producción: despliegue de Vercel `success` sobre 016e9d2; sin sesión `/`, `/review`, `/comments`, `/changelog` → 302 a login,
+  `/api/comments` → 401, `/login` → 200. Contenido servido no verificado por Claude (assets tras sesión): lo valida el usuario.
+- Pregunta de producto abierta: al eliminar la cuenta, ¿BeValk cancela la suscripción de la tienda? La app dice que sí; `Lab.dc.html`
+  (F14 C1) dice que no. La app es hoy coherente consigo misma (F13b).
