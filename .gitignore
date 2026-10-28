@@ -12,6 +12,7 @@ tests/visual/current/
 tests/visual/diff/
 tests/visual/own/current/
 tests/visual/own/diff/
+tests/visual/smoke-diff/
 tests/e2e/results/
 tools/area-review-results.json
 
@@ -21,3 +22,4 @@ tools/area-review-results.json
 .claude/
 skills-lock.json
 tests/visual/own/current/
+tests/visual/own/family/

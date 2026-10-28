@@ -95,17 +95,34 @@ const areas = [
   },
   {
     name: 'Familia',
-    screens: ['Mi Familia'],
+    screens: ['Mi Familia','Inicio','Perfil','Analizador'],
     cases: [
-      { key: 'familia-oferta', label: 'Mi Familia', flowId: 'famoferta' },
-      { key: 'familia-crear', label: 'Mi Familia', flowId: 'famcrear' },
-      { key: 'familia-responder', label: 'Mi Familia', flowId: 'famadmin' },
-      { key: 'familia-avisar', label: 'Mi Familia', flowId: 'famavisar' },
-      { key: 'familia-ficha', label: 'Mi Familia', flowId: 'famficha' },
-      { key: 'familia-ajustes', label: 'Mi Familia', flowId: 'famajustes' },
-      { key: 'familia-invitacion', label: 'Mi Familia', flowId: 'faminvite' },
-      { key: 'familia-miembro', label: 'Mi Familia', flowId: 'fammember' },
-      { key: 'familia-ayuda', label: 'Mi Familia', flowId: 'famayuda' },
+      { key:'familia-famdescubre', label:'Inicio', flowId:'famdescubre', referenceState:{screen:'home'}, role:'none', view:'hub' },
+      { key:'familia-famdescubrean', label:'Analizador', flowId:'famdescubrean', referenceState:{screen:'analizador', an:{view:'result',value:'https://clc.li/SeurPago-esp',verdict:'danger'}}, role:'none', view:'hub' },
+      { key:'familia-famoferta', label:'Mi Familia', flowId:'famoferta', referenceState:{screen:'familia'}, role:'none', view:'oferta' },
+      { key:'familia-famcrear', label:'Mi Familia', flowId:'famcrear', referenceState:{screen:'familia'}, role:'admin', view:'crear' },
+      { key:'familia-famcalma', label:'Inicio', flowId:'famcalma', referenceState:{screen:'home'}, role:'admin', view:'hub' },
+      { key:'familia-famadmin', label:'Inicio', flowId:'famadmin', referenceState:{screen:'home'}, role:'admin', view:'hub' },
+      { key:'familia-famficha', label:'Mi Familia', flowId:'famficha', referenceState:{screen:'familia'}, role:'admin', view:'ficha' },
+      { key:'familia-famavisar', label:'Mi Familia', flowId:'famavisar', referenceState:{screen:'familia'}, role:'admin', view:'hub' },
+      { key:'familia-famfichapep', label:'Mi Familia', flowId:'famfichapep', referenceState:{screen:'familia'}, role:'admin', view:'ficha' },
+      { key:'familia-faminvitar', label:'Mi Familia', flowId:'faminvitar', referenceState:{screen:'familia'}, role:'admin', view:'hub' },
+      { key:'familia-famajustes', label:'Mi Familia', flowId:'famajustes', referenceState:{screen:'familia'}, role:'admin', view:'ajustes' },
+      { key:'familia-famretirar', label:'Mi Familia', flowId:'famretirar', referenceState:{screen:'familia'}, role:'admin', view:'ficha' },
+      { key:'familia-famplan', label:'Perfil', flowId:'famplan', referenceState:{screen:'perfil', pr:{view:'plan'}}, role:'admin', view:'plan' },
+      { key:'familia-fambaja', label:'Mi Familia', flowId:'fambaja', referenceState:{screen:'familia'}, role:'admin', view:'baja' },
+      { key:'familia-famcancelado', label:'Inicio', flowId:'famcancelado', referenceState:{screen:'home'}, role:'admin', view:'hub' },
+      { key:'familia-faminvite', label:'Inicio', flowId:'faminvite', referenceState:{screen:'home'}, role:'invited', view:'hub' },
+      { key:'familia-fammember', label:'Inicio', flowId:'fammember', referenceState:{screen:'home'}, role:'member', view:'hub' },
+      { key:'familia-famayuda', label:'Mi Familia', flowId:'famayuda', referenceState:{screen:'familia'}, role:'member', view:'hub' },
+      { key:'familia-famayudaan', label:'Analizador', flowId:'famayudaan', referenceState:{screen:'analizador', an:{view:'result',value:'https://clc.li/SeurPago-esp',verdict:'danger'}}, role:'member', view:'hub' },
+      { key:'familia-famcomparto', label:'Mi Familia', flowId:'famcomparto', referenceState:{screen:'familia'}, role:'member', view:'hub' },
+      { key:'familia-famverlucia', label:'Mi Familia', flowId:'famverlucia', referenceState:{screen:'familia'}, role:'member', view:'ficha' },
+      { key:'familia-famplanmiembro', label:'Perfil', flowId:'famplanmiembro', referenceState:{screen:'perfil', pr:{view:'plan'}}, role:'member', view:'plan' },
+      { key:'familia-famsalir', label:'Mi Familia', flowId:'famsalir', referenceState:{screen:'familia'}, role:'member', view:'salir' },
+      { key:'familia-famtermina', label:'Inicio', flowId:'famtermina', referenceState:{screen:'home'}, role:'member', view:'hub' },
+      { key:'familia-famfuera', label:'Inicio', flowId:'famfuera', referenceState:{screen:'home'}, role:'none', view:'hub' },
+      { key:'familia-famcerrar', label:'Inicio', flowId:'famcerrar', referenceState:{screen:'home'}, role:'admin', view:'hub' }
     ],
   },
 ];
@@ -146,9 +163,11 @@ async function apply(page, scenario, plan) {
     c.labPickPlan(plan);
     if (scenario.flowId) {
       const flow = c.labFlows().find(item => item.id === scenario.flowId);
-      if (!flow) throw new Error('No existe el flujo ' + scenario.flowId);
-      c.labSelect(flow, { plan });
-      if (scenario.flowId.startsWith('fam') && c.state.screen !== 'familia') c.famOpen('home');
+      if (flow) c.labSelect(flow, { plan });
+      else {
+        const base = scenario.referenceState || { screen:'familia' };
+        c.setState({ flow:null, screen:base.screen, sheet:null, toast:null, fam:Object.assign({}, c.state.fam, { role:scenario.role, view:scenario.view }), pr:base.pr ? Object.assign({}, c.state.pr, base.pr) : c.state.pr, an:base.an ? Object.assign({}, c.state.an, base.an) : c.state.an });
+      }
     } else if (scenario.action === 'lesson') {
       c.openLesson('sms');
     } else {

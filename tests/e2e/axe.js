@@ -2,12 +2,12 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const GETC = `const getC = () => { if (window.__lab) return window.__lab; const el = document.querySelector('.tp-phone'); const k = Object.keys(el || {}).find(k => k.startsWith('__reactFiber')); let f = el && el[k]; while (f) { if (f.stateNode && f.stateNode.logic && f.stateNode.logic.labVals) return f.stateNode.logic; f = f.return; } return null; };`;
 (async () => {
-  const b = await chromium.launch({ headless: true }); const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
+  const b = await chromium.launch({ ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}), headless: true }); const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
   await p.goto((process.env.LAB_URL || 'http://localhost:4173/')); await p.waitForTimeout(2200);
   await p.addScriptTag({ content: fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8') });
   const run = async label => {
     await p.evaluate(() => document.querySelectorAll('.lab-b details').forEach(d => d.open = true));
-    const r = await p.evaluate(async () => { const res = await axe.run({ include: [['.lab-a'], ['.lab-b'], ['.lab-pvh'], ['.lab-tabs']] }, { resultTypes: ['violations'] });
+    const r = await p.evaluate(async () => { const res = await axe.run({ include: [['.lab-a'], ['.lab-b'], ['.lab-pvh'], ['.lab-tabs'], ['.tp-phone']] }, { resultTypes: ['violations'] });
       return res.violations.map(v => v.id + ' (' + v.impact + ') x' + v.nodes.length + ': ' + v.nodes.slice(0, 3).map(n => n.target.join(' ') + ' → ' + (n.failureSummary || '').split('\n').slice(1, 2).join('')).join(' || ')); });
     console.log('== ' + label + '\n' + (r.join('\n') || 'no violations'));
   };
@@ -15,5 +15,28 @@ const GETC = `const getC = () => { if (window.__lab) return window.__lab; const 
   await p.evaluate(`(() => { ${GETC} const c = getC(); c.labSelect(c.labFlows().find(x => x.id === 'famadmin')); })()`); await p.waitForTimeout(600);
   await p.locator('.lab-b article button').nth(1).click(); await p.waitForTimeout(900);
   await run('flow + case');
+  for (const [label, id] of [
+    ['Mi Familia · oferta', 'famoferta'],
+    ['Perfil · Gestiona tu plan admin', 'famplan'],
+    ['Perfil · Gestiona tu plan miembro', 'famplanmiembro'],
+    ['Mi Familia · baja', 'fambaja'],
+    ['Mi Familia · salir', 'famsalir'],
+    ['Inicio · tarjeta de descubrimiento', 'famdescubre'],
+    ['Inicio · después de salir', 'famfuera'],
+    ['Mi Familia · tienda sin precios', 'famtienda'],
+    ['Mi Familia · compra pendiente', 'fampendiente'],
+    ['Mi Familia · grupo lleno', 'famlleno'],
+    ['Inicio · invitación aceptada', 'famunido'],
+    ['Inicio · plan familiar terminado', 'famterminado'],
+    ['Inicio · fin de plan miembro', 'famterminadomiembro'],
+    ['Mi Familia · invitación anulada', 'famcaducada'],
+    ['Mi Familia · Premium propio', 'fampremiumpropio'],
+    ['Inicio · retirada del grupo', 'famretirado'],
+    ['Perfil · eliminar cuenta gestionando', 'fameliminar']
+  ]) {
+    await p.evaluate(`(() => { ${GETC} const c = getC(); c.labSelect(c.labFlows().find(x => x.id === ${JSON.stringify(id)})); })()`);
+    await p.waitForTimeout(500);
+    await run(label);
+  }
   await b.close();
 })();

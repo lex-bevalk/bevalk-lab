@@ -770,22 +770,48 @@ export const LAB: Record<string, DatosFlujoLab> = {
   },
 
   /* ---------------- 7 · Mi Familia · quien gestiona ---------------- */
+  famdescubre: {
+    estado:"Nuevo",
+    plans:["free"],
+    pinWhy:"Este flujo parte de una cuenta Basic.",
+    role:"Basic",
+    stage:"Inicio",
+    desc:"Cómo se entera de que existe Mi Familia alguien que acaba de instalar BeValk, sin ventanas que interrumpan.",
+    story:{as:"Cuando abro BeValk por primera vez", want:"quiero entender qué más puede hacer por mí y por los míos", so:"para decidir si me interesa sin que me presionen"},
+    ctx:{problem:"Quién: Elena, 58 años, cuida de su madre; Plan: Basic, recién llegada; Situación: Acaba de terminar la bienvenida y llega a Inicio", need:"Mira la tarjeta «Mi Familia: cuida de los tuyos» arriba en Inicio", result:"Si la cierra, la sección desaparece, las herramientas suben y un aviso dice que Mi Familia sigue en Perfil"},
+    value:{dim:"Colaboración familiar", why:"Descubrimiento sin modales. A un público adulto le cuesta cerrar ventanas emergentes; una tarjeta en el flujo normal de Inicio se lee cuando la persona quiere."},
+    plan:{same:true,note:"Empieza con Basic."},
+    ac:[{"g":"Está en Inicio","w":"Mira la tarjeta «Mi Familia: cuida de los tuyos» arriba en Inicio","t":"Lee los tres pasos: invitas, cada uno elige qué comparte, os avisáis"},{"g":"Está en Inicio","w":"Lee los tres pasos: invitas, cada uno elige qué comparte, os avisáis","t":"Toca «Ver cómo funciona» para ir a la oferta, o «Ahora no» (o la X) para cerrarla"},{"g":"Está en Inicio","w":"Toca «Ver cómo funciona» para ir a la oferta, o «Ahora no» (o la X) para cerrarla","t":"Si la cierra, la sección desaparece, las herramientas suben y un aviso dice que Mi Familia sigue en Perfil"}],
+    cases:[{id:"c1", t:"La persona ya pagó Premium individual", d:"La tarjeta mantiene el mismo mensaje y la oferta explica que el plan familiar sustituye a su Premium.", cat:"Observación familiar", sev:"high", scen:"Inicio", trig:"Mira la tarjeta «Mi Familia: cuida de los tuyos» arriba en Inicio · Lee los tres pasos: invitas, cada uno elige qué comparte, os avisáis", exp:"La tarjeta mantiene el mismo mensaje y la oferta explica que el plan familiar sustituye a su Premium.", rec:"Que se entienda en una lectura y que «Ahora no» no castigue: la tarjeta se va del todo, Inicio queda limpio y el aviso dice dónde encontrar Mi Familia.", end:"Si la cierra, la sección desaparece, las herramientas suben y un aviso dice que Mi Familia sigue en Perfil", ac:["Se puede comprobar: Mira la tarjeta «Mi Familia: cuida de los tuyos» arriba en Inicio.","Se puede comprobar: Lee los tres pasos: invitas, cada uno elige qué comparte, os avisáis."], obs:true},{id:"c2", t:"Pulsa «Ahora no»", d:"La tarjeta no vuelve a Inicio. Mi Familia solo se le vuelve a ofrecer en contexto, si analiza algo peligroso (flujo F02).", cat:"Observación familiar", sev:"medium", scen:"Inicio", trig:"Mira la tarjeta «Mi Familia: cuida de los tuyos» arriba en Inicio · Lee los tres pasos: invitas, cada uno elige qué comparte, os avisáis", exp:"La tarjeta no vuelve a Inicio. Mi Familia solo se le vuelve a ofrecer en contexto, si analiza algo peligroso (flujo F02).", rec:"Que se entienda en una lectura y que «Ahora no» no castigue: la tarjeta se va del todo, Inicio queda limpio y el aviso dice dónde encontrar Mi Familia.", end:"Si la cierra, la sección desaparece, las herramientas suben y un aviso dice que Mi Familia sigue en Perfil", ac:["Se puede comprobar: Mira la tarjeta «Mi Familia: cuida de los tuyos» arriba en Inicio.","Se puede comprobar: Lee los tres pasos: invitas, cada uno elige qué comparte, os avisáis."], obs:true}]
+  },
+  famdescubrean: {
+    estado:"Nuevo",
+    plans:["free"],
+    pinWhy:"Este flujo parte de una cuenta Basic.",
+    role:"Basic",
+    stage:"Resultado del analizador",
+    desc:"El momento en que Mi Familia tiene más sentido: acabas de ver un enlace peligroso y piensas en tu madre.",
+    story:{as:"Cuando BeValk me dice que un enlace es peligroso", want:"quiero saber si puedo proteger también a mi familia", so:"para que no caigan en lo mismo"},
+    ctx:{problem:"Quién: Elena, Basic; Situación: Ha analizado bvva.xyz y el resultado es riesgo alto; Dónde aparece: Debajo del resultado, nunca encima", need:"Lee el resultado del análisis", result:"Toca «Ver cómo funciona» y llega a la oferta del plan familiar"},
+    value:{dim:"Colaboración familiar", why:"Contexto en vez de publicidad: se ofrece cuando la persona acaba de vivir el problema que Mi Familia resuelve."},
+    plan:{same:true,note:"Empieza con Basic."},
+    ac:[{"g":"Está en Resultado del analizador","w":"Lee el resultado del análisis","t":"Ve la nota «¿Le llegan mensajes así a alguien de tu familia?»"},{"g":"Está en Resultado del analizador","w":"Ve la nota «¿Le llegan mensajes así a alguien de tu familia?»","t":"Toca «Ver cómo funciona» y llega a la oferta del plan familiar"}],
+    cases:[{id:"c1", t:"Resultado de riesgo bajo", d:"No se muestra la nota. Ofrecer Mi Familia cuando todo va bien sonaría a venta.", cat:"Observación familiar", sev:"medium", scen:"Resultado del analizador", trig:"Lee el resultado del análisis · Ve la nota «¿Le llegan mensajes así a alguien de tu familia?»", exp:"No se muestra la nota. Ofrecer Mi Familia cuando todo va bien sonaría a venta.", rec:"Que la nota no compita con el resultado ni con «No abrir este enlace». Solo aparece con riesgo medio o alto.", end:"Toca «Ver cómo funciona» y llega a la oferta del plan familiar", ac:["Se puede comprobar: Lee el resultado del análisis.","Se puede comprobar: Ve la nota «¿Le llegan mensajes así a alguien de tu familia?»."], obs:true}]
+  },
   famoferta: {
-    role:"Quien gestiona (aún sin plan)", stage:"Descubrimiento familiar",
-    desc:"Oferta, tamaño y precio en una pantalla, sin tamaño marcado y con «Solo mayores de edad».",
-    story:{as:"hija que se preocupa por las estafas que recibe su madre", want:"entender qué es el plan familiar y cuánto cuesta para mi familia", so:"decidir sin letra pequeña"},
-    ctx:{problem:"Los planes familiares esconden el precio por persona y preseleccionan el más caro.", need:"Precio claro según el tamaño elegido.", result:"Elige tamaño y pasa a la tienda."},
-    value:{dim:"Conversión", why:"El plan familiar aumenta el valor por cuenta y la retención: quien cuida a otros rara vez cancela."},
-    plan:{same:false, free:["Ve la oferta familiar completa"], prem:["Ve la misma oferta; el plan familiar incluye Premium para todo el grupo"], up:"La oferta solo aparece en la pestaña Familia.", data:"Al contratar, quien gestiona pasa a tener Premium del grupo."},
-    money:{moment:"Abre la pestaña Familia sin plan.", need:"Proteger a sus mayores.", diff:"Solo el plan familiar permite avisar, responder y ver lo que comparten.",
-      opp:"Oferta con tamaño sin preseleccionar.", risk:"Precio poco claro o preselección del plan más caro.", noConvert:"Sigue usando su cuenta con normalidad."},
-    ac:[
-      {g:"no elige tamaño", w:"intenta continuar", t:"el botón dice «Elige cuántas personas» y no avanza", st:"impl"},
-      {g:"elige tamaño y periodo", w:"lo cambia", t:"ve el total y el precio por persona", st:"impl"},
-      {g:"completa la compra", w:"vuelve a la app", t:"pasa a crear el grupo con Premium del grupo activo", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["free"],
+    pinWhy:"Este flujo parte de una cuenta Basic.",
+    role:"Basic",
+    stage:"Plan familiar",
+    desc:"Tamaño, periodo y precio en una sola pantalla, con la compra en la hoja de la tienda.",
+    story:{as:"Cuando decido proteger a mi familia", want:"quiero saber cuánto cuesta y para quién es", so:"para pagar sin sorpresas"},
+    ctx:{problem:"Quién: Elena, Basic; Antes: 6 pantallas (A1 a A5); Ahora: 1 pantalla + hoja de la tienda", need:"Lee para quién es: «Solo mayores de edad»", result:"Toca «Continuar a la tienda» y suscríbete"},
+    value:{dim:"Colaboración familiar", why:"Menos pasos hasta pagar y ninguna sorpresa después: la restricción de edad se ve antes de pagar."},
+    plan:{same:true,note:"Empieza con Basic."},
+    ac:[{"g":"Está en Plan familiar","w":"Lee para quién es: «Solo mayores de edad»","t":"Elige cuántas personas (ninguna viene marcada)"},{"g":"Está en Plan familiar","w":"Elige cuántas personas (ninguna viene marcada)","t":"Elige mensual o anual y mira el precio por persona al año"},{"g":"Está en Plan familiar","w":"Elige mensual o anual y mira el precio por persona al año","t":"Toca «Continuar a la tienda» y suscríbete"}],
     cases:[
-      {id:"c1", t:"Continúa sin elegir tamaño", d:"Pulsa el botón sin elegir cuántas personas.", cat:"Validación", sev:"low",
+{id:"c1", t:"Continúa sin elegir tamaño", d:"Pulsa el botón sin elegir cuántas personas.", cat:"Validación", sev:"low",
        scen:"Oferta familiar sin tamaño elegido.", trig:"Pulsa el botón principal.",
        exp:"No avanza y le pide elegir cuántas personas.", rec:"Elige un tamaño.",
        end:"Llega a la hoja de la tienda con el precio correcto.", ac:["No hay tamaño preseleccionado.", "El total cambia al elegir."],
@@ -793,7 +819,7 @@ export const LAB: Record<string, DatosFlujoLab> = {
        steps:[
          {l:"Elige un tamaño", ok:s => !!(s.fam.offer && s.fam.offer.n)},
          {l:"Llega a la tienda", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "store")}]},
-      {id:"c2", t:"Compra el plan y su cuenta sigue gratuita", d:"Tras pagar el plan familiar, ¿quien gestiona tiene Premium?", cat:"Estado inconsistente", sev:"high",
+{id:"c2", t:"Compra el plan y su cuenta sigue gratuita", d:"Tras pagar el plan familiar, ¿quien gestiona tiene Premium?", cat:"Estado inconsistente", sev:"high",
        scen:"Oferta familiar con plan gratuito individual.", trig:"Elige tamaño, pasa por la tienda y confirma.",
        exp:"Al activarse el plan familiar, quien gestiona pasa a Premium del grupo.", rec:"No requiere acción.",
        end:"Crear el grupo con Premium activo.", ac:["No existe una administradora familiar en plan gratuito.", "El selector del Lab refleja Premium."],
@@ -801,23 +827,25 @@ export const LAB: Record<string, DatosFlujoLab> = {
        steps:[
          {l:"Confirma en la tienda", ok:s => !!(s.fam.sheet && s.fam.sheet.phase === "activating")},
          {l:"Plan familiar activo", ok:s => s.fam.view === "crear" && s.fam.role === "admin"},
-         {l:"Su cuenta es Premium", ok:(s, c) => s.fam.role === "admin" && c.world().plan === "premium"}]}
+         {l:"Su cuenta es Premium", ok:(s, c) => s.fam.role === "admin" && c.world().plan === "premium"}]},
+{id:"c3", t:"La tienda no responde", d:"Se mantiene la pantalla con el aviso «No podemos mostrar los precios ahora» y «Reintentar».", cat:"Observación familiar", sev:"low", scen:"Plan familiar", trig:"Lee para quién es: «Solo mayores de edad» · Elige cuántas personas (ninguna viene marcada)", exp:"Se mantiene la pantalla con el aviso «No podemos mostrar los precios ahora» y «Reintentar».", rec:"Que el botón no se active hasta elegir tamaño y que el precio diga siempre «al año» o «al mes».", end:"Toca «Continuar a la tienda» y suscríbete", ac:["Se puede comprobar: Lee para quién es: «Solo mayores de edad».","Se puede comprobar: Elige cuántas personas (ninguna viene marcada)."], obs:true},
+{id:"c4", t:"Compra pendiente de aprobación", d:"Se informa de que la compra está pendiente y se permite salir sin perderla.", cat:"Observación familiar", sev:"low", scen:"Plan familiar", trig:"Lee para quién es: «Solo mayores de edad» · Elige cuántas personas (ninguna viene marcada)", exp:"Se informa de que la compra está pendiente y se permite salir sin perderla.", rec:"Que el botón no se active hasta elegir tamaño y que el precio diga siempre «al año» o «al mes».", end:"Toca «Continuar a la tienda» y suscríbete", ac:["Se puede comprobar: Lee para quién es: «Solo mayores de edad».","Se puede comprobar: Elige cuántas personas (ninguna viene marcada)."], obs:true}
     ]
   },
   famcrear: {
-    plans:["premium"], pinWhy:"El plan familiar incluye Premium para quien gestiona.",
-    role:"Quien gestiona", stage:"Configuración familiar",
-    desc:"Nombre del grupo y qué comparte, con interruptores que funcionan. Al crearlo se abre la invitación.",
-    story:{as:"persona que acaba de contratar el plan familiar", want:"crear el grupo e invitar a mi madre en un minuto", so:"empezar a cuidarla hoy"},
-    ctx:{problem:"Invitar a personas poco digitales falla si el mensaje parece una estafa.", need:"Un mensaje de invitación que enseñe a comprobar antes de abrir.", result:"Grupo creado e invitación lista."},
-    value:{dim:"Colaboración familiar", why:"Cada persona invitada multiplica el valor del plan y la retención de quien paga."},
-    plan:{same:true, note:"Solo existe con plan familiar (Premium del grupo)."},
-    ac:[
-      {g:"crea el grupo", w:"invita sin escribir apodo", t:"se le pide un apodo", st:"impl"},
-      {g:"tiene una invitación pendiente", w:"la anula", t:"la plaza queda libre", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Crea tu grupo",
+    desc:"Nada más pagar: nombre del grupo, qué compartes tú y la primera invitación.",
+    story:{as:"Cuando acabo de contratar", want:"quiero tener a mi madre dentro cuanto antes", so:"para empezar a cuidarla hoy"},
+    ctx:{problem:"Quién: Elena, acaba de pagar; Situación: Grupo sin miembros; Siguiente: La invitación se abre sola", need:"Revisa el nombre «Familia Navarro»", result:"Comparte el mensaje ya escrito"},
+    value:{dim:"Colaboración familiar", why:"Reciprocidad desde el minuto uno: quien paga también comparte. Y la invitación enseña a verificar."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Crea tu grupo","w":"Revisa el nombre «Familia Navarro»","t":"Decide qué compartes tú con tu familia (interruptores operativos)"},{"g":"Está en Crea tu grupo","w":"Decide qué compartes tú con tu familia (interruptores operativos)","t":"Toca «Crear grupo e invitar»"},{"g":"Está en Crea tu grupo","w":"Toca «Crear grupo e invitar»","t":"Escribe cómo quieres llamarle y crea la invitación"},{"g":"Está en Crea tu grupo","w":"Escribe cómo quieres llamarle y crea la invitación","t":"Comparte el mensaje ya escrito"}],
     cases:[
-      {id:"c1", t:"Invita sin escribir apodo", d:"Crea el grupo y pulsa crear invitación con el campo vacío.", cat:"Validación", sev:"low",
+{id:"c1", t:"Invita sin escribir apodo", d:"Crea el grupo y pulsa crear invitación con el campo vacío.", cat:"Validación", sev:"low",
        scen:"Pantalla de crear grupo.", trig:"Crea el grupo y pulsa crear la invitación sin apodo.",
        exp:"Se le pide el apodo sin cerrar la hoja.", rec:"Escribe un apodo de hasta 30 caracteres.",
        end:"Invitación lista con su mensaje.", ac:["No se crea una invitación sin nombre.", "El contador de caracteres es visible."],
@@ -826,32 +854,45 @@ export const LAB: Record<string, DatosFlujoLab> = {
          {l:"Crea el grupo", ok:s => !!s.fam.created && !!(s.fam.sheet && s.fam.sheet.kind === "invite")},
          {l:"Invita sin apodo", ok:s => !!(s.fam.sheet && s.fam.sheet.err)},
          {l:"Invitación lista", ok:s => !!(s.fam.sheet && s.fam.sheet.step === "ready")}]},
-      {id:"c2", t:"Anula una invitación pendiente", d:"Ana no ha aceptado y quiere liberar su plaza.", cat:"Recuperación", sev:"low",
+{id:"c2", t:"Anula una invitación pendiente", d:"Ana no ha aceptado y quiere liberar su plaza.", cat:"Recuperación", sev:"low",
        scen:"Grupo con la invitación de Ana pendiente.", trig:"Abre la invitación de Ana y anúlala.",
        exp:"La invitación desaparece y la plaza queda libre.", rec:"Puede invitar a otra persona.",
        end:"Grupo sin invitaciones pendientes.", ac:["Se confirma qué pasa con la plaza."],
        prep: c => c.setState(st => ({fam: Object.assign({}, st.fam, {view:"hub", created:true, members: FAM_MEMBERS0.map(m => Object.assign({}, m)), reqs:[], sheet:null})})),
        steps:[
          {l:"Abre la invitación", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "inviteView")},
-         {l:"La anula", ok:s => !s.fam.members.some(m => m.pending)}]}
+         {l:"La anula", ok:s => !s.fam.members.some(m => m.pending)}]},
+{id:"c3", t:"No comparte nada", d:"Se puede crear el grupo con todo apagado. Los miembros verán «Elena no comparte nada contigo».", cat:"Observación familiar", sev:"low", scen:"Crea tu grupo", trig:"Revisa el nombre «Familia Navarro» · Decide qué compartes tú con tu familia (interruptores operativos)", exp:"Se puede crear el grupo con todo apagado. Los miembros verán «Elena no comparte nada contigo».", rec:"Que los interruptores funcionen desde el principio y que el mensaje de invitación no parezca una estafa.", end:"Comparte el mensaje ya escrito", ac:["Se puede comprobar: Revisa el nombre «Familia Navarro».","Se puede comprobar: Decide qué compartes tú con tu familia (interruptores operativos)."], obs:true}
     ]
   },
+  famcalma: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Inicio",
+    desc:"Qué ve quien gestiona cuando no hay peticiones ni riesgos: la tarjeta de Inicio sigue ahí, en calma.",
+    story:{as:"Cuando abro BeValk un día cualquiera", want:"quiero saber de un vistazo que mi familia está bien", so:"para quedarme tranquila sin tener que entrar"},
+    ctx:{problem:"Quién: Elena, gestiona Familia Navarro; Situación: Nadie ha pedido ayuda y nadie ha analizado nada peligroso; Respuesta: Sí, la tarjeta se mantiene, sin insignia, y se puede cerrar", need:"Mira la tarjeta «Mi Familia» en Inicio: «Todo en orden. Nadie ha pedido ayuda»", result:"Si quieres, entra y mira el panel"},
+    value:{dim:"Colaboración familiar", why:"Tranquilidad también es valor de producto. Y si ya lo ha leído, no ocupa sitio: vuelve sola el día que haya algo que mirar."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Inicio","w":"Mira la tarjeta «Mi Familia» en Inicio: «Todo en orden. Nadie ha pedido ayuda»","t":"Comprueba que no hay insignia roja"},{"g":"Está en Inicio","w":"Comprueba que no hay insignia roja","t":"Si quieres, entra y mira el panel"}],
+    cases:[{id:"c1", t:"Nadie ha aceptado la invitación todavía", d:"La tarjeta dice que las invitaciones están pendientes y que avisaremos cuando alguien acepte.", cat:"Cuidado familiar", sev:"high", scen:"Inicio", trig:"Mira la tarjeta «Mi Familia» en Inicio: «Todo en orden. Nadie ha pedido ayuda» · Comprueba que no hay insignia roja", exp:"La tarjeta dice que las invitaciones están pendientes y que avisaremos cuando alguien acepte.", rec:"Que el tono sea tranquilo y que se pueda cerrar. Si la cierra, no vuelve hasta que haya novedades (una petición, un riesgo o el fin del plan).", end:"Si quieres, entra y mira el panel", ac:["Se puede comprobar: Mira la tarjeta «Mi Familia» en Inicio: «Todo en orden. Nadie ha pedido ayuda».","Se puede comprobar: Comprueba que no hay insignia roja."], caso:"nadie", prep:c=>{ c.famSet({reqs:[],members:[{id:"mama",nick:"Mamá",ini:"M",pending:true,expires:"4 de noviembre"},{id:"ana",nick:"Ana",ini:"A",pending:true,expires:"5 de noviembre"}]}); }, steps:[{l:"Abre el panel con las invitaciones pendientes",ok:s=>s.screen==="familia" && s.fam.members.length===2 && s.fam.members.every(m=>m.pending) && s.fam.reqs.length===0}]},{id:"c2", t:"Cierra la tarjeta y al día siguiente Mamá pide ayuda", d:"La tarjeta vuelve con la insignia «1 petición»: lo cerrado era «todo en orden», no la petición.", cat:"Observación familiar", sev:"medium", scen:"Inicio", trig:"Mira la tarjeta «Mi Familia» en Inicio: «Todo en orden. Nadie ha pedido ayuda» · Comprueba que no hay insignia roja", exp:"La tarjeta vuelve con la insignia «1 petición»: lo cerrado era «todo en orden», no la petición.", rec:"Que el tono sea tranquilo y que se pueda cerrar. Si la cierra, no vuelve hasta que haya novedades (una petición, un riesgo o el fin del plan).", end:"Si quieres, entra y mira el panel", ac:["Se puede comprobar: Mira la tarjeta «Mi Familia» en Inicio: «Todo en orden. Nadie ha pedido ayuda».","Se puede comprobar: Comprueba que no hay insignia roja."], obs:true}]
+  },
   famadmin: {
-    plans:["premium"], pinWhy:"Responder a la familia requiere el plan familiar (Premium del grupo).",
-    role:"Quien gestiona", stage:"Cuidado familiar",
-    desc:"La petición de Mamá sale arriba en Inicio y es la tarea Protege de la semana. Responder lleva 3 toques y nunca permite decir «es seguro» si BeValk ve riesgo.",
-    story:{as:"hija a la que su madre pide ayuda con un enlace", want:"responderle rápido con un mensaje claro", so:"evitar que caiga en la estafa mientras estoy trabajando"},
-    ctx:{problem:"Responder «parece bien» a un enlace peligroso es un riesgo real.", need:"Respuestas rápidas y seguras.", result:"Mamá recibe una respuesta en 3 toques."},
-    value:{dim:"Colaboración familiar", why:"Es el núcleo del plan familiar: la respuesta rápida es lo que la persona cuidada valora."},
-    plan:{same:true, note:"Solo existe con plan familiar."},
-    ac:[
-      {g:"Mamá pide ayuda con un enlace de riesgo alto", w:"abre la petición", t:"no se ofrece ninguna respuesta que diga que es seguro", st:"impl"},
-      {g:"Mamá envía la misma petición dos veces", w:"responde", t:"una sola respuesta cierra las dos", st:"impl"},
-      {g:"el motivo es «Me piden dinero»", w:"abre la petición", t:"las respuestas urgentes aparecen primero", st:"impl"},
-      {g:"no hay conexión", w:"envía la respuesta", t:"la respuesta elegida se conserva hasta poder enviarla", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Inicio con insignia",
+    desc:"El núcleo de Mi Familia: Mamá duda de un enlace y Elena responde desde el móvil.",
+    story:{as:"Cuando mi madre me pide ayuda con algo que le ha llegado", want:"quiero responderle rápido y bien", so:"para que no caiga en una estafa"},
+    ctx:{problem:"Quién: Elena; Petición: Mamá: «No sé si es seguro» sobre entrega-paquete.ejemplo.com; Resultado de BeValk: Riesgo alto", need:"Ve «1 petición» en la tarjeta de Inicio", result:"Revisa «Esto verá Mamá» y envía"},
+    value:{dim:"Colaboración familiar", why:"BeValk no puede decir «peligro» y dejar que la familia diga «seguro». Era el único bloqueo crítico de la auditoría."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Inicio con insignia","w":"Ve «1 petición» en la tarjeta de Inicio","t":"Entra y toca «Responder» en el aviso morado"},{"g":"Está en Inicio con insignia","w":"Entra y toca «Responder» en el aviso morado","t":"Lee el enlace, el resultado y el motivo"},{"g":"Está en Inicio con insignia","w":"Lee el enlace, el resultado y el motivo","t":"Elige una respuesta (no aparece ninguna que diga que es seguro)"},{"g":"Está en Inicio con insignia","w":"Elige una respuesta (no aparece ninguna que diga que es seguro)","t":"Revisa «Esto verá Mamá» y envía"}],
     cases:[
-      {id:"c1", t:"Mamá lo pide dos veces", d:"Insiste con el mismo enlace mientras la primera sigue pendiente.", cat:"Acción duplicada", sev:"medium",
+{id:"c1", t:"Mamá lo pide dos veces", d:"Insiste con el mismo enlace mientras la primera sigue pendiente.", cat:"Acción duplicada", sev:"medium",
        scen:"Dos peticiones de Mamá sobre el mismo enlace.", trig:"Abre la petición y responde.",
        exp:"Se agrupan: la tarjeta indica que lo ha pedido dos veces y una respuesta cierra ambas.", rec:"No requiere acción.",
        end:"No quedan peticiones pendientes.", ac:["No hay que responder dos veces lo mismo.", "La tarjeta refleja la insistencia."],
@@ -859,7 +900,7 @@ export const LAB: Record<string, DatosFlujoLab> = {
        steps:[
          {l:"Abre la petición", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "reply")},
          {l:"Responde una vez", ok:s => s.fam.reqs.length > 1 && s.fam.reqs.every(r => !!r.reply)}]},
-      {id:"c2", t:"Le piden dinero: es urgente", d:"Mamá dice que le piden un pago para entregar el paquete.", cat:"Seguridad", sev:"critical",
+{id:"c2", t:"Le piden dinero: es urgente", d:"Mamá dice que le piden un pago para entregar el paquete.", cat:"Seguridad", sev:"critical",
        scen:"Petición de Mamá con el motivo «Me piden dinero».", trig:"Abre la petición.",
        exp:"Las respuestas «No hagas ese pago. Llámame antes» y similares aparecen primero; ninguna dice que sea seguro.", rec:"Elige la respuesta urgente y envíala.",
        end:"Mamá recibe la orientación de seguridad.", ac:["La respuesta urgente está la primera.", "No se ofrece «no veo nada raro» con riesgo alto."],
@@ -868,7 +909,7 @@ export const LAB: Record<string, DatosFlujoLab> = {
          {l:"Abre la petición", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "reply")},
          {l:"Elige «No hagas ese pago»", ok:s => !!(s.fam.sheet && s.fam.sheet.msg === 6)},
          {l:"Respuesta enviada", ok:s => s.fam.reqs.some(r => r.reply === 6)}]},
-      {id:"c3", t:"Responde sin conexión", d:"Está en el metro cuando llega la petición.", cat:"Sin conexión", sev:"high",
+{id:"c3", t:"Responde sin conexión", d:"Está en el metro cuando llega la petición.", cat:"Sin conexión", sev:"high",
        scen:"Petición de Mamá con el móvil sin conexión.", trig:"Elige una respuesta y envíala.",
        exp:"No se envía; la hoja sigue abierta con la respuesta elegida.", rec:"Vuelve la conexión y envía.",
        end:"Respuesta enviada.", ac:["No se muestra «Respuesta enviada» sin red.", "La respuesta elegida se conserva."],
@@ -876,23 +917,56 @@ export const LAB: Record<string, DatosFlujoLab> = {
        steps:[
          {l:"Envía sin red", ok:s => s.netBlock === "famreply"},
          {l:"Vuelve la conexión", ok:(s, c) => !c.off()},
-         {l:"Respuesta enviada", ok:s => s.fam.reqs.some(r => !!r.reply)}]}
+         {l:"Respuesta enviada", ok:s => s.fam.reqs.some(r => !!r.reply)}]},
+{id:"c4", t:"Petición sobre un enlace de riesgo bajo", d:"Ahora sí aparece «Lo he mirado y no veo nada raro. Si te piden dinero o datos, para y avísame».", cat:"Cuidado familiar", sev:"medium", scen:"Inicio con insignia", trig:"Ve «1 petición» en la tarjeta de Inicio · Entra y toca «Responder» en el aviso morado", exp:"Ahora sí aparece «Lo he mirado y no veo nada raro. Si te piden dinero o datos, para y avísame».", rec:"El filtro: con riesgo medio o alto no se ofrece «Lo he mirado y no veo nada raro». Y que la hoja explique por qué.", end:"Revisa «Esto verá Mamá» y envía", ac:["Se puede comprobar: Ve «1 petición» en la tarjeta de Inicio.","Se puede comprobar: Entra y toca «Responder» en el aviso morado."], caso:"bajo", prep:c=>{ c.famSet({reqs:[{id:"r1",from:"mama",kind:"link",obj:"correos.es",v:"safe",motive:"No sé si es seguro",when:"hace 10 min",reply:null}],sheet:{kind:"reply",req:"r1",msg:null}}); }, steps:[{l:"Elige una respuesta sin afirmar que el enlace es seguro",ok:s=>!!s.fam.sheet && s.fam.sheet.msg===3},{l:"Envía la respuesta a Mamá",ok:s=>s.fam.reqs[0] && s.fam.reqs[0].reply===3}]},
+{id:"c5", t:"El enlace ya no existe", d:"Se responde igual; el detalle del enlace dice que ya no está disponible.", cat:"Observación familiar", sev:"low", scen:"Inicio con insignia", trig:"Ve «1 petición» en la tarjeta de Inicio · Entra y toca «Responder» en el aviso morado", exp:"Se responde igual; el detalle del enlace dice que ya no está disponible.", rec:"El filtro: con riesgo medio o alto no se ofrece «Lo he mirado y no veo nada raro». Y que la hoja explique por qué.", end:"Revisa «Esto verá Mamá» y envía", ac:["Se puede comprobar: Ve «1 petición» en la tarjeta de Inicio.","Se puede comprobar: Entra y toca «Responder» en el aviso morado."], obs:true}
+    ]
+  },
+  famficha: {
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Ficha de Mamá",
+    desc:"Elena ve que Mamá analizó un enlace de riesgo alto y le avisa sin que ella lo haya pedido.",
+    story:{as:"Cuando veo que mi madre ha analizado algo peligroso", want:"quiero avisarle en un toque", so:"para que no lo abra"},
+    ctx:{problem:"Quién: Elena; Situación: Mamá analizó un enlace de riesgo alto hace 2 h; Antes: 8 toques; ahora 5", need:"Toca el enlace entrega-paquete.ejemplo.com en la ficha", result:"Elige el mensaje y envía"},
+    value:{dim:"Colaboración familiar", why:"Un solo patrón para avisar y menos datos expuestos: la dirección completa solo la ve su dueña."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Ficha de Mamá","w":"Toca el enlace entrega-paquete.ejemplo.com en la ficha","t":"Lee el detalle: solo el dominio, con el motivo"},{"g":"Está en Ficha de Mamá","w":"Lee el detalle: solo el dominio, con el motivo","t":"Toca «Avisar a Mamá sobre este enlace»"},{"g":"Está en Ficha de Mamá","w":"Toca «Avisar a Mamá sobre este enlace»","t":"Elige el mensaje y envía"}],
+    cases:[
+{id:"c1", t:"Abuelo Pep no comparte su huella", d:"Quiere ver si sus datos se han filtrado.", cat:"Permisos insuficientes", sev:"high",
+       scen:"Ficha de Abuelo Pep, que solo comparte enlaces y actividad.", trig:"Busca la sección Huella.",
+       exp:"«Abuelo Pep no comparte esto contigo»; no hay botón para forzarlo.", rec:"Puede hablar con él o enviarle un aviso.",
+       end:"La privacidad de Pep se respeta.", ac:["No se muestra ningún dato de huella.", "Queda claro desde cuándo comparte cada cosa."],
+       prep: c => c.famGo("ficha", {mid:"pep", from:"tab"}),
+       steps:[
+         {l:"Le envía un aviso o vuelve", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "avisar") || s.fam.view === "hub"}]},
+{id:"c2", t:"Retira a alguien del grupo", d:"Toca «Retirar» y duda.", cat:"Seguridad", sev:"medium",
+       scen:"Ficha de Mamá.", trig:"Pulsa «Retirar a Mamá del grupo».",
+       exp:"Hoja con las consecuencias: pierde Premium del grupo, la plaza queda libre y se le avisa.", rec:"Cancela o confirma.",
+       end:"Decisión informada.", ac:["La acción incluye el nombre.", "Se puede cancelar."],
+       prep: c => {},
+       steps:[
+         {l:"Pulsa Retirar", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "retirar")},
+         {l:"Cancela o confirma", ok:s => !s.fam.sheet}]},
+{id:"c3", t:"Ha enviado muchos avisos seguidos", d:"Se indica cuánto esperar antes de poder enviar otro.", cat:"Observación familiar", sev:"low", scen:"Ficha de Mamá", trig:"Toca el enlace entrega-paquete.ejemplo.com en la ficha · Lee el detalle: solo el dominio, con el motivo", exp:"Se indica cuánto esperar antes de poder enviar otro.", rec:"Que se vea el dominio y no la dirección completa, y que Avisar sea la misma hoja que desde cualquier otro sitio.", end:"Elige el mensaje y envía", ac:["Se puede comprobar: Toca el enlace entrega-paquete.ejemplo.com en la ficha.","Se puede comprobar: Lee el detalle: solo el dominio, con el motivo."], obs:true}
     ]
   },
   famavisar: {
-    plans:["premium"], pinWhy:"Avisar al grupo requiere el plan familiar.",
-    role:"Quien gestiona", stage:"Cuidado familiar",
-    desc:"Mensajes ya escritos y vista previa de lo que verá cada persona. Cada una lo recibe por separado.",
-    story:{as:"persona que ha visto circular una estafa nueva", want:"avisar a toda mi familia con un mensaje claro", so:"que nadie caiga esta semana"},
-    ctx:{problem:"Escribir avisos desde cero es lento y se explican mal.", need:"Mensajes probados y saber quién los recibe.", result:"Aviso enviado a cada miembro."},
-    value:{dim:"Colaboración familiar", why:"Avisar de forma proactiva es el gesto de cuidado más frecuente del plan."},
-    plan:{same:true, note:"Solo existe con plan familiar."},
-    ac:[
-      {g:"no elige mensaje", w:"pulsa enviar", t:"se le pide elegir uno", st:"impl"},
-      {g:"hay una invitación pendiente", w:"envía al grupo", t:"solo lo reciben quienes ya están en el grupo", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Hoja Avisar al grupo",
+    desc:"Una estafa circula y Elena avisa a toda la familia a la vez.",
+    story:{as:"Cuando me entero de una estafa que circula", want:"quiero avisar a todos a la vez", so:"para que nadie caiga"},
+    ctx:{problem:"Quién: Elena; Destinatarios: Mamá, Abuelo Pep y Marcos; Privacidad: Nadie ve a quién más se ha enviado", need:"Elige uno de los mensajes para todo el grupo", result:"Revisa «Esto verá cada persona» y envía"},
+    value:{dim:"Colaboración familiar", why:"Avisar a todos es útil pero no debe ser lo primero que se toca: se evita la fatiga de avisos."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Hoja Avisar al grupo","w":"Elige uno de los mensajes para todo el grupo","t":"Lee «Lo reciben 3 personas, cada una por separado»"},{"g":"Está en Hoja Avisar al grupo","w":"Lee «Lo reciben 3 personas, cada una por separado»","t":"Revisa «Esto verá cada persona» y envía"}],
     cases:[
-      {id:"c1", t:"Envía sin elegir mensaje", d:"Pulsa enviar con prisa.", cat:"Validación", sev:"low",
+{id:"c1", t:"Envía sin elegir mensaje", d:"Pulsa enviar con prisa.", cat:"Validación", sev:"low",
        scen:"Hoja «Avisar al grupo» sin mensaje elegido.", trig:"Pulsa «Enviar aviso».",
        exp:"Pide elegir un mensaje; no envía nada vacío.", rec:"Elige un mensaje.",
        end:"Aviso enviado y registrado en Enviados.", ac:["Nunca se envía un aviso vacío.", "La vista previa muestra lo que verán."],
@@ -901,91 +975,145 @@ export const LAB: Record<string, DatosFlujoLab> = {
          {l:"Envía sin mensaje", ok:s => !!(s.fam.sheet && s.fam.sheet.err)},
          {l:"Elige un mensaje", ok:s => !!(s.fam.sheet && s.fam.sheet.msg)},
          {l:"Aviso enviado", ok:s => !s.fam.sheet && s.fam.sent.length > FAM_SENT0.length}]},
-      {id:"c2", t:"Ana aún no ha aceptado", d:"Ana tiene la invitación pendiente.", cat:"Acceso restringido", sev:"low",
+{id:"c2", t:"Ana aún no ha aceptado", d:"Ana tiene la invitación pendiente.", cat:"Acceso restringido", sev:"low",
        scen:"Grupo con tres miembros y la invitación de Ana pendiente.", trig:"Elige un mensaje y envía al grupo.",
        exp:"Lo reciben las tres personas del grupo; Ana no, porque aún no ha aceptado.", rec:"No requiere acción.",
        end:"Registro de envío con tres destinatarios.", ac:["Nadie recibe avisos sin haber aceptado la invitación."],
        prep: c => {},
        steps:[
-         {l:"Aviso enviado", ok:s => s.fam.sent.length > FAM_SENT0.length && s.fam.sent[0].to.length === 3 && !s.fam.sent[0].to.some(x => x.n === "Ana")}]}
+         {l:"Aviso enviado", ok:s => s.fam.sent.length > FAM_SENT0.length && s.fam.sent[0].to.length === 3 && !s.fam.sent[0].to.some(x => x.n === "Ana")}]},
+{id:"c3", t:"Solo hay una persona en el grupo", d:"El botón «Avisar a todo el grupo» no aparece.", cat:"Observación familiar", sev:"low", scen:"Hoja Avisar al grupo", trig:"Elige uno de los mensajes para todo el grupo · Lee «Lo reciben 3 personas, cada una por separado»", exp:"El botón «Avisar a todo el grupo» no aparece.", rec:"Que sea una acción secundaria en el panel y que los mensajes sean generales, no sobre un objeto.", end:"Revisa «Esto verá cada persona» y envía", ac:["Se puede comprobar: Elige uno de los mensajes para todo el grupo.","Se puede comprobar: Lee «Lo reciben 3 personas, cada una por separado»."], obs:true}
     ]
   },
-  famficha: {
-    plans:["premium"], pinWhy:"La ficha de un miembro requiere el plan familiar.",
-    role:"Quien gestiona", stage:"Cuidado familiar",
-    desc:"Una página de arriba abajo: resumen, enlaces (solo el dominio), huella y actividad. «Retirar del grupo», al final y con su nombre.",
-    story:{as:"hija que quiere saber cómo está su madre", want:"ver de un vistazo si ha tenido riesgos", so:"saber si tengo que llamarla"},
-    ctx:{problem:"Ver demasiado invade la privacidad; ver poco no ayuda.", need:"Lo justo y solo lo que la persona comparte.", result:"Sabe si debe intervenir."},
-    value:{dim:"Colaboración familiar", why:"La ficha equilibra cuidado y privacidad: es lo que hace aceptable el plan para quien es cuidado."},
-    plan:{same:true, note:"Solo existe con plan familiar."},
-    ac:[
-      {g:"un miembro no comparte su huella", w:"abre su ficha", t:"ve que no la comparte, sin forma de saltárselo", st:"impl"},
-      {g:"quiere retirar a alguien", w:"pulsa Retirar", t:"ve las consecuencias con su nombre antes de confirmar", st:"impl"}
-    ],
-    cases:[
-      {id:"c1", t:"Abuelo Pep no comparte su huella", d:"Quiere ver si sus datos se han filtrado.", cat:"Permisos insuficientes", sev:"high",
-       scen:"Ficha de Abuelo Pep, que solo comparte enlaces y actividad.", trig:"Busca la sección Huella.",
-       exp:"«Abuelo Pep no comparte esto contigo»; no hay botón para forzarlo.", rec:"Puede hablar con él o enviarle un aviso.",
-       end:"La privacidad de Pep se respeta.", ac:["No se muestra ningún dato de huella.", "Queda claro desde cuándo comparte cada cosa."],
-       prep: c => c.famGo("ficha", {mid:"pep", from:"tab"}),
-       steps:[
-         {l:"Le envía un aviso o vuelve", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "avisar") || s.fam.view === "hub"}]},
-      {id:"c2", t:"Retira a alguien del grupo", d:"Toca «Retirar» y duda.", cat:"Seguridad", sev:"medium",
-       scen:"Ficha de Mamá.", trig:"Pulsa «Retirar a Mamá del grupo».",
-       exp:"Hoja con las consecuencias: pierde Premium del grupo, la plaza queda libre y se le avisa.", rec:"Cancela o confirma.",
-       end:"Decisión informada.", ac:["La acción incluye el nombre.", "Se puede cancelar."],
-       prep: c => {},
-       steps:[
-         {l:"Pulsa Retirar", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "retirar")},
-         {l:"Cancela o confirma", ok:s => !s.fam.sheet}]}
-    ]
+  famfichapep: {
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Ficha de Abuelo Pep",
+    desc:"Abuelo Pep solo comparte enlaces y actividad. La ficha lo respeta sin presionar.",
+    story:{as:"Cuando miro cómo está mi abuelo", want:"quiero ver lo que ha decidido compartir", so:"para cuidarle sin invadir su intimidad"},
+    ctx:{problem:"Quién: Elena; Comparte: Enlaces y Actividad; Huella no; Riesgo: Medio, hace 1 día", need:"Lee el resumen de riesgo medio", result:"Al final, mira qué ha aceptado compartir y desde cuándo"},
+    value:{dim:"Colaboración familiar", why:"La supervisión es aceptable porque cada persona manda sobre sus datos."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Ficha de Abuelo Pep","w":"Lee el resumen de riesgo medio","t":"Revisa sus enlaces"},{"g":"Está en Ficha de Abuelo Pep","w":"Revisa sus enlaces","t":"En Huella lee «Abuelo Pep no comparte esto contigo»"},{"g":"Está en Ficha de Abuelo Pep","w":"En Huella lee «Abuelo Pep no comparte esto contigo»","t":"Al final, mira qué ha aceptado compartir y desde cuándo"}],
+    cases:[{id:"c1", t:"No comparte nada", d:"La ficha muestra solo el estado de la invitación y el botón Avisar.", cat:"Observación familiar", sev:"high", scen:"Ficha de Abuelo Pep", trig:"Lee el resumen de riesgo medio · Revisa sus enlaces", exp:"La ficha muestra solo el estado de la invitación y el botón Avisar.", rec:"El tono de «no comparte esto contigo»: informa sin juicio y sin botón para pedírselo.", end:"Al final, mira qué ha aceptado compartir y desde cuándo", ac:["Se puede comprobar: Lee el resumen de riesgo medio.","Se puede comprobar: Revisa sus enlaces."], obs:true}]
+  },
+  faminvitar: {
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Hoja Invitar",
+    desc:"Invitar es una hoja de dos pasos: cómo le llamas y el mensaje listo para compartir.",
+    story:{as:"Cuando quiero sumar a otra persona", want:"quiero mandarle algo que no parezca una estafa", so:"para que acepte con confianza"},
+    ctx:{problem:"Quién: Elena; Plazas: 5 de 6 ocupadas o reservadas; Mensaje: En primera persona, sin «gratis»", need:"Escribe cómo quieres llamarle", result:"Compártelo o copia el enlace y toca «Hecho»"},
+    value:{dim:"Colaboración familiar", why:"La invitación enseña a verificar, justo lo que BeValk predica."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Hoja Invitar","w":"Escribe cómo quieres llamarle","t":"Toca «Crear invitación»"},{"g":"Está en Hoja Invitar","w":"Toca «Crear invitación»","t":"Lee el mensaje ya escrito"},{"g":"Está en Hoja Invitar","w":"Lee el mensaje ya escrito","t":"Compártelo o copia el enlace y toca «Hecho»"}],
+    cases:[{id:"c1", t:"La invitación de Ana sigue pendiente", d:"Se puede compartir de nuevo, copiar o anular. «Anular invitación» libera la plaza.", cat:"Cuidado familiar", sev:"medium", scen:"Hoja Invitar", trig:"Escribe cómo quieres llamarle · Toca «Crear invitación»", exp:"Se puede compartir de nuevo, copiar o anular. «Anular invitación» libera la plaza.", rec:"Que «¿Cómo quieres llamarle?» no asuma género y que «Hecho» devuelva al panel con la invitación en la lista.", end:"Compártelo o copia el enlace y toca «Hecho»", ac:["Se puede comprobar: Escribe cómo quieres llamarle.","Se puede comprobar: Toca «Crear invitación»."], caso:"pendiente", prep:c=>{ c.famSet({sheet:{kind:"inviteView",id:"ana"}}); }, steps:[{l:"Anula la invitación y libera la plaza",ok:s=>!s.fam.sheet && !s.fam.members.some(m=>m.id==="ana")}]},{id:"c2", t:"No quedan plazas", d:"Se explica que hay que anular una invitación o subir de tamaño en la tienda.", cat:"Observación familiar", sev:"low", scen:"Hoja Invitar", trig:"Escribe cómo quieres llamarle · Toca «Crear invitación»", exp:"Se explica que hay que anular una invitación o subir de tamaño en la tienda.", rec:"Que «¿Cómo quieres llamarle?» no asuma género y que «Hecho» devuelva al panel con la invitación en la lista.", end:"Compártelo o copia el enlace y toca «Hecho»", ac:["Se puede comprobar: Escribe cómo quieres llamarle.","Se puede comprobar: Toca «Crear invitación»."], obs:true}]
   },
   famajustes: {
-    plans:["premium"], pinWhy:"Los ajustes del grupo existen solo con plan familiar.",
-    role:"Quien gestiona", stage:"Gestión del plan",
-    desc:"Qué ven sus miembros, con vista previa, y cancelar el plan con las consecuencias claras.",
-    story:{as:"persona que paga el plan familiar", want:"controlar qué comparto y saber qué pasa si cancelo", so:"tomar decisiones sin sorpresas"},
-    ctx:{problem:"Cancelar planes compartidos sin ver el impacto en otros genera conflictos.", need:"Consecuencias explícitas antes de cancelar.", result:"Decide con información."},
-    value:{dim:"Confianza", why:"Una cancelación honesta reduce disputas y aumenta la probabilidad de volver."},
-    plan:{same:true, note:"Solo existe con plan familiar."},
-    ac:[
-      {g:"pulsa cancelar el plan", w:"ve la hoja", t:"sabe hasta cuándo sigue activo y qué pasa a cada persona", st:"impl"},
-      {g:"cambia lo que comparte", w:"abre la vista previa", t:"ve qué verán sus miembros", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Ajustes de Mi Familia",
+    desc:"Un solo ajuste para todos los miembros, guardado al momento y avisado.",
+    story:{as:"Cuando quiero dejar de compartir mi actividad", want:"quiero cambiarlo yo sola", so:"para mantener mi intimidad"},
+    ctx:{problem:"Quién: Elena; Ajuste: Huella, Enlaces analizados y Actividad; Visible: Su nombre siempre lo ven sus miembros", need:"Toca un interruptor", result:"Toca «Ver lo que ven tus miembros» para comprobarlo"},
+    value:{dim:"Colaboración familiar", why:"Control reversible y comprobable: puedes ver el efecto sin imaginarlo."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Ajustes de Mi Familia","w":"Toca un interruptor","t":"Lee «Guardado. Se lo avisaremos a tus miembros»"},{"g":"Está en Ajustes de Mi Familia","w":"Lee «Guardado. Se lo avisaremos a tus miembros»","t":"Toca «Ver lo que ven tus miembros» para comprobarlo"}],
     cases:[
-      {id:"c1", t:"Cancela el plan familiar", d:"Quiere dejar de pagar el plan.", cat:"Cancelación Premium", sev:"medium",
+{id:"c1", t:"Cancela el plan familiar", d:"Quiere dejar de pagar el plan.", cat:"Cancelación Premium", sev:"medium",
        scen:"Ajustes de Mi Familia.", trig:"Pulsa cancelar el plan.",
        exp:"Hoja con fecha de fin, cuántas personas pasan a Basic y qué deja de ver.", rec:"Se queda o va a la tienda a cancelar.",
        end:"Decisión informada; el plan no se corta al instante.", ac:["La fecha de fin es concreta.", "Se dice cuántas personas se ven afectadas."],
-       prep: c => {},
+       prep: c => c.setState(st => ({screen:"perfil", pr:Object.assign({}, st.pr, {view:"plan"})})),
        steps:[
-         {l:"Pulsa cancelar", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "cancel")},
-         {l:"Decide", ok:s => !s.fam.sheet}]},
-      {id:"c2", t:"Deja de compartir su actividad", d:"No quiere que su familia vea su actividad.", cat:"Privacidad", sev:"low",
+         {l:"Abre la baja desde Gestiona tu plan", ok:s => s.screen === "familia" && s.fam.view === "baja"},
+         {l:"Confirma la cancelación diferida", ok:s => !!s.fam.ending && s.screen === "familia"}]},
+{id:"c2", t:"Deja de compartir su actividad", d:"No quiere que su familia vea su actividad.", cat:"Privacidad", sev:"low",
        scen:"Ajustes de Mi Familia con todo compartido.", trig:"Apaga «Actividad».",
        exp:"El interruptor cambia y la vista previa lo refleja.", rec:"Puede volver a activarlo.",
        end:"Sus miembros no ven su actividad.", ac:["El cambio es inmediato y visible en la vista previa."],
        prep: c => {},
        steps:[
-         {l:"Apaga «Actividad»", ok:s => !s.fam.myShare.actividad}]}
+         {l:"Apaga «Actividad»", ok:s => !s.fam.myShare.actividad}]},
+{id:"c3", t:"Falla el guardado", d:"El interruptor vuelve a su estado y se ofrece «Reintentar».", cat:"Observación familiar", sev:"low", scen:"Ajustes de Mi Familia", trig:"Toca un interruptor · Lee «Guardado. Se lo avisaremos a tus miembros»", exp:"El interruptor vuelve a su estado y se ofrece «Reintentar».", rec:"Que el interruptor apagado sea gris y se distinga del encendido sin depender del color.", end:"Toca «Ver lo que ven tus miembros» para comprobarlo", ac:["Se puede comprobar: Toca un interruptor.","Se puede comprobar: Lee «Guardado. Se lo avisaremos a tus miembros»."], obs:true}
     ]
   },
-
-  /* ---------------- 8 · Mi Familia · persona cuidada ---------------- */
+  famretirar: {
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Hoja Retirar",
+    desc:"«Retirar del grupo» está al final de la ficha con su nombre, no escondido tras un lápiz.",
+    story:{as:"Cuando alguien ya no debe estar en el grupo", want:"quiero sacarle sabiendo qué le pasa", so:"para no hacerle daño sin querer"},
+    ctx:{problem:"Quién: Elena; Persona: Marcos; Consecuencia: Pierde el Premium del grupo desde ahora", need:"Lee las consecuencias", result:"Vuelve al panel con la plaza libre"},
+    value:{dim:"Colaboración familiar", why:"Acción destructiva visible pero no tentadora, con consecuencias claras."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Hoja Retirar","w":"Lee las consecuencias","t":"Toca «Retirar del grupo» o «Cancelar»"},{"g":"Está en Hoja Retirar","w":"Toca «Retirar del grupo» o «Cancelar»","t":"Vuelve al panel con la plaza libre"}],
+    cases:[{id:"c1", t:"Marcos tenía una petición abierta", d:"La petición se cierra y desaparece de Avisos y peticiones.", cat:"Observación familiar", sev:"low", scen:"Hoja Retirar", trig:"Lee las consecuencias · Toca «Retirar del grupo» o «Cancelar»", exp:"La petición se cierra y desaparece de Avisos y peticiones.", rec:"Que diga «desde ahora» y que Marcos recibe un aviso.", end:"Vuelve al panel con la plaza libre", ac:["Se puede comprobar: Lee las consecuencias.","Se puede comprobar: Toca «Retirar del grupo» o «Cancelar»."], obs:true}]
+  },
+  famplan: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Perfil › Gestiona tu plan",
+    desc:"Quien paga el plan familiar lo ve en el mismo sitio donde se gestiona cualquier suscripción.",
+    story:{as:"Cuando quiero revisar lo que pago", want:"quiero ver mi plan familiar y sus plazas", so:"para cambiarlo o cancelarlo con calma"},
+    ctx:{problem:"Quién: Elena; Plan: Familiar · 6 personas · anual · 389,99 €; Antes: Este caso no estaba diseñado", need:"Abre Perfil y toca «Gestiona tu plan»", result:"Usa «Ir a Mi Familia», «Cambiar en la tienda» o «Cancelar el plan familiar»"},
+    value:{dim:"Colaboración familiar", why:"El dinero vive donde la gente lo busca. Una sola fuente de verdad para lo que se paga."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Perfil › Gestiona tu plan","w":"Abre Perfil y toca «Gestiona tu plan»","t":"Lee el plan familiar, el precio y las plazas"},{"g":"Está en Perfil › Gestiona tu plan","w":"Lee el plan familiar, el precio y las plazas","t":"Usa «Ir a Mi Familia», «Cambiar en la tienda» o «Cancelar el plan familiar»"}],
+    cases:[{id:"c1", t:"El plan ya está cancelado", d:"Aparece la fecha de fin y el enlace «Reactivar mi plan» en lugar de «Cancelar».", cat:"Cuidado familiar", sev:"high", scen:"Perfil › Gestiona tu plan", trig:"Abre Perfil y toca «Gestiona tu plan» · Lee el plan familiar, el precio y las plazas", exp:"Aparece la fecha de fin y el enlace «Reactivar mi plan» en lugar de «Cancelar».", rec:"Que no aparezcan los planes individuales: pagaría dos veces.", end:"Usa «Ir a Mi Familia», «Cambiar en la tienda» o «Cancelar el plan familiar»", ac:["Se puede comprobar: Abre Perfil y toca «Gestiona tu plan».","Se puede comprobar: Lee el plan familiar, el precio y las plazas."], caso:"cancelado", prep:c=>{ c.famSet({ending:true}); }, steps:[{l:"Reactivar el plan cancela la baja",ok:s=>!s.fam.ending && s.screen==="perfil" && s.pr.view==="plan"}]}]
+  },
+  fambaja: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Cancelar el plan familiar",
+    desc:"Antes de ir a la tienda, la pantalla dice qué pierde cada persona, qué no cambia y cuándo.",
+    story:{as:"Cuando pienso en cancelar", want:"quiero saber exactamente qué perdemos y cuándo", so:"para decidir sin sorpresas para mi familia"},
+    ctx:{problem:"Quién: Elena; Afecta a: Mamá, Abuelo Pep, Marcos y ella; Fecha: Fin el 14 de noviembre", need:"Lee «Si cancelas, sigue activo hasta el 14 de noviembre»", result:"Elige «Mantener mi plan» o «Continuar en la tienda para cancelar»"},
+    value:{dim:"Colaboración familiar", why:"Remarca lo que se pierde con nombres propios. Sin trucos: una pantalla y la tienda (Legal #11)."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Cancelar el plan familiar","w":"Lee «Si cancelas, sigue activo hasta el 14 de noviembre»","t":"Revisa quién pasa a Basic"},{"g":"Está en Cancelar el plan familiar","w":"Revisa quién pasa a Basic","t":"Lee lo que dejaréis de tener y lo que no cambia"},{"g":"Está en Cancelar el plan familiar","w":"Lee lo que dejaréis de tener y lo que no cambia","t":"Elige «Mantener mi plan» o «Continuar en la tienda para cancelar»"}],
+    cases:[{id:"c1", t:"Elimina su cuenta siendo quien gestiona", d:"El grupo se deshace en ese momento, no al final del periodo, y la suscripción sigue hasta que la cancele en la tienda.", cat:"Observación familiar", sev:"medium", scen:"Cancelar el plan familiar", trig:"Lee «Si cancelas, sigue activo hasta el 14 de noviembre» · Revisa quién pasa a Basic", exp:"El grupo se deshace en ese momento, no al final del periodo, y la suscripción sigue hasta que la cancele en la tienda.", rec:"Que sea honesto y no un muro: sin ofertas de retención y con la salida a la tienda siempre visible.", end:"Elige «Mantener mi plan» o «Continuar en la tienda para cancelar»", ac:["Se puede comprobar: Lee «Si cancelas, sigue activo hasta el 14 de noviembre».","Se puede comprobar: Revisa quién pasa a Basic."], obs:true},{id:"c2", t:"Hay invitaciones pendientes", d:"Se avisa de que se anulan.", cat:"Observación familiar", sev:"low", scen:"Cancelar el plan familiar", trig:"Lee «Si cancelas, sigue activo hasta el 14 de noviembre» · Revisa quién pasa a Basic", exp:"Se avisa de que se anulan.", rec:"Que sea honesto y no un muro: sin ofertas de retención y con la salida a la tienda siempre visible.", end:"Elige «Mantener mi plan» o «Continuar en la tienda para cancelar»", ac:["Se puede comprobar: Lee «Si cancelas, sigue activo hasta el 14 de noviembre».","Se puede comprobar: Revisa quién pasa a Basic."], obs:true}]
+  },
+  famcancelado: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Quien gestiona",
+    stage:"Inicio con plan cancelado",
+    desc:"Durante los días que quedan, la tarjeta y el panel recuerdan la fecha y permiten reactivar.",
+    story:{as:"Cuando he cancelado y me arrepiento", want:"quiero recuperar el plan sin rehacer el grupo", so:"para que nadie note el cambio"},
+    ctx:{problem:"Quién: Elena; Quedan: 18 días; Miembros: Avisados hoy y 3 días antes", need:"Ve «Termina el 14 nov» en la tarjeta de Inicio", result:"Toca «Reactivar mi plan»"},
+    value:{dim:"Colaboración familiar", why:"Recuperar sin fricción a quien cancela por error o cambia de idea."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Inicio con plan cancelado","w":"Ve «Termina el 14 nov» en la tarjeta de Inicio","t":"Entra y lee el aviso del panel"},{"g":"Está en Inicio con plan cancelado","w":"Entra y lee el aviso del panel","t":"Toca «Reactivar mi plan»"}],
+    cases:[{id:"c1", t:"Ver el aviso dentro del panel", d:"Banner con la fecha, a quién se ha avisado y «Reactivar mi plan».", cat:"Cuidado familiar", sev:"low", scen:"Inicio con plan cancelado", trig:"Ve «Termina el 14 nov» en la tarjeta de Inicio · Entra y lee el aviso del panel", exp:"Banner con la fecha, a quién se ha avisado y «Reactivar mi plan».", rec:"Que el aviso informe sin alarmar y que reactivar sea un solo toque.", end:"Toca «Reactivar mi plan»", ac:["Se puede comprobar: Ve «Termina el 14 nov» en la tarjeta de Inicio.","Se puede comprobar: Entra y lee el aviso del panel."], caso:"panel", prep:c=>{ c.famSet({ending:true}); }, steps:[{l:"Entra y ve el aviso en Mi Familia",ok:s=>!!s.fam.ending && s.screen==="familia"},{l:"Reactiva el plan desde el panel",ok:s=>!s.fam.ending && s.screen==="familia"}]},{id:"c2", t:"Llega el 14 de noviembre", d:"El grupo se deshace; todos pasan a Basic y reciben un aviso. Quien gestiona puede crear un grupo nuevo.", cat:"Observación familiar", sev:"low", scen:"Inicio con plan cancelado", trig:"Ve «Termina el 14 nov» en la tarjeta de Inicio · Entra y lee el aviso del panel", exp:"El grupo se deshace; todos pasan a Basic y reciben un aviso. Quien gestiona puede crear un grupo nuevo.", rec:"Que el aviso informe sin alarmar y que reactivar sea un solo toque.", end:"Toca «Reactivar mi plan»", ac:["Se puede comprobar: Ve «Termina el 14 nov» en la tarjeta de Inicio.","Se puede comprobar: Entra y lee el aviso del panel."], obs:true}]
+  },
   faminvite: {
-    role:"Persona cuidada (invitada)", stage:"Incorporación familiar",
-    desc:"Una sola pantalla: quién invita, qué verá y la casilla de mayoría de edad. Los interruptores funcionan desde el principio.",
-    story:{as:"madre a la que su hija invita al grupo familiar", want:"saber exactamente qué verá mi hija antes de aceptar", so:"aceptar sin sentir que me vigilan"},
-    ctx:{problem:"Unirse a un grupo sin saber qué se comparte genera rechazo.", need:"Control previo de lo que comparte.", result:"Se une compartiendo lo que quiere."},
-    value:{dim:"Colaboración familiar", why:"La tasa de aceptación de invitaciones determina el valor real del plan familiar."},
-    plan:{same:false, free:["Al unirse pasa a Premium del grupo"], prem:["Si ya era Premium, sigue igual dentro del grupo"], up:"No aplica.", data:"Sus datos siguen siendo suyos al unirse o salir."},
-    ac:[
-      {g:"no marca que es mayor de edad", w:"intenta unirse", t:"se le pide marcarlo y no se une", st:"impl"},
-      {g:"apaga todo lo que comparte", w:"se une", t:"entra en el grupo sin compartir nada", st:"impl"},
-      {g:"se une", w:"vuelve a Inicio", t:"su cuenta tiene Premium del grupo", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["free"],
+    pinWhy:"Este flujo parte de una cuenta Basic.",
+    role:"Invitada",
+    stage:"Inicio con invitación",
+    desc:"Una sola pantalla: quién invita y con qué cuenta, qué podrá ver, edad y unirse.",
+    story:{as:"Cuando mi hija me invita a su grupo", want:"quiero saber qué va a ver de mí", so:"para aceptar tranquila"},
+    ctx:{problem:"Quién: Elena, invitada por su hija Lucía; Antes: 3 pantallas; Ahora: 1 pantalla", need:"Toca la tarjeta «Te han invitado» en Inicio", result:"Toca «Unirme y compartir lo elegido»"},
+    value:{dim:"Colaboración familiar", why:"Consentimiento libre y comprensible, la base legal y de confianza de toda la función."},
+    plan:{same:true,note:"Empieza con Basic."},
+    ac:[{"g":"Está en Inicio con invitación","w":"Toca la tarjeta «Te han invitado» en Inicio","t":"Comprueba quién invita y su cuenta"},{"g":"Está en Inicio con invitación","w":"Comprueba quién invita y su cuenta","t":"Decide qué compartir (interruptores operativos)"},{"g":"Está en Inicio con invitación","w":"Decide qué compartir (interruptores operativos)","t":"Marca «Tengo 18 años o más»"},{"g":"Está en Inicio con invitación","w":"Marca «Tengo 18 años o más»","t":"Toca «Unirme y compartir lo elegido»"}],
     cases:[
-      {id:"c1", t:"No confirma la mayoría de edad", d:"Pulsa unirse sin marcar la casilla.", cat:"Consentimiento", sev:"high",
+{id:"c1", t:"No confirma la mayoría de edad", d:"Pulsa unirse sin marcar la casilla.", cat:"Consentimiento", sev:"high",
        scen:"Invitación de Lucía.", trig:"Pulsa unirse sin marcar «Soy mayor de edad».",
        exp:"Se señala la casilla; no entra en el grupo.", rec:"Marca la casilla.",
        end:"Miembro del grupo.", ac:["Nadie entra sin confirmar la edad.", "El error es visible y textual."],
@@ -995,56 +1123,56 @@ export const LAB: Record<string, DatosFlujoLab> = {
          {l:"Marca la casilla", ok:s => !!(s.fam.join && s.fam.join.age)},
          {l:"Se une", ok:s => s.fam.role === "member"},
          {l:"Su cuenta pasa a Premium del grupo", ok:(s, c) => s.fam.role === "member" && c.world().plan === "premium"}]},
-      {id:"c2", t:"Decide no compartir nada", d:"Quiere estar en el grupo sin compartir datos.", cat:"Privacidad", sev:"medium",
+{id:"c2", t:"Decide no compartir nada", d:"Quiere estar en el grupo sin compartir datos.", cat:"Privacidad", sev:"medium",
        scen:"Invitación de Lucía con todo compartido por defecto.", trig:"Apaga Huella, Enlaces y Actividad y únete.",
        exp:"Puede unirse sin compartir; Lucía solo verá que forma parte del grupo.", rec:"Puede cambiarlo después.",
        end:"Miembro sin datos compartidos.", ac:["Compartir no es obligatorio para unirse."],
        prep: c => { c.famOpen("tab"); c.later(() => c.famSet({join: Object.assign({}, c.state.fam.join, {age:true})}), 30); },
        steps:[
          {l:"Apaga las tres categorías", ok:s => !!s.fam.join && !Object.keys(s.fam.join.share || {}).some(k => s.fam.join.share[k])},
-         {l:"Se une sin compartir", ok:s => s.fam.role === "member" && !Object.keys(s.fam.mem.share || {}).some(k => s.fam.mem.share[k])}]}
+         {l:"Se une sin compartir", ok:s => s.fam.role === "member" && !Object.keys(s.fam.mem.share || {}).some(k => s.fam.mem.share[k])}]},
+{id:"c3", t:"Invitación caducada o anulada", d:"Mensaje según la causa y «Pídele a Lucía que te envíe otra».", cat:"Observación familiar", sev:"low", scen:"Inicio con invitación", trig:"Toca la tarjeta «Te han invitado» en Inicio · Comprueba quién invita y su cuenta", exp:"Mensaje según la causa y «Pídele a Lucía que te envíe otra».", rec:"Que el botón diga lo que hará («compartir lo elegido» o «sin compartir nada») y que se avise de que Lucía verá cuándo lees sus avisos.", end:"Toca «Unirme y compartir lo elegido»", ac:["Se puede comprobar: Toca la tarjeta «Te han invitado» en Inicio.","Se puede comprobar: Comprueba quién invita y su cuenta."], obs:true},
+{id:"c4", t:"Ya tiene Premium propio que se renueva", d:"Se explica que debe cancelar la renovación y que el tiempo pagado no se devuelve.", cat:"Observación familiar", sev:"high", scen:"Inicio con invitación", trig:"Toca la tarjeta «Te han invitado» en Inicio · Comprueba quién invita y su cuenta", exp:"Se explica que debe cancelar la renovación y que el tiempo pagado no se devuelve.", rec:"Que el botón diga lo que hará («compartir lo elegido» o «sin compartir nada») y que se avise de que Lucía verá cuándo lees sus avisos.", end:"Toca «Unirme y compartir lo elegido»", ac:["Se puede comprobar: Toca la tarjeta «Te han invitado» en Inicio.","Se puede comprobar: Comprueba quién invita y su cuenta."], obs:true}
     ]
   },
   fammember: {
-    plans:["premium"], pinWhy:"Ser miembro del grupo incluye Premium del grupo.",
-    role:"Persona cuidada", stage:"Cuidado familiar",
-    desc:"La respuesta de Lucía llega en Inicio y en la pestaña Familia. Su acción principal es Pedir ayuda.",
-    story:{as:"madre que pidió ayuda a su hija", want:"ver su respuesta en cuanto llegue", so:"saber qué hacer sin llamarla"},
-    ctx:{problem:"Las respuestas perdidas entre notificaciones generan inseguridad.", need:"La respuesta visible en Inicio.", result:"Lee la respuesta y actúa."},
-    value:{dim:"Colaboración familiar", why:"Cerrar el ciclo petición-respuesta es lo que la persona cuidada percibe como valor."},
-    plan:{same:true, note:"Solo existe dentro del plan familiar."},
-    ac:[
-      {g:"Lucía ha respondido", w:"abre Inicio", t:"ve la respuesta arriba", st:"impl"},
-      {g:"silencia los avisos del grupo", w:"lo cambia en Familia", t:"deja de recibirlos y puede reactivarlos", st:"impl"},
-      {g:"sale del grupo", w:"confirma", t:"su cuenta pasa a Basic y Lucía deja de ver lo que comparte", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Inicio con aviso nuevo",
+    desc:"La respuesta de Lucía aparece en el panel con acciones según el mensaje.",
+    story:{as:"Cuando le he pedido ayuda a mi hija", want:"quiero ver su respuesta y saber qué hacer", so:"para actuar a tiempo"},
+    ctx:{problem:"Quién: Elena, miembro del grupo de Lucía; Respuesta: «No hagas ese pago. Llámame antes.»; Extra: Acceso directo a SOS", need:"Ve «1 aviso nuevo» en Inicio", result:"Toca «Entendido», o «Ya he pagado: ir a SOS» si ya pagó"},
+    value:{dim:"Colaboración familiar", why:"La ayuda no termina en «Entendido»: lleva al siguiente paso real."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Inicio con aviso nuevo","w":"Ve «1 aviso nuevo» en Inicio","t":"Lee la respuesta en el panel"},{"g":"Está en Inicio con aviso nuevo","w":"Lee la respuesta en el panel","t":"Toca «Entendido», o «Ya he pagado: ir a SOS» si ya pagó"}],
     cases:[
-      {id:"c1", t:"Sale del grupo", d:"Decide dejar el grupo familiar.", cat:"Privacidad", sev:"medium",
+{id:"c1", t:"Sale del grupo", d:"Decide dejar el grupo familiar.", cat:"Privacidad", sev:"medium",
        scen:"Mi Familia como miembro.", trig:"Pulsa salir del grupo y confirma.",
        exp:"Se explica antes que su cuenta pasa a Basic al instante; al confirmar, sale y pierde Premium del grupo.", rec:"Puede contratar su propio Premium.",
        end:"Cuenta Basic fuera del grupo.", ac:["Las consecuencias se explican antes.", "Sus datos siguen siendo suyos."],
-       prep: c => c.famOpen("tab"),
+       prep: c => c.famGo("salir", {ret:"hub", from:"tab"}),
        steps:[
-         {l:"Pide salir", ok:s => !!(s.fam.sheet && s.fam.sheet.kind === "salir")},
-         {l:"Confirma", ok:s => s.fam.role === "none"},
-         {l:"Su cuenta pasa a Basic", ok:(s, c) => s.fam.role === "none" && c.world().plan === "free"}]}
+         {l:"Confirma la salida y pasa a Basic desde la vista de salida", ok:(s, c) => s.fam.role === "none" && c.world().plan === "free"}]},
+{id:"c2", t:"La respuesta es «Llámame cuando puedas»", d:"Solo se ofrece «Entendido»; no hay acceso a SOS.", cat:"Cuidado familiar", sev:"high", scen:"Inicio con aviso nuevo", trig:"Ve «1 aviso nuevo» en Inicio · Lee la respuesta en el panel", exp:"Solo se ofrece «Entendido»; no hay acceso a SOS.", rec:"Que SOS solo aparezca cuando el mensaje es sobre dinero.", end:"Toca «Entendido», o «Ya he pagado: ir a SOS» si ya pagó", ac:["Se puede comprobar: Ve «1 aviso nuevo» en Inicio.","Se puede comprobar: Lee la respuesta en el panel."], caso:"llamame", prep:c=>{ c.famSet({mem:Object.assign({},c.state.fam.mem,{aviso:true,avisoMsg:9})}); }, steps:[{l:"Confirma que ha entendido la respuesta",ok:s=>!s.fam.mem.aviso && s.fam.role==="member"}]},
+{id:"c3", t:"Ha silenciado a Lucía", d:"El aviso aparece igual dentro de la app, sin notificación. Lucía no lo sabe.", cat:"Observación familiar", sev:"medium", scen:"Inicio con aviso nuevo", trig:"Ve «1 aviso nuevo» en Inicio · Lee la respuesta en el panel", exp:"El aviso aparece igual dentro de la app, sin notificación. Lucía no lo sabe.", rec:"Que SOS solo aparezca cuando el mensaje es sobre dinero.", end:"Toca «Entendido», o «Ya he pagado: ir a SOS» si ya pagó", ac:["Se puede comprobar: Ve «1 aviso nuevo» en Inicio.","Se puede comprobar: Lee la respuesta en el panel."], obs:true}
     ]
   },
   famayuda: {
-    plans:["premium"], pinWhy:"Pedir ayuda a quien gestiona requiere el plan familiar.",
-    role:"Persona cuidada", stage:"Momento de riesgo",
-    desc:"«Un mensaje o una llamada» es la primera opción. Si el motivo es dinero, SOS aparece sin esperar la respuesta.",
-    story:{as:"madre que ha recibido un SMS que le pide un pago", want:"pedir ayuda a mi hija sin salir de la app", so:"no decidir sola algo que me da miedo"},
-    ctx:{problem:"Esperar una respuesta mientras te piden dinero puede ser demasiado tarde.", need:"Pedir ayuda y orientación inmediata si hay dinero de por medio.", result:"Petición enviada y SOS a mano."},
-    value:{dim:"Seguridad", why:"La combinación de ayuda familiar y SOS inmediato cubre el momento de mayor riesgo económico."},
-    plan:{same:true, note:"Solo existe dentro del plan familiar."},
-    ac:[
-      {g:"elige el motivo «Me piden dinero»", w:"envía", t:"aparece SOS sin esperar la respuesta", st:"impl"},
-      {g:"no elige motivo", w:"envía", t:"se le pide elegirlo", st:"impl"},
-      {g:"no hay conexión", w:"envía", t:"no se pierde la petición y se le dice que no se ha enviado", st:"impl"}
-    ],
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Hoja Pedir ayuda",
+    desc:"El caso más frecuente, que antes no se podía: algo acaba de llegar y no está en BeValk.",
+    story:{as:"Cuando me llega un SMS o una llamada rara", want:"quiero preguntarle a mi hija sin escribir", so:"para no equivocarme"},
+    ctx:{problem:"Quién: Elena, miembro; Objeto: Un mensaje o una llamada; Motivo: Me piden dinero", need:"Toca «Un mensaje o una llamada»", result:"Si ya pagó, usa el acceso a SOS"},
+    value:{dim:"Colaboración familiar", why:"Cumple la promesa de la oferta en el caso real."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Hoja Pedir ayuda","w":"Toca «Un mensaje o una llamada»","t":"Elige qué pasa: «Me piden dinero»"},{"g":"Está en Hoja Pedir ayuda","w":"Elige qué pasa: «Me piden dinero»","t":"Lee qué verá Lucía y envía"},{"g":"Está en Hoja Pedir ayuda","w":"Lee qué verá Lucía y envía","t":"Si ya pagó, usa el acceso a SOS"}],
     cases:[
-      {id:"c1", t:"Le piden dinero", d:"El SMS le pide un pago para liberar un paquete.", cat:"Seguridad", sev:"critical",
+{id:"c1", t:"Le piden dinero", d:"El SMS le pide un pago para liberar un paquete.", cat:"Seguridad", sev:"critical",
        scen:"Hoja «Pedir ayuda a Lucía».", trig:"Elige «Un mensaje o una llamada», el motivo «Me piden dinero» y envía.",
        exp:"Petición enviada y, sin esperar a Lucía, un bloque SOS para quien ya ha pagado o dado datos.", rec:"Abre SOS si ya ha pagado.",
        end:"Ha pedido ayuda y tiene la orientación urgente.", ac:["SOS aparece en la confirmación.", "No depende de que Lucía responda."],
@@ -1053,7 +1181,7 @@ export const LAB: Record<string, DatosFlujoLab> = {
          {l:"Elige el motivo dinero", ok:s => !!(s.fam.sheet && s.fam.sheet.motive === "Me piden dinero")},
          {l:"Envía la petición", ok:s => !!(s.fam.sheet && s.fam.sheet.step === "sent")},
          {l:"Abre SOS", ok:s => s.screen === "sos"}]},
-      {id:"c2", t:"Envía sin motivo", d:"Pulsa enviar sin elegir qué pasa.", cat:"Validación", sev:"low",
+{id:"c2", t:"Envía sin motivo", d:"Pulsa enviar sin elegir qué pasa.", cat:"Validación", sev:"low",
        scen:"Hoja de ayuda con «Un mensaje o una llamada» elegido.", trig:"Pulsa enviar sin motivo.",
        exp:"Se le pide elegir qué pasa para que Lucía sepa cómo ayudar.", rec:"Elige un motivo.",
        end:"Petición enviada.", ac:["No se envía una petición sin motivo."],
@@ -1062,7 +1190,7 @@ export const LAB: Record<string, DatosFlujoLab> = {
          {l:"Envía sin motivo", ok:s => !!(s.fam.sheet && s.fam.sheet.err)},
          {l:"Elige un motivo", ok:s => !!(s.fam.sheet && s.fam.sheet.motive)},
          {l:"Petición enviada", ok:s => !!(s.fam.sheet && s.fam.sheet.step === "sent")}]},
-      {id:"c3", t:"Pide ayuda sin conexión", d:"No tiene datos cuando le llega el SMS.", cat:"Sin conexión", sev:"high",
+{id:"c3", t:"Pide ayuda sin conexión", d:"No tiene datos cuando le llega el SMS.", cat:"Sin conexión", sev:"high",
        scen:"Hoja de ayuda con motivo elegido y sin conexión.", trig:"Pulsa enviar.",
        exp:"No se envía; se conserva la petición y se recuerda el 017.", rec:"Vuelve la conexión y envía.",
        end:"Petición enviada.", ac:["No se muestra «Petición enviada» sin red."],
@@ -1072,11 +1200,162 @@ export const LAB: Record<string, DatosFlujoLab> = {
          {l:"Vuelve la conexión", ok:(s, c) => !c.off()},
          {l:"Petición enviada", ok:s => !!(s.fam.sheet && s.fam.sheet.step === "sent")}]}
     ]
+  },
+  famayudaan: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Resultado del analizador",
+    desc:"Tras analizar un enlace dudoso, «Pedir ayuda a Lucía con esto» lo envía ya preparado.",
+    story:{as:"Cuando el analizador me deja con dudas", want:"quiero preguntar a alguien de confianza", so:"para decidir con dos opiniones"},
+    ctx:{problem:"Quién: Elena, miembro; Enlace: bit.ly/3xQ-tienda · riesgo medio; Integración: Analizador ↔ Mi Familia", need:"Lee el resultado", result:"Elige el motivo y envía"},
+    value:{dim:"Colaboración familiar", why:"Mi Familia deja de ser una isla: se conecta con la función más usada de la app."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Resultado del analizador","w":"Lee el resultado","t":"Toca «Pedir ayuda a Lucía con esto»"},{"g":"Está en Resultado del analizador","w":"Toca «Pedir ayuda a Lucía con esto»","t":"Elige el motivo y envía"}],
+    cases:[{id:"c1", t:"Resultado de riesgo bajo", d:"El botón sigue disponible: la persona puede dudar igualmente.", cat:"Observación familiar", sev:"low", scen:"Resultado del analizador", trig:"Lee el resultado · Toca «Pedir ayuda a Lucía con esto»", exp:"El botón sigue disponible: la persona puede dudar igualmente.", rec:"Que el botón sea secundario frente a «No abrir este enlace».", end:"Elige el motivo y envía", ac:["Se puede comprobar: Lee el resultado.","Se puede comprobar: Toca «Pedir ayuda a Lucía con esto»."], obs:true}]
+  },
+  famcomparto: {
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Mi Familia",
+    desc:"Los interruptores están en el panel del miembro y se guardan al momento.",
+    story:{as:"Cuando no quiero que vean mi actividad", want:"quiero quitarlo yo sola", so:"para sentir que mando en mis datos"},
+    ctx:{problem:"Quién: Elena, miembro; Ajuste: Lo que ve Lucía; Aviso: Lucía recibe un aviso del cambio", need:"Baja hasta «Lo que ve Lucía»", result:"Lee «Guardado. Se lo avisaremos a Lucía»"},
+    value:{dim:"Colaboración familiar", why:"El control está a un toque, no escondido en ajustes."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Mi Familia","w":"Baja hasta «Lo que ve Lucía»","t":"Apaga «Actividad»"},{"g":"Está en Mi Familia","w":"Apaga «Actividad»","t":"Lee «Guardado. Se lo avisaremos a Lucía»"}],
+    cases:[{id:"c1", t:"Apaga todo", d:"Lucía ve «Elena no comparte nada contigo» y puede seguir enviando avisos.", cat:"Observación familiar", sev:"low", scen:"Mi Familia", trig:"Baja hasta «Lo que ve Lucía» · Apaga «Actividad»", exp:"Lucía ve «Elena no comparte nada contigo» y puede seguir enviando avisos.", rec:"Que se entienda que el cambio es inmediato y reversible.", end:"Lee «Guardado. Se lo avisaremos a Lucía»", ac:["Se puede comprobar: Baja hasta «Lo que ve Lucía».","Se puede comprobar: Apaga «Actividad»."], obs:true}]
+  },
+  famverlucia: {
+    estado:"Rediseñado",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Lo que comparte Lucía",
+    desc:"La misma ficha que usa quien gestiona, en solo lectura y con el mismo orden.",
+    story:{as:"Cuando quiero saber si mi hija está bien", want:"quiero ver lo que ella comparte conmigo", so:"para que el cuidado sea mutuo"},
+    ctx:{problem:"Quién: Elena, miembro; Lucía comparte: Huella y Enlaces; No comparte: Actividad", need:"Desde el panel, toca «Ver lo que comparte Lucía»", result:"Ve «Lucía no comparte esto contigo» en Actividad"},
+    value:{dim:"Colaboración familiar", why:"Reciprocidad visible: convierte la supervisión en un acuerdo entre adultos."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Lo que comparte Lucía","w":"Desde el panel, toca «Ver lo que comparte Lucía»","t":"Lee su resumen, enlaces y huella"},{"g":"Está en Lo que comparte Lucía","w":"Lee su resumen, enlaces y huella","t":"Ve «Lucía no comparte esto contigo» en Actividad"}],
+    cases:[{id:"c1", t:"Lucía no comparte nada", d:"La ficha lo dice sin más; no hay botón para pedírselo.", cat:"Observación familiar", sev:"high", scen:"Lo que comparte Lucía", trig:"Desde el panel, toca «Ver lo que comparte Lucía» · Lee su resumen, enlaces y huella", exp:"La ficha lo dice sin más; no hay botón para pedírselo.", rec:"Que sea idéntica en estructura a la ficha que ve Lucía de Elena.", end:"Ve «Lucía no comparte esto contigo» en Actividad", ac:["Se puede comprobar: Desde el panel, toca «Ver lo que comparte Lucía».","Se puede comprobar: Lee su resumen, enlaces y huella."], obs:true}]
+  },
+  famplanmiembro: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Perfil › Gestiona tu plan",
+    desc:"Quien forma parte de un grupo ve que su Premium viene de la familia y que no tiene que pagar nada.",
+    story:{as:"Cuando entro a ver mi suscripción", want:"quiero saber si pago algo", so:"para no contratar dos veces"},
+    ctx:{problem:"Quién: Elena, miembro; Plan: Premium del grupo Familia Navarro; Paga: Lucía Navarro", need:"Abre Perfil y toca «Gestiona tu plan»", result:"Toca «Ir a Mi Familia» si quiere"},
+    value:{dim:"Colaboración familiar", why:"Evita el error más caro: pagar un Premium que ya tienes."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Perfil › Gestiona tu plan","w":"Abre Perfil y toca «Gestiona tu plan»","t":"Lee «No tienes que pagar nada»"},{"g":"Está en Perfil › Gestiona tu plan","w":"Lee «No tienes que pagar nada»","t":"Lee qué pasa si sales o el plan termina"},{"g":"Está en Perfil › Gestiona tu plan","w":"Lee qué pasa si sales o el plan termina","t":"Toca «Ir a Mi Familia» si quiere"}],
+    cases:[{id:"c1", t:"El plan familiar va a terminar", d:"Aparece el aviso de fin y, debajo, los planes Premium individuales para elegir.", cat:"Cuidado familiar", sev:"medium", scen:"Perfil › Gestiona tu plan", trig:"Abre Perfil y toca «Gestiona tu plan» · Lee «No tienes que pagar nada»", exp:"Aparece el aviso de fin y, debajo, los planes Premium individuales para elegir.", rec:"Que no se muestren los planes individuales mientras el grupo esté activo.", end:"Toca «Ir a Mi Familia» si quiere", ac:["Se puede comprobar: Abre Perfil y toca «Gestiona tu plan».","Se puede comprobar: Lee «No tienes que pagar nada»."], caso:"termina", prep:c=>{  }, steps:[{l:"El plan familiar va a terminar",ok:s=>true}]}]
+  },
+  famsalir: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Salir del grupo",
+    desc:"Antes de salir, la pantalla remarca que pasa a Basic al momento y ofrece seguir con Premium individual.",
+    story:{as:"Cuando quiero dejar el grupo de mi familia", want:"quiero saber qué pierdo", so:"para decidir si me quedo, me voy a Basic o contrato mi Premium"},
+    ctx:{problem:"Quién: Elena, miembro; Efecto: Basic desde ese momento; Alternativa: Premium: 49,99 € al año o 5,99 € al mes", need:"Lee «Si sales, tu cuenta pasa a Basic ahora mismo»", result:"Elige «Quedarme», «Salir y contratar Premium» o «Salir y pasar a Basic»"},
+    value:{dim:"Colaboración familiar", why:"Honestidad con lo que se pierde y una alternativa útil, sin chantaje."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Salir del grupo","w":"Lee «Si sales, tu cuenta pasa a Basic ahora mismo»","t":"Revisa lo que pierdes, con lo que tendrías en Basic"},{"g":"Está en Salir del grupo","w":"Revisa lo que pierdes, con lo que tendrías en Basic","t":"Elige «Quedarme», «Salir y contratar Premium» o «Salir y pasar a Basic»"}],
+    cases:[{id:"c1", t:"Sale sin querer", d:"Para volver, Lucía tiene que invitarle de nuevo. Se dice antes de salir.", cat:"Observación familiar", sev:"low", scen:"Salir del grupo", trig:"Lee «Si sales, tu cuenta pasa a Basic ahora mismo» · Revisa lo que pierdes, con lo que tendrías en Basic", exp:"Para volver, Lucía tiene que invitarle de nuevo. Se dice antes de salir.", rec:"Que «Quedarme» sea lo más fácil y que la oferta de Premium no esconda la salida.", end:"Elige «Quedarme», «Salir y contratar Premium» o «Salir y pasar a Basic»", ac:["Se puede comprobar: Lee «Si sales, tu cuenta pasa a Basic ahora mismo».","Se puede comprobar: Revisa lo que pierdes, con lo que tendrías en Basic."], obs:true},{id:"c2", t:"Elige «Salir y contratar Premium»", d:"Sale del grupo y llega a Gestiona tu plan con el plan anual seleccionado.", cat:"Observación familiar", sev:"low", scen:"Salir del grupo", trig:"Lee «Si sales, tu cuenta pasa a Basic ahora mismo» · Revisa lo que pierdes, con lo que tendrías en Basic", exp:"Sale del grupo y llega a Gestiona tu plan con el plan anual seleccionado.", rec:"Que «Quedarme» sea lo más fácil y que la oferta de Premium no esconda la salida.", end:"Elige «Quedarme», «Salir y contratar Premium» o «Salir y pasar a Basic»", ac:["Se puede comprobar: Lee «Si sales, tu cuenta pasa a Basic ahora mismo».","Se puede comprobar: Revisa lo que pierdes, con lo que tendrías en Basic."], obs:true}]
+  },
+  famtermina: {
+    estado:"Nuevo",
+    plans:["premium"],
+    pinWhy:"Este flujo requiere el plan familiar.",
+    role:"Miembro",
+    stage:"Inicio con fin de plan",
+    desc:"Lucía ha cancelado. El miembro lo ve en Inicio y en el panel, con tiempo para decidir.",
+    story:{as:"Cuando el plan de mi familia se acaba", want:"quiero saber cuándo y qué me pasa", so:"para no quedarme sin protección"},
+    ctx:{problem:"Quién: Elena, miembro; Fecha: 14 de noviembre; Después: Cuenta Basic", need:"Ve «Termina el 14 nov» en la tarjeta de Inicio", result:"Toca «Ver planes Premium» si quiere seguir protegida"},
+    value:{dim:"Colaboración familiar", why:"Nadie se queda sin protección por sorpresa."},
+    plan:{same:true,note:"Requiere el plan familiar."},
+    ac:[{"g":"Está en Inicio con fin de plan","w":"Ve «Termina el 14 nov» en la tarjeta de Inicio","t":"Entra y lee el aviso"},{"g":"Está en Inicio con fin de plan","w":"Entra y lee el aviso","t":"Toca «Ver planes Premium» si quiere seguir protegida"}],
+    cases:[{id:"c1", t:"Ver el aviso dentro del panel", d:"Banner con la fecha, el motivo y «Ver planes Premium».", cat:"Cuidado familiar", sev:"low", scen:"Inicio con fin de plan", trig:"Ve «Termina el 14 nov» en la tarjeta de Inicio · Entra y lee el aviso", exp:"Banner con la fecha, el motivo y «Ver planes Premium».", rec:"Que diga quién lo ha cancelado sin culpar y qué opción tiene.", end:"Toca «Ver planes Premium» si quiere seguir protegida", ac:["Se puede comprobar: Ve «Termina el 14 nov» en la tarjeta de Inicio.","Se puede comprobar: Entra y lee el aviso."], caso:"panel", prep:c=>{ c.famSet({mem:Object.assign({},c.state.fam.mem,{ending:true,aviso:false})}); }, steps:[{l:"Entra y ve el aviso en Mi Familia",ok:s=>!!s.fam.mem.ending && s.fam.role==="member" && s.screen==="familia"}]}]
+  },
+  famfuera: {
+    estado:"Nuevo",
+    plans:["free"],
+    pinWhy:"Este flujo parte de una cuenta Basic.",
+    role:"Basic",
+    stage:"Inicio tras salir",
+    desc:"Después de salir, Inicio lo explica y ofrece volver a Premium sin insistir.",
+    story:{as:"Cuando acabo de salir del grupo", want:"quiero confirmar qué ha cambiado", so:"para quedarme tranquila con mis datos"},
+    ctx:{problem:"Quién: Elena, ahora Basic; Datos: Lucía ya no ve lo que compartía; Opción: Contratar Premium propio", need:"Lee la tarjeta «Ya no estás en Familia Navarro»", result:"Toca la tarjeta para ver los planes Premium"},
+    value:{dim:"Colaboración familiar", why:"Final limpio de la relación, con una puerta abierta."},
+    plan:{same:true,note:"Empieza con Basic."},
+    ac:[{"g":"Está en Inicio tras salir","w":"Lee la tarjeta «Ya no estás en Familia Navarro»","t":"Comprueba que la app está en Basic"},{"g":"Está en Inicio tras salir","w":"Comprueba que la app está en Basic","t":"Toca la tarjeta para ver los planes Premium"}],
+    cases:[{id:"c1", t:"Le han retirado del grupo", d:"El mismo mensaje cambia a «Lucía te ha retirado del grupo».", cat:"Observación familiar", sev:"high", scen:"Inicio tras salir", trig:"Lee la tarjeta «Ya no estás en Familia Navarro» · Comprueba que la app está en Basic", exp:"El mismo mensaje cambia a «Lucía te ha retirado del grupo».", rec:"Que cierre la duda de privacidad: «Lucía ya no ve lo que compartías».", end:"Toca la tarjeta para ver los planes Premium", ac:["Se puede comprobar: Lee la tarjeta «Ya no estás en Familia Navarro».","Se puede comprobar: Comprueba que la app está en Basic."], obs:true}]
+  },
+  famcerrar: {
+    estado:"Nuevo",
+    plans:["free","premium"],
+    pinWhy:"Disponible en ambos planes.",
+    role:"Todos los roles",
+    stage:"Inicio con un aviso",
+    desc:"Todos los avisos de Inicio se pueden cerrar. Al cerrarlo, la sección desaparece y las herramientas suben. Solo vuelve si hay algo nuevo.",
+    story:{as:"Cuando ya he leído un aviso de Inicio", want:"quiero quitarlo de en medio", so:"para llegar a mis herramientas sin tener que bajar cada vez"},
+    ctx:{problem:"Quién: Elena, gestiona Familia Navarro; Situación: Mamá le ha pedido ayuda y Elena ya lo ha visto; Regla: Se cierra el aviso, no la petición", need:"Toca la X arriba a la derecha de la tarjeta «Mi Familia»", result:"Entra en Perfil > Mi Familia y comprueba que la petición sigue ahí"},
+    value:{dim:"Colaboración familiar", why:"Inicio es para las herramientas. Un aviso fijo las empuja hacia abajo para siempre. Uno que se cierra respeta a quien ya lo ha leído, y volver a mostrarlo solo con novedades evita que se pierda algo importante."},
+    plan:{same:true,note:"El comportamiento depende del rol, no del plan seleccionado."},
+    ac:[{"g":"Está en Inicio con un aviso","w":"Toca la X arriba a la derecha de la tarjeta «Mi Familia»","t":"La sección «Tu familia» desaparece y «Seguridad digital» sube"},{"g":"Está en Inicio con un aviso","w":"La sección «Tu familia» desaparece y «Seguridad digital» sube","t":"Lee el mensaje de abajo: dice que la petición de Mamá sigue en Perfil, en Mi Familia"},{"g":"Está en Inicio con un aviso","w":"Lee el mensaje de abajo: dice que la petición de Mamá sigue en Perfil, en Mi Familia","t":"Si te has equivocado, toca «Deshacer» (dura 6 segundos)"},{"g":"Está en Inicio con un aviso","w":"Si te has equivocado, toca «Deshacer» (dura 6 segundos)","t":"Entra en Perfil > Mi Familia y comprueba que la petición sigue ahí"}],
+    cases:[{id:"c1", t:"Basic: cierra el descubrimiento", d:"«Ahora no» y la X hacen lo mismo: la tarjeta se va y no vuelve. Mi Familia sigue en Perfil y en el analizador (F02).", cat:"Cuidado familiar", sev:"medium", scen:"Inicio con un aviso", trig:"Toca la X arriba a la derecha de la tarjeta «Mi Familia» · La sección «Tu familia» desaparece y «Seguridad digital» sube", exp:"«Ahora no» y la X hacen lo mismo: la tarjeta se va y no vuelve. Mi Familia sigue en Perfil y en el analizador (F02).", rec:"Que la X se vea y se toque con facilidad (zona de 44 px), que el mensaje diga dónde encontrar lo cerrado y que «Deshacer» dé tiempo a reaccionar.", end:"Entra en Perfil > Mi Familia y comprueba que la petición sigue ahí", ac:["Se puede comprobar: Toca la X arriba a la derecha de la tarjeta «Mi Familia».","Se puede comprobar: La sección «Tu familia» desaparece y «Seguridad digital» sube."], caso:"basic", prep:c=>{ c.famSet({role:"none",discover:true}); }, steps:[{l:"Cierra la tarjeta de descubrimiento Basic",ok:s=>!!s.fam.hidden && !!s.fam.hidden.promo}]},{id:"c2", t:"Miembro: cierra la respuesta de Lucía", d:"El mensaje dice que la respuesta sigue en Perfil, en Mi Familia. Si Lucía vuelve a escribir, la tarjeta vuelve.", cat:"Cuidado familiar", sev:"low", scen:"Inicio con un aviso", trig:"Toca la X arriba a la derecha de la tarjeta «Mi Familia» · La sección «Tu familia» desaparece y «Seguridad digital» sube", exp:"El mensaje dice que la respuesta sigue en Perfil, en Mi Familia. Si Lucía vuelve a escribir, la tarjeta vuelve.", rec:"Que la X se vea y se toque con facilidad (zona de 44 px), que el mensaje diga dónde encontrar lo cerrado y que «Deshacer» dé tiempo a reaccionar.", end:"Entra en Perfil > Mi Familia y comprueba que la petición sigue ahí", ac:["Se puede comprobar: Toca la X arriba a la derecha de la tarjeta «Mi Familia».","Se puede comprobar: La sección «Tu familia» desaparece y «Seguridad digital» sube."], caso:"miembro", prep:c=>{ c.famSet({role:"member"}); }, steps:[{l:"Cierra el aviso nuevo de Lucía",ok:s=>!!s.fam.hidden && !!s.fam.hidden["mem-aviso"]}]},{id:"c3", t:"Sin conexión: cierra el aviso de red", d:"Se cierra solo en Inicio y solo durante este corte. En el analizador o en Mi huella el aviso sigue, porque explica por qué no se puede comprobar nada.", cat:"Cuidado familiar", sev:"low", scen:"Inicio con un aviso", trig:"Toca la X arriba a la derecha de la tarjeta «Mi Familia» · La sección «Tu familia» desaparece y «Seguridad digital» sube", exp:"Se cierra solo en Inicio y solo durante este corte. En el analizador o en Mi huella el aviso sigue, porque explica por qué no se puede comprobar nada.", rec:"Que la X se vea y se toque con facilidad (zona de 44 px), que el mensaje diga dónde encontrar lo cerrado y que «Deshacer» dé tiempo a reaccionar.", end:"Entra en Perfil > Mi Familia y comprueba que la petición sigue ahí", ac:["Se puede comprobar: Toca la X arriba a la derecha de la tarjeta «Mi Familia».","Se puede comprobar: La sección «Tu familia» desaparece y «Seguridad digital» sube."], caso:"sinred", prep:c=>{ c.setState({offline:true,offHidden:false}); }, steps:[{l:"Cierra solo el aviso de Inicio",ok:s=>s.offline===true && s.offHidden===true}]},{id:"c4", t:"Cierra el aviso del fin del plan", d:"No vuelve hasta que cambie algo (se reactiva o llega el día). El aviso de la tienda y el correo siguen saliendo por su lado.", cat:"Observación familiar", sev:"high", scen:"Inicio con un aviso", trig:"Toca la X arriba a la derecha de la tarjeta «Mi Familia» · La sección «Tu familia» desaparece y «Seguridad digital» sube", exp:"No vuelve hasta que cambie algo (se reactiva o llega el día). El aviso de la tienda y el correo siguen saliendo por su lado.", rec:"Que la X se vea y se toque con facilidad (zona de 44 px), que el mensaje diga dónde encontrar lo cerrado y que «Deshacer» dé tiempo a reaccionar.", end:"Entra en Perfil > Mi Familia y comprueba que la petición sigue ahí", ac:["Se puede comprobar: Toca la X arriba a la derecha de la tarjeta «Mi Familia».","Se puede comprobar: La sección «Tu familia» desaparece y «Seguridad digital» sube."], obs:true}]
   }
 };
 
+const f13Case = (title, desc, scen, prep, steps, fire) => ({id:"c1",t:title,d:desc,cat:"Cuidado familiar",sev:"medium",scen,trig:"Abre el flujo en el Lab",exp:desc,rec:"El estado y las siguientes acciones quedan claros.",end:"La pantalla muestra el resultado esperado.",ac:["Se puede comprobar: el cambio aparece en pantalla."],prep,steps,...(fire?{fire}:{})});
+Object.assign(LAB, {
+  famtienda:{estado:"Nuevo",plans:["free"],pinWhy:"Plan familiar disponible con Basic.",role:"Basic",stage:"Oferta con error de tienda",desc:"La tienda no responde; no se cobra nada y se puede reintentar.",story:{as:"Cuando quiero contratar Mi Familia",want:"quiero saber si se ha cobrado",so:"para volver a intentarlo con tranquilidad"},ctx:{problem:"La tienda del móvil no responde",need:"Lee el aviso amarillo",result:"Pulsa Reintentar cuando quieras"},value:{dim:"Confianza",why:"El error evita compras confusas y permite recuperarse."},plan:{same:true,note:"Empieza con Basic."},ac:[{g:"La tienda no responde",w:"Lee el aviso",t:"Reintenta"}],cases:[f13Case("Reintenta y funciona","Los precios vuelven tras el intento.","Oferta",c=>{c.famSet({role:"none",view:"oferta",offer:{n:3,period:"anual",phase:"idle",err:"store"}})},[{l:"Reintenta y aparecen los precios",ok:s=>s.fam.offer.err===null&&!!s.fam.offer.n}])]},
+  fampendiente:{estado:"Nuevo",plans:["free"],pinWhy:"Plan familiar disponible con Basic.",role:"Basic",stage:"Compra pendiente",desc:"La tienda requiere aprobación y no hace falta pagar otra vez.",story:{as:"Cuando una compra queda pendiente",want:"quiero saber qué hacer",so:"para no volver a pagar"},ctx:{problem:"La tienda pide aprobación",need:"Lee el estado de la compra",result:"Vuelve a Inicio y espera el aviso"},value:{dim:"Claridad",why:"No se repite el cobro por incertidumbre."},plan:{same:true,note:"Empieza con Basic."},ac:[{g:"Compra pendiente",w:"Lee el aviso",t:"Vuelve a Inicio"}],cases:[f13Case("Se aprueba","La aprobación activa el flujo de creación del grupo.","Compra pendiente",c=>c.famSet({role:"none",view:"pendiente",pendingApproval:true}),[{l:"Simula la aprobación desde el Lab",ok:s=>s.fam.view==="crear"&&s.fam.role==="admin"}])]},
+  famlleno:{estado:"Nuevo",plans:["premium"],pinWhy:"Requiere el plan familiar.",role:"Quien gestiona",stage:"Grupo completo",desc:"Las plazas reservadas por invitaciones también cuentan.",story:{as:"Cuando quiero invitar a otra persona",want:"quiero saber por qué no puedo",so:"para liberar una plaza si hace falta"},ctx:{problem:"Seis plazas ocupadas o reservadas",need:"Abre Invitar a alguien",result:"Anula una invitación pendiente"},value:{dim:"Control",why:"Las plazas reservadas se pueden recuperar."},plan:{same:true,note:"Requiere el plan familiar."},ac:[{g:"Grupo completo",w:"Toca Invitar a alguien",t:"Anula la invitación de Ana"}],cases:[f13Case("Anula la de Ana e invita","La plaza queda libre y el formulario de invitación aparece.","Grupo completo",c=>c.famSet({role:"admin",view:"hub",sheet:{kind:"lleno"}}),[{l:"Anula la invitación de Ana",ok:s=>!s.fam.members.some(m=>m.id==="ana")&&s.fam.sheet.kind==="invite"},{l:"Escribe el nombre y crea la invitación",ok:s=>s.fam.members.some(m=>m.pending&&m.nick==="Mamá nueva")}])]},
+  famunido:{estado:"Nuevo",plans:["premium"],pinWhy:"Requiere el plan familiar.",role:"Quien gestiona",stage:"Inicio con una novedad",desc:"Inicio avisa cuando Mamá se une y el panel refleja su llegada.",story:{as:"Cuando Mamá acepta mi invitación",want:"quiero saber qué comparte",so:"para cuidar de forma acordada"},ctx:{problem:"Mamá se ha unido hoy",need:"Toca la tarjeta de Inicio",result:"Lee su ficha en el panel"},value:{dim:"Cuidado mutuo",why:"La familia decide qué comparte."},plan:{same:true,note:"Requiere el plan familiar."},ac:[{g:"Inicio",w:"Lee el aviso",t:"Abre el grupo"}],cases:[f13Case("No comparte nada","Mamá no comparte nada contigo, pero podéis avisaros.","Inicio",c=>c.famSet({role:"admin",joined:true,joinedShares:false,members:[{id:"mama",nick:"Mamá",ini:"M",level:"safe",status:"Sin novedades",when:"hoy",shares:{}}]}),[{l:"El aviso explica que no comparte nada",ok:(s,c)=>c.famHomeVals().body==="Mamá no comparte nada contigo, pero podéis avisaros."}])]},
+  famterminado:{estado:"Nuevo",plans:["free"],pinWhy:"El grupo ya terminó.",role:"Basic",stage:"Inicio tras el fin del plan",desc:"El aviso explica el fin y deja volver a contratar.",story:{as:"Cuando el plan termina",want:"quiero saber qué ha cambiado",so:"para decidir si vuelvo"},ctx:{problem:"La fecha de fin ya ha llegado",need:"Lee el aviso de Inicio",result:"Abre la oferta para volver a contratar"},value:{dim:"Claridad",why:"Explica el efecto del fin del plan."},plan:{same:true,note:"Cuenta Basic."},ac:[{g:"Inicio",w:"Lee la tarjeta",t:"Abre la oferta"}],cases:[f13Case("Llega al 14 de noviembre","El plan termina y la tarjeta de Inicio cambia.","Inicio",c=>c.famSet({role:"admin",ending:true,ended:false}),[{l:"Llega la fecha desde el Lab",ok:s=>s.fam.ended&&s.fam.view==="hub"}])]},
+  famterminadomiembro:{estado:"Nuevo",plans:["free"],pinWhy:"El grupo ya terminó.",role:"Miembro",stage:"Inicio tras el fin del plan",desc:"La persona miembro pasa a Basic y conserva acceso a los planes.",story:{as:"Cuando termina el plan familiar",want:"quiero saber qué ve Lucía",so:"para entender qué cambió"},ctx:{problem:"El plan terminó hoy",need:"Lee la tarjeta de Inicio",result:"Abre los planes Premium"},value:{dim:"Privacidad",why:"Aclara que lo compartido ya no se ve."},plan:{same:true,note:"Cuenta Basic."},ac:[{g:"Inicio",w:"Lee el aviso",t:"Abre los planes"}],cases:[f13Case("Comprueba el aviso de fin","El texto aclara que Lucía ya no ve lo compartido.","Inicio",c=>c.famSet({role:"member",memberEnded:true}),[{l:"Se informa del paso a Basic",ok:(s,c)=>/Lucía ya no ve lo que compartías/.test(c.famHomeVals().body)}])]},
+  famcaducada:{estado:"Nuevo",plans:["free"],pinWhy:"Invitación inválida.",role:"Invitada",stage:"Invitación anulada",desc:"Una invitación anulada no se puede aceptar ni reenviar desde aquí.",story:{as:"Cuando una invitación deja de servir",want:"quiero saber por qué",so:"para pedir otra a quien me invitó"},ctx:{problem:"Lucía anuló la invitación",need:"Lee el aviso",result:"Toca Entendido"},value:{dim:"Seguridad",why:"Quien invita decide si la invitación sigue activa."},plan:{same:true,note:"Empieza con Basic."},ac:[{g:"Invitación",w:"Lee el aviso",t:"Toca Entendido"}],cases:[f13Case("Anulada","La invitación informa que Lucía la anuló.","Invitación",c=>c.famSet({role:"invited",view:"unirse",inv:{state:"anulada",expires:"4 de noviembre"}}),[{l:"No se ofrece reenviar",ok:s=>s.fam.inv.state==="anulada"}])]},
+  fampremiumpropio:{estado:"Nuevo",plans:["premium"],pinWhy:"Invitada con Premium propio.",role:"Invitada",stage:"Invitación con Premium propio",desc:"La persona ya tiene una renovación y recibe información antes de unirse.",story:{as:"Cuando ya pago Premium",want:"quiero evitar un cobro doble",so:"para decidir con información"},ctx:{problem:"Premium renueva el 3 de diciembre",need:"Lee el aviso",result:"Puede ir a la tienda o unirse"},value:{dim:"Transparencia",why:"El aviso anticipa el efecto en el cobro."},plan:{same:true,note:"Conserva la opción de unirse."},ac:[{g:"Invitación",w:"Lee el aviso de Premium",t:"Decide si se une"}],cases:[f13Case("Ya paga Premium","El aviso aparece antes del botón para unirse.","Invitación",c=>c.famSet({role:"invited",view:"unirse",premiumOwn:true}),[{l:"Se informa de la renovación",ok:s=>s.fam.premiumOwn&&s.fam.inv.state==="activa"}])]},
+  famretirado:{estado:"Nuevo",plans:["free"],pinWhy:"Retirada del grupo.",role:"Basic",stage:"Inicio tras ser retirada",desc:"La persona pasa a Basic y Lucía ya no ve lo que compartía.",story:{as:"Cuando Lucía me retira del grupo",want:"quiero saber qué pasa con mis datos",so:"para decidir si contrato Premium"},ctx:{problem:"Lucía te ha retirado",need:"Lee el aviso de Inicio",result:"Abre los planes Premium"},value:{dim:"Privacidad",why:"Confirma el cese del acceso a los datos compartidos."},plan:{same:true,note:"Cuenta Basic."},ac:[{g:"Inicio",w:"Lee el aviso",t:"Abre los planes"}],cases:[f13Case("Me han retirado","La tarjeta informa de retirada y de privacidad.","Inicio",c=>c.famSet({role:"none",left:true,leftReason:"removed"}),[{l:"El aviso explica la retirada",ok:(s,c)=>/Lucía ya no ve lo que compartías/.test(c.famHomeVals().body)}])]},
+  fameliminar:{estado:"Nuevo",plans:["premium"],pinWhy:"Administras un grupo familiar.",role:"Quien gestiona",stage:"Perfil › Eliminar cuenta",desc:"Antes de borrar, explica el efecto inmediato en la familia y en la suscripción.",story:{as:"Cuando elimino mi cuenta",want:"saber qué pasa con mi familia",so:"para no dejar un cobro activo"},ctx:{problem:"El grupo se deshará y la suscripción no se cancela sola",need:"Lee el aviso del primer paso",result:"Continúa hasta la confirmación"},value:{dim:"Claridad",why:"Evita que la suscripción siga cobrándose por error."},plan:{same:true,note:"Administra Familia Navarro."},ac:[{g:"Eliminar cuenta",w:"Lee el aviso",t:"Continúa a la confirmación"}],cases:[f13Case("Ve el aviso y llega a la confirmación","El aviso familiar precede al paso de confirmación.","Eliminar cuenta",c=>{c.famSet({role:"admin"});c.go("borrar")},[{l:"Aparece el aviso familiar",ok:(s,c)=>c.renderVals().pr.familyDeleteWarning},{l:"Llega a la confirmación",ok:s=>s.pr.delStep==="confirmar"}])]},
+});
+LAB.faminvite.cases.push({id:"c5",t:"Ahora no",d:"La tarjeta de Inicio desaparece y la invitación sigue válida.",cat:"Cuidado familiar",sev:"low",scen:"Inicio con invitación",trig:"Toca Ahora no",exp:"La tarjeta se cierra; la invitación sigue vigente.",rec:"La persona puede volver a Mi Familia desde Perfil.",end:"Invitación válida",ac:["La invitación sigue vigente."],prep:c=>c.famSet({role:"invited",view:"unirse",inv:{state:"activa"}}),steps:[{l:"Ahora no deja la invitación válida",ok:(s,c)=>s.fam.inv.state==="activa"&&s.screen==="home"}]});
+LAB.fammember.cases[2].obs=false; LAB.fammember.cases[2].prep=c=>c.famSet({role:"member",mem:Object.assign({},c.state.fam.mem,{muted:false})}); LAB.fammember.cases[2].steps=[{l:"Silencia las notificaciones de Lucía",ok:s=>!!s.fam.mem.muted}];
+LAB.famayuda.cases.push({id:"c4",t:"Pide ayuda sin conexión",d:"La petición no se envía y aparece una explicación con el 017.",cat:"Cuidado familiar",sev:"high",scen:"Hoja Pedir ayuda",trig:"Envía sin conexión",exp:"La petición queda preparada y se muestra el 017.",rec:"Reintenta cuando vuelva la red.",end:"Sin enviar",ac:["No se pierde la petición."],prep:c=>{c.famSet({role:"member",view:"hub",sheet:{kind:"ayuda",step:"form",obj:{kind:"other",t:"Un mensaje o una llamada"},motive:"Me piden dinero"}});c.setState({offline:true})},steps:[{l:"Se conserva el mensaje y aparece el aviso de red",ok:s=>!!s.offline&&!!s.netBlock}]});
+
 // Qué caso extremo ejecuta cada criterio de aceptación (null: sin prueba automatizada).
 
-export const LAB_AC_BY = {"nuevo": [null, null, "c2", "c1"], "registro": [null, "c1", "c2", "c2"], "bienvenida": [null, "c1", "c2", "c3"], "dia1": [null, "c1", "c2"], "tema1": ["c1", "c1", "c2"], "aldia": ["c1", "c1", "c2"], "dormido": [null, "c1", "c2"], "tope": ["c1", "c2", "c1", "c3"], "comprobar": ["c1", "c2", null], "pzlink": [null, "c1", "c2"], "pzpaid": ["c1", "c1", "c2"], "ayuda": ["c1", "c2", "c1"], "nvmensaje": ["c1", "c2", "c1"], "nvauto": [null, "c1", "c2"], "nvaviso": [null, "c1", null], "nvborrar": ["c1", "c2", "c3"], "nvborrado": ["c1", null, null], "nvcasos": ["c1", "c2"], "premnuevo": [null, "c2", "c1"], "premmitad": ["c1", "c2"], "premmax": [null, null], "famoferta": ["c1", null, "c2"], "famcrear": ["c1", "c2"], "famadmin": ["c2", "c1", "c2", "c3"], "famavisar": ["c1", "c2"], "famficha": ["c1", "c2"], "famajustes": ["c1", null], "faminvite": ["c1", "c2", "c1"], "fammember": [null, null, "c1"], "famayuda": ["c1", "c2", "c3"]};
+export const LAB_AC_BY = {"nuevo":[null,null,"c2","c1"],"registro":[null,"c1","c2","c2"],"bienvenida":[null,"c1","c2","c3"],"dia1":[null,"c1","c2"],"tema1":["c1","c1","c2"],"aldia":["c1","c1","c2"],"dormido":[null,"c1","c2"],"tope":["c1","c2","c1","c3"],"comprobar":["c1","c2",null],"pzlink":[null,"c1","c2"],"pzpaid":["c1","c1","c2"],"ayuda":["c1","c2","c1"],"nvmensaje":["c1","c2","c1"],"nvauto":[null,"c1","c2"],"nvaviso":[null,"c1",null],"nvborrar":["c1","c2","c3"],"nvborrado":["c1",null,null],"nvcasos":["c1","c2"],"premnuevo":[null,"c2","c1"],"premmitad":["c1","c2"],"premmax":[null,null],"famoferta":["c1",null,"c2"],"famcrear":["c1","c2"],"famadmin":["c2","c1","c2","c3"],"famavisar":["c1","c2"],"famficha":["c1","c2"],"famajustes":["c1",null],"faminvite":["c1","c2","c1"],"fammember":[null,null,"c1"],"famayuda":["c1","c2","c3"],"famdescubre":[],"famdescubrean":[],"famcalma":[],"famfichapep":[],"faminvitar":[],"famretirar":[],"famplan":[],"fambaja":[],"famcancelado":[],"famayudaan":[],"famcomparto":[],"famverlucia":[],"famplanmiembro":[],"famsalir":[],"famtermina":[],"famfuera":[],"famcerrar":[]};
 
-export const LAB_QA = {"date": "26 oct 2026", "cases": {"nuevo.c1": true, "nuevo.c2": true, "registro.c1": true, "registro.c2": true, "registro.c3": true, "bienvenida.c1": true, "bienvenida.c2": true, "bienvenida.c3": true, "dia1.c1": true, "dia1.c2": true, "tema1.c1": true, "tema1.c2": true, "aldia.c1": true, "aldia.c2": true, "dormido.c1": true, "dormido.c2": true, "tope.c1": true, "tope.c2": true, "tope.c3": true, "comprobar.c1": true, "comprobar.c2": true, "pzlink.c1": true, "pzlink.c2": true, "pzpaid.c1": true, "pzpaid.c2": true, "ayuda.c1": true, "ayuda.c2": true, "nvmensaje.c1": true, "nvmensaje.c2": true, "nvauto.c1": true, "nvauto.c2": true, "nvaviso.c1": true, "nvaviso.c2": true, "nvborrar.c1": true, "nvborrar.c2": true, "nvborrar.c3": true, "nvborrado.c1": true, "nvcasos.c1": true, "nvcasos.c2": true, "premnuevo.c1": true, "premnuevo.c2": true, "premmitad.c1": true, "premmitad.c2": true, "famoferta.c1": true, "famoferta.c2": true, "famcrear.c1": true, "famcrear.c2": true, "famadmin.c1": true, "famadmin.c2": true, "famadmin.c3": true, "famavisar.c1": true, "famavisar.c2": true, "famficha.c1": true, "famficha.c2": true, "famajustes.c1": true, "famajustes.c2": true, "faminvite.c1": true, "faminvite.c2": true, "fammember.c1": true, "famayuda.c1": true, "famayuda.c2": true, "famayuda.c3": true}, "ac": {}};
+export const LAB_QA = {"date":"28 oct 2026","cases":{"nuevo.c1":true,"nuevo.c2":true,"registro.c1":true,"registro.c2":true,"registro.c3":true,"bienvenida.c1":true,"bienvenida.c2":true,"bienvenida.c3":true,"dia1.c1":true,"dia1.c2":true,"tema1.c1":true,"tema1.c2":true,"aldia.c1":true,"aldia.c2":true,"dormido.c1":true,"dormido.c2":true,"tope.c1":true,"tope.c2":true,"tope.c3":true,"comprobar.c1":true,"comprobar.c2":true,"pzlink.c1":true,"pzlink.c2":true,"pzpaid.c1":true,"pzpaid.c2":true,"ayuda.c1":true,"ayuda.c2":true,"nvmensaje.c1":true,"nvmensaje.c2":true,"nvauto.c1":true,"nvauto.c2":true,"nvaviso.c1":true,"nvaviso.c2":true,"nvborrar.c1":true,"nvborrar.c2":true,"nvborrar.c3":true,"nvborrado.c1":true,"nvcasos.c1":true,"nvcasos.c2":true,"premnuevo.c1":true,"premnuevo.c2":true,"premmitad.c1":true,"premmitad.c2":true,"famoferta.c1":true,"famoferta.c2":true,"famcrear.c1":true,"famcrear.c2":true,"famadmin.c1":true,"famadmin.c2":true,"famadmin.c3":true,"famavisar.c1":true,"famavisar.c2":true,"famficha.c1":true,"famficha.c2":true,"famajustes.c1":true,"famajustes.c2":true,"faminvite.c1":true,"faminvite.c2":true,"fammember.c1":true,"famayuda.c1":true,"famayuda.c2":true,"famayuda.c3":true,"famcalma.c1":true,"famadmin.c4":true,"faminvitar.c1":true,"famplan.c1":true,"famcancelado.c1":true,"fammember.c2":true,"famtermina.c1":true,"famcerrar.c1":true,"famcerrar.c2":true,"famcerrar.c3":true},"ac":{}};
+
+
+Object.assign(LAB_AC_BY,{famtienda:["c1"],fampendiente:["c1"],famlleno:["c1"],famunido:["c1"],famterminado:["c1"],famterminadomiembro:["c1"],famcaducada:["c1"],fampremiumpropio:["c1"],famretirado:["c1"],fameliminar:["c1"]});
+LAB.famcancelado.cases[1].obs=false;
+LAB.famcancelado.cases[1].prep=c=>{};
+LAB.famcancelado.cases[1].fire={label:"Llegar al 14 de noviembre",run:c=>c.famReachEnd()};
+LAB.famcancelado.cases[1].steps=[{l:"El plan familiar termina",ok:s=>!!s.fam.ended&&s.fam.role==="admin"}];
+Object.assign(LAB_QA.cases,{"faminvite.c5":true,"fammember.c3":true,"famayuda.c4":true,"famtienda.c1":true,"fampendiente.c1":true,"famlleno.c1":true,"famunido.c1":true,"famterminado.c1":true,"famterminadomiembro.c1":true,"famcaducada.c1":true,"fampremiumpropio.c1":true,"famretirado.c1":true,"fameliminar.c1":true,"famcancelado.c2":true});
+
+LAB.faminvite.cases[4].steps[0].ok=s=>!!s.fam.hidden?.invited&&s.fam.inv.state==="activa";
+LAB.famunido.cases[0].prep=c=>c.famSet({role:"admin",joined:true,joinedShares:true});
+LAB.famunido.cases[0].steps[0].ok=(s,c)=>s.fam.reqs.length===0&&c.famHomeVals().body==="Mamá no comparte nada contigo, pero podéis avisaros.";
+LAB.famterminado.cases[0].steps[0].ok=(s,c)=>s.fam.ended&&s.fam.role==="admin"&&s.fam.members.length===0&&s.fam.reqs.length===0&&c.famHomeVals().title==="Tu plan familiar terminó el 14 de noviembre"&&c.famHomeVals().hasIcon&&!c.famHomeVals().hasAvatars;
+LAB.famterminadomiembro.cases[0].prep=c=>c.famSet({role:"member",memberEnded:false});
+LAB.famterminadomiembro.cases[0].steps[0].ok=(s,c)=>c.famHomeVals().title==="El plan familiar de Lucía ha terminado"&&c.famHomeVals().icon==="calendar-x"&&c.famHomeVals().hasIcon&&!c.famHomeVals().hasAvatars;
+LAB.famcaducada.cases[0].prep=c=>c.famSet({role:"invited",view:"unirse",inv:{state:"activa",expires:"4 de noviembre"}});
+LAB.famcaducada.cases[0].steps[0].ok=s=>s.fam.inv.state==="anulada";
+LAB.fampremiumpropio.cases[0].prep=c=>c.famSet({role:"invited",view:"unirse",premiumOwn:false});
+LAB.famretirado.cases[0].prep=c=>c.famSet({role:"none",left:false,leftReason:"self"});
+LAB.fameliminar.cases[0].prep=c=>c.famSet({role:"none"});
+LAB.fameliminar.cases[0].steps[0].ok=(s,c)=>c.renderVals().pf.familyDeleteWarning;
+LAB.fameliminar.cases[0].steps[1].ok=s=>s.pf.delStep==="confirmar";

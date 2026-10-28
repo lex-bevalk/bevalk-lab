@@ -12,8 +12,8 @@ const VIEWPORTS = [
   { width: 375, height: 812 },
 ];
 const SCROLL_VIEWPORTS = new Set(['1680x916', '1024x768', '375x812']);
-const MAX_CAPTURES = 1500;
-const MAX_BYTES = 400 * 1024 * 1024;
+const MAX_CAPTURES = 3000;
+const MAX_BYTES = 900 * 1024 * 1024;
 const DEFAULT_REFERENCE = 'http://127.0.0.1:8765/project/Main.dc.html';
 const [url = DEFAULT_REFERENCE, outArg] = process.argv.slice(2);
 if (!outArg) {
@@ -31,6 +31,8 @@ const context = await browser.newContext({ viewport: VIEWPORTS[0], reducedMotion
 const page = await context.newPage();
 const missing = [];
 const screenshots = [];
+let flows = [];
+let caseGroups = [];
 let totalBytes = 0;
 const GETC = `const getC = () => { if (window.__lab) return window.__lab; const el = document.querySelector('.tp-phone'); const k = Object.keys(el || {}).find(k => k.startsWith('__reactFiber')); let f = el && el[k]; while (f) { if (f.stateNode && f.stateNode.logic && f.stateNode.logic.labVals) return f.stateNode.logic; f = f.return; } return null; };`;
 
@@ -74,24 +76,26 @@ async function logic(expression) {
 }
 
 async function settle() {
-  const deadline = Date.now() + 20000;
-  let previousShown;
-  let stableSamples = 0;
-  while (Date.now() < deadline) {
-    const state = await logic('return { shown:c.state.shown, toast:!!c.state.toast };');
-    if (!state.toast && state.shown === previousShown) stableSamples += 1;
-    else stableSamples = 0;
-    previousShown = state.shown;
-    if (stableSamples >= 3) {
-      await page.waitForTimeout(160);
-      const afterMargin = await logic('return { shown:c.state.shown, toast:!!c.state.toast };');
-      if (!afterMargin.toast && afterMargin.shown === state.shown) return;
-      previousShown = afterMargin.shown;
-      stableSamples = 0;
+  await page.waitForFunction(() => {
+    const el = document.querySelector('.tp-phone');
+    let c = window.__lab;
+    if (!c && el) {
+      const key = Object.keys(el).find(k => k.startsWith('__reactFiber'));
+      let fiber = key ? el[key] : null;
+      while (fiber) {
+        if (fiber.stateNode?.logic?.labVals) { c = fiber.stateNode.logic; break; }
+        fiber = fiber.return;
+      }
     }
-    await page.waitForTimeout(100);
-  }
-  throw new Error('El anillo o el toast no se estabilizaron en 20 s');
+    if (!c) return false;
+    const shown = c.state.shown;
+    const toast = !!c.state.toast;
+    const previous = window.__visualSettlePrevious;
+    const stable = !toast && previous && previous.shown === shown ? previous.stable + 1 : 0;
+    window.__visualSettlePrevious = { shown, stable };
+    return stable >= 2;
+  }, null, { timeout: 20000, polling: 50 });
+  await page.waitForTimeout(40);
 }
 async function capture(viewport, stem, settleFirst = true) {
   if (settleFirst) await settle();
@@ -101,7 +105,34 @@ async function capture(viewport, stem, settleFirst = true) {
   const png = await page.screenshot({ animations: 'disabled' });
   if (totalBytes + png.length > MAX_BYTES) throw new Error(`Presupuesto excedido: más de ${MAX_BYTES / (1024 * 1024)} MiB.`);
   await writeFile(join(outDir, name), png);
-  screenshots.push({ name, bytes: png.length });
+  const code = stem.match(/(?:^|-)F\d{2}(?:-|$)/)?.[0]?.replace(/^-/, '').replace(/-$/, '');
+  const flowId = code ? (flows.find(flow => flow.code === code)?.id || null) : null;
+  const visualState = await page.evaluate(`(() => {
+    ${GETC}
+    const c = getC();
+    if (!c) throw new Error('No se encontró la lógica del Lab al guardar el manifiesto visual');
+    const box = selector => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || rect.width < 1 || rect.height < 1) return null;
+      return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+    };
+    const vals = c.renderVals();
+    const famHome = Boolean(vals.famHome?.show);
+    const famAnNudge = Boolean(vals.famAn?.nudge);
+    const famAnShow = Boolean(vals.famAn?.show);
+    const familyScreen = vals.isFamilia === true || c.state?.screen === 'familia';
+    const famHomeVisible = c.state?.screen === 'home' && famHome;
+    return {
+      boxes: { labA: box('.lab-a'), tpPhone: box('.tp-phone') },
+      family: { famHome, famHomeVisible, famAnNudge, famAnShow, screen: c.state?.screen || null, familyScreen },
+      maskPhone: famHomeVisible || famAnNudge || famAnShow || familyScreen,
+    };
+  })()`);
+  const flow = flowId ? flows.find(item => item.id === flowId) : null;
+  screenshots.push({ name, bytes: png.length, flowId, flowGroup: flow?.group || null, ...visualState });
   totalBytes += png.length;
   if (screenshots.length % 50 === 0) console.log(`Progreso: ${screenshots.length} capturas`);
 }
@@ -159,15 +190,13 @@ async function captureScrolls(viewport, stem) {
 }
 
 try {
-  let flows = [];
-  let caseGroups = [];
   for (const viewport of VIEWPORTS) {
     await loadAt(viewport);
     if (!flows.length) {
-      flows = await logic('return c.labFlows().map(f => ({ id:f.id, code:c.labN(f) }));');
+      flows = await logic('return c.labFlows().filter(f => !String(f.group || f.grp || "").startsWith("Mi Familia ·")).map(f => ({ id:f.id, code:c.labN(f), group:f.group || f.grp || null }));');
       caseGroups = await logic(`
         const seen = new Set(); const groups = [];
-        for (const f of c.labFlows()) for (const cs of (c.labD(f.id).cases || [])) {
+        for (const f of c.labFlows().filter(f => !String(f.group || f.grp || "").startsWith("Mi Familia ·"))) for (const cs of (c.labD(f.id).cases || [])) {
           if (!cs.cat || seen.has(cs.cat)) continue;
           seen.add(cs.cat); groups.push({ category:cs.cat, flowId:f.id, flowCode:c.labN(f), caseId:cs.id, title:cs.t });
         }
@@ -201,6 +230,7 @@ try {
         }
         return c && !c.state.lab.prepping;
       }, null, { timeout: 8000 });
+      await page.evaluate(() => document.getElementById('lab-case-detail')?.scrollIntoView({ block: 'nearest', behavior: 'instant' }));
       await capture(viewport, `case-${slug(group.category)}-${group.flowCode}-${group.caseId}`);
     }
   }

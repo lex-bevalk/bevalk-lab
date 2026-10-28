@@ -34,28 +34,38 @@ const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
         const label = element.getAttribute('aria-label')
           || element.getAttribute('title')
           || (element.innerText || element.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 80);
-        return { tag, label };
+        const navGroup = element.matches('.lab-a button[aria-current]')
+          ? element.parentElement?.getAttribute('aria-label') || ''
+          : /^button$/.test(tag) && /^Mi Familia(?:,| ·)/.test(label)
+            ? 'Mi Familia · Inicio'
+          : /^button$/.test(tag) && /Mamá te pide ayuda con un enlace/.test(label)
+            ? 'Mi Familia · tarea semanal'
+          : /^button$/.test(tag) && /^F\d{2} · Mi Familia ·/.test(label)
+            ? 'Mi Familia · destacado'
+            : '';
+        return { tag, label, navGroup };
       }));
     }
     await page.close();
-    return { url, candidateCount: count, steps: sequence.length, sequence };
+    const normalized = sequence.filter(item => !(item.navGroup || '').startsWith('Mi Familia ·'));
+    return { url, candidateCount: count, steps: sequence.length, sequence, normalized };
   }
 
   try {
     const reference = await sequenceFor(refUrl);
     const lab = await sequenceFor(labUrl);
-    const identical = JSON.stringify(reference.sequence) === JSON.stringify(lab.sequence);
+    const identical = JSON.stringify(reference.normalized) === JSON.stringify(lab.normalized);
     const outputDir = path.resolve('tests/e2e/results');
     await fs.mkdir(outputDir, { recursive: true });
     await fs.writeFile(path.join(outputDir, 'focus.json'), JSON.stringify({ identical, reference, lab }, null, 2));
     console.log(`FOCUS ${identical ? 'IDENTICAL' : 'DIFFERENT'} · referencia ${reference.steps} pasos (${reference.candidateCount} elementos) · Lab ${lab.steps} pasos (${lab.candidateCount} elementos)`);
     console.log(`Secuencia guardada en ${path.join(outputDir, 'focus.json')}`);
     if (!identical) {
-      const length = Math.max(reference.sequence.length, lab.sequence.length);
+      const length = Math.max(reference.normalized.length, lab.normalized.length);
       const diff = [];
       for (let index = 0; index < length; index += 1) {
-        if (JSON.stringify(reference.sequence[index]) !== JSON.stringify(lab.sequence[index])) {
-          diff.push({ step: index + 1, reference: reference.sequence[index] || null, lab: lab.sequence[index] || null });
+        if (JSON.stringify(reference.normalized[index]) !== JSON.stringify(lab.normalized[index])) {
+          diff.push({ step: index + 1, reference: reference.normalized[index] || null, lab: lab.normalized[index] || null });
         }
       }
       console.table(diff);

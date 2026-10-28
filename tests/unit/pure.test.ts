@@ -20,11 +20,18 @@ describe('planWorld', () => {
     expect(planWorld({ plan: 'premium', alertsLeft: 99 }, 'free')).toEqual({ plan: 'free', alertsLeft: 4 });
   });
 
-  it('conserva los planes fijados por los flujos y la preferencia en los demás', () => {
-    const free = [1, 2, 3, 4, 5, 8].map(number => FLOWS[number - 1].id);
-    const premium = [17, 19, 20, 21, 23, 24, 25, 26, 27, 29, 30].map(number => FLOWS[number - 1].id);
-    expect(FLOWS.filter(flow => LAB[flow.id]?.plans?.length === 1 && LAB[flow.id].plans[0] === 'free').map(flow => flow.id)).toEqual(free);
-    expect(FLOWS.filter(flow => LAB[flow.id]?.plans?.length === 1 && LAB[flow.id].plans[0] === 'premium').map(flow => flow.id)).toEqual(premium);
+  it('conserva las asignaciones de plan al añadir los 36 flujos de Mi Familia', () => {
+    const familyIds = ['famdescubre','famdescubrean','famoferta','famcrear','famtienda','fampendiente','famcalma','famadmin','famficha','famavisar','famfichapep','famunido','faminvitar','famajustes','famretirar','famlleno','famplan','fambaja','famcancelado','famterminado','fameliminar','faminvite','famcaducada','fampremiumpropio','fammember','famayuda','famayudaan','famcomparto','famverlucia','famplanmiembro','famsalir','famtermina','famfuera','famterminadomiembro','famretirado','famcerrar'];
+    expect(FLOWS.filter(flow => flow.id.startsWith('fam')).map(flow => flow.id)).toEqual(familyIds);
+    expect([...new Set(FLOWS.filter(flow => flow.id.startsWith('fam')).map(flow => flow.group))]).toEqual([
+      'Mi Familia · descubrir y contratar', 'Mi Familia · quien gestiona, día a día', 'Mi Familia · quien gestiona, el grupo',
+      'Mi Familia · quien gestiona, plan y baja', 'Mi Familia · persona invitada', 'Mi Familia · miembro, día a día',
+      'Mi Familia · miembro, plan y salida', 'Mi Familia · avisos de Inicio'
+    ]);
+    expect(FLOWS.filter(flow => LAB[flow.id]?.plans?.length === 1 && LAB[flow.id].plans[0] === 'free').map(flow => flow.id))
+      .toEqual(['nuevo','registro','bienvenida','dia1','tema1','tope','famdescubre','famdescubrean','famoferta','famtienda','fampendiente','famterminado','faminvite','famcaducada','famfuera','famterminadomiembro','famretirado']);
+    expect(FLOWS.filter(flow => LAB[flow.id]?.plans?.length === 1 && LAB[flow.id].plans[0] === 'premium').map(flow => flow.id))
+      .toEqual(['nvborrado','premnuevo','premmitad','premmax','famcrear','famcalma','famadmin','famficha','famavisar','famfichapep','famunido','faminvitar','famajustes','famretirar','famlleno','famplan','fambaja','famcancelado','fameliminar','fampremiumpropio','fammember','famayuda','famayudaan','famcomparto','famverlucia','famplanmiembro','famsalir','famtermina']);
   });
 
   it('mantiene SCEN intacto al componer mundos derivados', () => {

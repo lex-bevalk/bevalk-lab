@@ -188,3 +188,40 @@ comprobación final contra https://bevalk-lab.vercel.app/ (requiere quitar Verce
 - CI PR #11 (run 40589931665): visual 1.470/1.470, visual propio 10/10, e2e:select 5/5, e2e:review verde; 175 tests unitarios.
 - Producción verificada por el usuario el 28 oct: respuestas y cambio de estado funcionan. Sin sesión: `/comments` y `/review` 302 a login, `/api/comments` 401.
 - Riesgo aceptado: respuestas, estados y borrados comparten el cupo de 30 escrituras cada 10 min por IP.
+
+## v1.6.0 · Mi Familia: 26 flujos de `mi-familia-lab/Lab.dc.html` (28 oct 2026) · EN CURSO
+Rama `feat/mi-familia-flujos`. Spec Codex: `tasks/codex-f12.md` (fase A) y `tasks/codex-f13.md` (fase B, tras verificar A).
+
+### Hechos verificados
+- `Lab.dc.html` define 26 flujos en 8 grupos (`LAB_FLOWS`/`LAB_GROUPS`, l. 4126-4416) y tiene pantalla para los 26 (`famApplyFlow`, l. 6497).
+- Su prototipo base es ANTERIOR al de `handoff` (tiene «Escáner», no tiene Aprende/Lección/Ayuda/Aviso/Comprobar/Borrar):
+  no hay ancestro común y regenerar desde él borraría v1.1-v1.5. Se portan solo los cambios de Mi Familia a `src/`.
+- Puntos de contacto: pantalla Mi Familia (vistas nuevas `isBaja`, `isSalir`; banners de fin de plan), hoja `fam.sh`,
+  Inicio (`famHome`: descubrimiento, cerrar con Deshacer), Perfil (`famPlan`: Gestiona tu plan), Analizador (`famAn.nudge`, Basic).
+- Datos nuevos: `FAM_MEMBERS_CALM`, `FAM_LOSE_MEMBER`, `FAM_LOSE_ADMIN`. Props del Host idénticas.
+
+### Decisiones (Claude, a partir del blueprint de Fable; el usuario puede objetar)
+13. El shell del Lab (columnas, navegación, ficha, live preview, `state.lab`) queda protegido. No se porta el shell de `Lab.dc.html`
+    (filtros por rol, `labGo`, `famApplyFlow`): cada flujo se expresa con los campos declarativos de `FLOWS` y `LAB[id].cases[].prep`.
+14. Fusión por bloque: comportamiento, contenido y elementos nuevos vienen de `Lab.dc.html`; el estilo de elementos que ya existían
+    (p. ej. avatares 48 px, `canBack`) se queda como en `src/`, que es más reciente.
+15. Los 9 flujos de familia actuales conservan su id (QA, e2e, comentarios guardados) y pasan a los nuevos grupos; se añaden 17 ids.
+16. Las capturas de Mi Familia/Inicio/Perfil/Analizador que cambian a propósito salen de la comparación con la referencia y pasan a visual propio.
+17. Fase B («los que faltan»): estados y flujos sin pantalla en `Lab.dc.html`, diseñados por Claude con los patrones existentes.
+
+### Decisiones del usuario (28 oct 2026: «procede con tu mejor recomendación aplicando siempre el mejor UX»)
+18. Fase B aprobada con los 10 flujos de `tasks/codex-f13.md`.
+19. Tarjeta compacta «Mi Familia · NUEVO» en Inicio para todo usuario sin grupo (como la referencia): se mantiene; cerrable y no vuelve (F26).
+20. `mi-familia-lab/` se versiona como referencia de solo lectura (igual que `handoff/`).
+21. Revisión del usuario sobre el Preview de Vercel de la PR antes de fusionar.
+22. La plantilla fuente de Mi Familia es `design/familia/Main.dc.html`; las pantallas se regeneran con `convert-template.mjs`, nunca a mano.
+23. CI visual proporcional (usuario, 28 oct 2026; sustituye la decisión 3): la comparación completa contra `handoff` sale de cada PR.
+    Por PR y solo si cambian rutas de UI: humo visual (~40 capturas clave a 375 y 1440) contra línea base propia aprobada de `main`
+    + gates deterministas (colocación, iconos, a11y, focus). Capturas de referencia en caché. Comparación completa: manual/nocturna.
+    Se aplica en esta rama como commit propio, tras la fase B.
+    Cada PR mantiene tipos, unit, middleware, build, e2e, invariants, sweep, a11y, focus, review, select y family-layout.
+    El humo corre cuando cambian `src/ui`, `src/styles`, `src/logic`, `src/data`, `design`, configuración de Vite o capturas visuales.
+    Compara estados clave en móvil (375) y escritorio (1440) entre la rama y la base de la PR.
+    Los cambios visuales intencionados se etiquetan `cambio-visual`; el humo informa y adjunta sus diferencias sin bloquear.
+    La suite completa contra `handoff` y `e2e:baseline` se lanza manualmente o a diario a las 03:00 UTC en `main`.
+    La acción completa conserva la caché de capturas de referencia hasta que cambien `handoff` o el capturador.

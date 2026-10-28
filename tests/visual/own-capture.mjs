@@ -1,11 +1,13 @@
 import { spawnSync } from 'node:child_process';
 import { access, mkdir, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { relative, resolve } from 'node:path';
 import { chromium } from 'playwright';
 
 const root = resolve(process.cwd());
 const currentDir = resolve(root, 'tests/visual/own/current');
 const baselineDir = resolve(root, 'tests/visual/own/baseline');
+const familyCurrentDir = resolve(root, 'tests/visual/own/family/current');
+const familyBaselineDir = resolve(root, 'tests/visual/own/family/baseline');
 const appUrl = process.env.LAB_URL || 'http://localhost:4173/';
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 const targets = {
@@ -27,8 +29,7 @@ const browser = await chromium.launch(executablePath ? { executablePath, headles
 const page = await browser.newPage({ viewport: viewports[0], deviceScaleFactor: 1, reducedMotion: 'reduce' });
 await page.emulateMedia({ reducedMotion: 'reduce' });
 const captures = [];
-try {
-  await mkdir(currentDir, { recursive: true });
+await mkdir(currentDir, { recursive: true });
   await page.goto(appUrl, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__lab);
   for (const [target, setup] of Object.entries(targets)) {
@@ -85,21 +86,41 @@ try {
       await page.waitForFunction(() => !document.querySelector('.tp-phone .odin-menu'));
     }
   }
-} finally {
-  await browser.close();
-}
 
 await writeFile(resolve(currentDir, 'capture-manifest.json'), JSON.stringify({ appUrl, captures }, null, 2));
-console.log(`Capturas propias: ${captures.length}/${Object.keys(targets).length * viewports.length} en ${currentDir}`);
-let baselineExists = false;
-try {
-  await access(baselineDir);
-  baselineExists = true;
-} catch {}
-if (baselineExists) {
-  const result = spawnSync(process.execPath, ['tests/visual/compare.mjs', 'tests/visual/own/baseline', 'tests/visual/own/current', 'tests/visual/own/diff'], { cwd: root, stdio: 'inherit' });
-  if (result.error) throw result.error;
-  if (result.status !== 0) process.exitCode = result.status || 1;
-} else {
-  console.log('Baseline propia no existe; comparación omitida.');
+const familyTargets = ['famdescubre','famdescubrean','famoferta','famcrear','famcalma','famadmin','famficha','famavisar','famfichapep','faminvitar','famajustes','famretirar','famplan','fambaja','famcancelado','faminvite','fammember','famayuda','famayudaan','famcomparto','famverlucia','famplanmiembro','famsalir','famtermina','famfuera','famcerrar','famtienda','fampendiente','famlleno','famunido','famterminado','famterminadomiembro','famcaducada','fampremiumpropio','famretirado','fameliminar'];
+const familyCaptures = [];
+await mkdir(familyCurrentDir, { recursive:true });
+for (const id of familyTargets) {
+  await page.evaluate(id => {
+    const c = window.__lab;
+    const flow = c?.labFlows().find(item => item.id === id);
+    if (!flow) throw new Error('No se encontró el flujo ' + id);
+    c.labSelect(flow);
+    c.labLabSet({ tab:'phone', pv:'closed', case:null, view:'flow' });
+    document.querySelectorAll('.tp-scroll, .lab-scroll').forEach(element => { element.scrollTop = 0; });
+  }, id);
+  await page.waitForTimeout(500);
+  for (const viewport of [{width:375,height:812},{width:1440,height:900}]) {
+    await page.setViewportSize(viewport);
+    await page.waitForTimeout(100);
+    const name = `${id}--${viewport.width}x${viewport.height}.png`;
+    await page.screenshot({ path:resolve(familyCurrentDir,name), animations:'disabled' });
+    familyCaptures.push({ flowId:id, name, viewport });
+  }
 }
+await writeFile(resolve(familyCurrentDir, 'capture-manifest.json'), JSON.stringify({ appUrl, captures:familyCaptures }, null, 2));
+await browser.close();
+
+console.log(`Capturas propias: ${captures.length}/${Object.keys(targets).length * viewports.length} en ${currentDir} · visual own familia: ${familyCaptures.length}/${familyTargets.length * 2} en 375 y 1440 px en ${familyCurrentDir}`);
+let status = 0;
+async function compareIfPresent(label, baseline, current, diff) {
+  try { await access(baseline); }
+  catch { console.log(`Baseline ${label} no existe; comparación omitida.`); return; }
+  const result = spawnSync(process.execPath, ['tests/visual/compare.mjs', relative(root, baseline), relative(root, current), relative(root, diff)], { cwd: root, stdio: 'inherit' });
+  if (result.error) throw result.error;
+  if (result.status !== 0) status = result.status || 1;
+}
+await compareIfPresent('genérico', baselineDir, currentDir, resolve(root, 'tests/visual/own/diff'));
+await compareIfPresent('visual own familia', familyBaselineDir, familyCurrentDir, resolve(root, 'tests/visual/own/family/diff'));
+if (status) process.exitCode = status;

@@ -1,0 +1,28 @@
+/* Brand gradients — derived from assets/brand/cover.png, built only from the purple scale
+   plus neutral.950. Six ramps, no new colour values.
+
+   SCOPE, and it is narrow. design.md §0 bans decorative gradients in product UI: no gradient
+   on a control, a card, a table, a badge or any chrome. These exist for BRAND surfaces only —
+   covers, title slides, auth backdrops, marketing hero sections, empty-state art, app splash.
+   Product UI stays flat, exactly as the rest of the system prescribes.
+   Text on a gradient must clear 4.5:1 against its DARKEST stop, not its average. */
+:root{
+  /* The cover field: near-black bleeding into deep purple. Default brand backdrop. */
+  --gradient-midnight:linear-gradient(135deg,#0A0A0A 0%,#170040 55%,#220058 100%); /* @kind other */
+
+  /* The cover's signature: one soft violet glow off-centre over the midnight field.
+     This is the only "glow" the system allows, and only as a background. */
+  --gradient-glow:radial-gradient(ellipse 70% 60% at 65% 45%,#4900AC 0%,#220058 45%,#0A0A0A 100%); /* @kind other */
+
+  /* Saturated brand ramp for full-bleed panels and title slides. */
+  --gradient-brand:linear-gradient(135deg,#4900AC 0%,#6300E2 60%,#7933FF 100%); /* @kind other */
+
+  /* Bright accent ramp — small areas: icon frames on dark, chart highlights, progress art. */
+  --gradient-aurora:linear-gradient(135deg,#6300E2 0%,#8D62FF 55%,#A488FF 100%); /* @kind other */
+
+  /* Light wash. The only gradient permitted on a light page: section backgrounds behind flat cards. */
+  --gradient-veil:linear-gradient(180deg,#F2EFFF 0%,#FFFFFF 100%); /* @kind other */
+
+  /* The rule under the cover wordmark. Use as a 1-2px divider, never as a fill. */
+  --gradient-hairline:linear-gradient(90deg,#8D62FF00 0%,#8D62FF 50%,#8D62FF00 100%); /* @kind other */
+}

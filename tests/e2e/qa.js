@@ -58,19 +58,44 @@ const SPEC = {
   'famavisar.c2': [['js', 'c.famSheetSet({msg:10})'], ['js', 'c.famSendAviso()']],
   'famficha.c1': [['js', 'c.famBack()']],
   'famficha.c2': [['js', 'c.famGo("ficha", {mid:"mama"})'], ['js', 'c.renderVals().fam.ficha.retirar()'], ['js', 'c.famClose()']],
-  'famajustes.c1': [['js', 'c.famSheet({kind:"cancel"})'], ['js', 'c.famClose()']],
+  'famajustes.c1': [['js', 'c.famPlanVals().cancel()'], ['js', 'c.renderVals().fam.baja.go()']],
   'famajustes.c2': [['js', 'c.famSet({myShare: Object.assign({}, c.state.fam.myShare, {actividad:0})})']],
   'faminvite.c1': [['js', 'c.famJoin()'], ['js', 'c.famSet({join: Object.assign({}, c.state.fam.join, {age:true})})'], ['js', 'c.famJoin()']],
   'faminvite.c2': [['wait', 100], ['js', 'c.famSet({join: Object.assign({}, c.state.fam.join, {share:{huella:0, enlaces:0, actividad:0}})})'], ['js', 'c.famJoin()']],
-  'fammember.c1': [['js', 'c.famSheet({kind:"salir"})'], ['js', 'c.renderVals().fam.sh.confirm()']],
+  'fammember.c1': [['js', 'c.renderVals().fam.salir.basic()']],
   'famayuda.c1': [['js', 'c.famSheetSet({step:"form", obj:{kind:"other", t:"Un mensaje o una llamada", v:null}, err:false})'], ['js', 'c.famSheetSet({motive:"Me piden dinero"})'], ['js', 'c.famSendAyuda()'], ['js', 'c.renderVals().fam.sh.toSos()']],
   'famayuda.c2': [['js', 'c.famSendAyuda()'], ['js', 'c.famSheetSet({motive:"No sé si es seguro"})'], ['js', 'c.famSendAyuda()']],
-  'famayuda.c3': [['js', 'c.famSendAyuda()'], ['online'], ['js', 'c.famSendAyuda()']]
+  'famayuda.c3': [['js', 'c.famSendAyuda()'], ['online'], ['js', 'c.famSendAyuda()']],
+  'famcalma.c1': [['js', 'c.famHomeVals().open()']],
+  'famadmin.c4': [['js', 'c.famSheetSet({msg:3})'], ['js', 'c.famSendReply()']],
+  'faminvitar.c1': [['js', 'c.renderVals().fam.sh.cancelInv()']],
+  'famplan.c1': [['js', 'c.famPlanVals().reactivate()']],
+  'famcancelado.c1': [['js', 'c.famHomeVals().open()'], ['js', 'c.famReactivate()']],
+  'fammember.c2': [['js', 'c.renderVals().fam.member.understood()']],
+  'famtermina.c1': [['js', 'c.famHomeVals().open()']],
+  'famcerrar.c1': [['js', 'c.famHomeVals().discoverLater()']],
+  'famcerrar.c2': [['js', 'c.famHomeVals().close()']],
+  'famcerrar.c3': [['js', 'c.renderVals().offlineClose()']],
+  'famcancelado.c2': [['fire']],
+  'faminvite.c5': [['js', 'c.famHomeVals().close()']],
+  'fammember.c3': [['js', 'c.renderVals().fam.member.toggleMute()']],
+  'famayuda.c4': [['js', 'c.famSendAyuda()']],
+  'famtienda.c1': [['js', 'c.famRetryStore()'], ['wait', 1300]],
+  'fampendiente.c1': [['js', 'c.famApprove()']],
+  'famlleno.c1': [['js', 'c.famUnjoin()'], ['js', 'c.famSheetSet({nick:"Mamá nueva"})'], ['js', 'c.famInviteCreate()']],
+  'famunido.c1': [['js', 'c.famSet({joinedShares:false})']],
+  'famterminado.c1': [['js', 'c.famReachEnd()']],
+  'famterminadomiembro.c1': [['js', 'c.famSet({memberEnded:true})']],
+  'famcaducada.c1': [['js', 'c.famSet({inv:{state:"anulada",expires:"4 de noviembre"}})']],
+  'fampremiumpropio.c1': [['js', 'c.famSet({premiumOwn:true})']],
+  'famretirado.c1': [['js', 'c.famSet({left:true,leftReason:"removed"})']],
+  'fameliminar.c1': [['js', 'c.famSet({role:"admin"})'], ['wait', 350], ['js', 'c.pfSet({delStep:"motivo",delReason:"Otro motivo",delOther:"Prueba"}); c.pfDelNext()']]
 };
+const BASELINE_SKIP = ["famdescubre","famdescubrean","famoferta","famcrear","famcalma","famadmin","famficha","famavisar","famfichapep","faminvitar","famajustes","famretirar","famplan","fambaja","famcancelado","faminvite","fammember","famayuda","famayudaan","famcomparto","famverlucia","famplanmiembro","famsalir","famtermina","famfuera","famcerrar","famtienda","fampendiente","famlleno","famunido","famterminado","famterminadomiembro","famcaducada","fampremiumpropio","famretirado","fameliminar"];
 (async () => {
   const baseline = process.argv[2] === '--baseline';
   const only = baseline ? null : process.argv[2];
-  const b = await chromium.launch({ headless: true });
+  const b = await chromium.launch({ ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}), headless: true });
   const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
   let errs = [];
   p.on('console', m => { const t = m.text(); if ((m.type() === 'error' || m.type() === 'warning') && !/status of 404|TUNNEL|Failed to load resource/.test(t)) errs.push(t); });
@@ -81,10 +106,13 @@ const SPEC = {
   for (const key of Object.keys(SPEC)) {
     if (only && key.indexOf(only) !== 0) continue;
     const [fid, cid] = key.split('.');
+    if (baseline && BASELINE_SKIP.includes(fid)) { lines.push('SKIP baseline no family flow in reference: ' + fid); continue; }
     errs = [];
-    await p.evaluate(`(() => { ${GETC} const c = getC(); const f = c.labFlows().find(x => x.id === ${JSON.stringify(fid)}); c.labSelect(f); })()`);
+    await p.evaluate(`(() => { ${GETC} const c = getC(); const f = c.labFlows().find(x => x.id === ${JSON.stringify(fid)}); c.labSelect(f); c.labLabSet({tab:'info',pv:'closed',case:null,view:'flow'}); })()`);
     await p.waitForTimeout(500);
     const ci = await p.evaluate(`(() => { ${GETC} const c = getC(); return (c.labD().cases || []).findIndex(x => x.id === ${JSON.stringify(cid)}); })()`);
+    if (ci < 0) throw new Error(`No existe el caso ${key} en el Lab`);
+    await p.waitForFunction(() => document.querySelectorAll('.lab-b article button').length > 0, null, { timeout:5000 }).catch(() => { throw new Error(`No aparecen tarjetas de caso en el Lab para ${key}`); });
     await p.locator('.lab-b article button').nth(ci).click();
     await p.waitForTimeout(650);
     const log = [];

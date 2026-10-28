@@ -72,6 +72,38 @@ afterEach(() => {
 });
 
 describe('LabLogic smoke sin DOM', () => {
+  it('renderiza todos los flujos tras aplicar su estado declarativo', () => {
+    for (const flow of FLOWS) {
+      const logic = setupLogic();
+      expect(() => {
+        logic.selectFlow(flow);
+        logic.renderVals();
+      }, flow.id).not.toThrow();
+    }
+  });
+
+  it('arranca los 36 flujos de familia en su pantalla, rol y vista declarados', () => {
+    const expected: Record<string, [string, string, string]> = {
+      famdescubre:['home','none','hub'], famdescubrean:['analizador','none','hub'], famoferta:['familia','none','oferta'], famcrear:['familia','admin','crear'], famtienda:['familia','none','oferta'], fampendiente:['familia','none','pendiente'],
+      famcalma:['home','admin','hub'], famadmin:['home','admin','hub'], famficha:['familia','admin','ficha'], famavisar:['familia','admin','hub'],
+      famfichapep:['familia','admin','ficha'], famunido:['home','admin','hub'], faminvitar:['familia','admin','hub'], famajustes:['familia','admin','ajustes'], famretirar:['familia','admin','ficha'], famlleno:['familia','admin','hub'],
+      famplan:['perfil','admin','hub'], fambaja:['familia','admin','baja'], famcancelado:['home','admin','hub'], famterminado:['home','admin','hub'], fameliminar:['pfflow','admin','hub'], faminvite:['home','invited','hub'], famcaducada:['familia','invited','unirse'], fampremiumpropio:['familia','invited','unirse'],
+      fammember:['home','member','hub'], famayuda:['familia','member','hub'], famayudaan:['analizador','member','hub'], famcomparto:['familia','member','hub'],
+      famverlucia:['familia','member','ficha'], famplanmiembro:['perfil','member','hub'], famsalir:['familia','member','salir'], famtermina:['home','member','hub'],
+      famfuera:['home','none','hub'], famterminadomiembro:['home','member','hub'], famretirado:['home','none','hub'], famcerrar:['home','admin','hub']
+    };
+    const familyFlows = FLOWS.filter(flow => flow.id.startsWith('fam'));
+    expect(familyFlows.map(flow => flow.id)).toEqual(Object.keys(expected));
+    for (const flow of familyFlows) {
+      const logic = setupLogic();
+      logic.labSelect(flow);
+      expect([logic.state.screen, logic.state.fam.role, logic.state.fam.view], flow.id).toEqual(expected[flow.id]);
+      if (flow.id === 'famlleno') expect(logic.state.fam.sheet?.kind).toBe('lleno');
+      if (flow.id === 'famunido') expect(logic.state.fam.reqs).toEqual([]);
+      if (flow.id === 'famterminado') expect([logic.state.fam.members, logic.state.fam.reqs]).toEqual([[], []]);
+    }
+  });
+
   it('conserva la preferencia al entrar y salir de un flujo con plan fijado', () => {
     const logic = setupLogic();
     logic.labSetSimPlan('premium');
