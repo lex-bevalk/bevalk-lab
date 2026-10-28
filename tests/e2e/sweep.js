@@ -1,6 +1,6 @@
 const { chromium } = require('playwright');
 (async () => {
-  const b = await chromium.launch({ headless: true });
+  const b = await chromium.launch({ ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}), headless: true });
   const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
   const errs = [];
   p.on('console', m => { const t = m.text(); if ((m.type() === 'error' || m.type() === 'warning') && !/status of 404|TUNNEL|Failed to load resource/.test(t)) errs.push(t); });
@@ -14,7 +14,12 @@ const { chromium } = require('playwright');
       const before = errs.length;
       await p.locator('.lab-a button[aria-current]').nth(i).click();
       await p.waitForTimeout(350);
-      await p.locator('.lab-a [role=radio]', { hasText: plan }).click({force:true});
+      const radio = p.locator('.lab-a [role=radio]', { hasText: plan });
+      if (await radio.count() === 0 || await radio.getAttribute('aria-disabled') === 'true') {
+        out.push([i + 1, plan, 'SKIP unavailable', '', '', ''].join(' | '));
+        continue;
+      }
+      await radio.click({force:true});
       await p.waitForTimeout(500);
       const r = await p.evaluate(() => {
         const t = s => (document.querySelector(s) || {}).textContent || '';

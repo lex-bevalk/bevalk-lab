@@ -4,6 +4,12 @@ Cambios relevantes del BeValk Product Experience Lab. Formato basado en [Keep a 
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-28
+
+### Added
+- Mi Familia completo en el Lab: 26 flujos en 8 grupos (descubrir y contratar, día a día, grupo, plan y baja, invitación, miembro y salida, avisos de Inicio) con sus casos.
+- 10 flujos nuevos de Mi Familia para los casos límite: tienda sin respuesta, compra pendiente, grupo lleno, invitación aceptada, caducada o anulada, Premium propio, fin del plan para quien gestiona y para el miembro, retirada del grupo y eliminar la cuenta gestionando un grupo.
+
 ## [1.5.0] - 2026-10-27
 
 ### Added

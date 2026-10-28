@@ -31,6 +31,7 @@ jobs:
           BASE_REF: ${{ github.base_ref }}
         run: |
           code=true
+          ui=false
           files=""
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -38,9 +39,15 @@ jobs:
               if [[ -n "$files" ]] && ! printf '%s\n' "$files" | grep -Ev '^(tasks/|.*\.md$)' >/dev/null; then
                 code=false
               fi
+              if printf '%s\n' "$files" | grep -Eq '^(src/ui/|src/styles/|src/logic/|src/data/|design/|index\.html$|vite\.config\.ts$|package-lock\.json$|tests/visual/)'; then
+                ui=true
+              fi
             else
               code=true
+              ui=true
             fi
+          else
+            ui=true
           fi
 
           echo "Changed files:"
@@ -51,6 +58,8 @@ jobs:
           fi
           echo "Run code checks: $code"
           echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Run visual smoke: $ui"
+          echo "ui=$ui" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js 24
         if: steps.changes.outputs.code == 'true'
@@ -89,7 +98,8 @@ jobs:
         run: |
           npm run preview > /tmp/bevalk-preview.log 2>&1 &
           echo $! > /tmp/bevalk-preview.pid
-          node tools/serve-reference.cjs 8765 > /tmp/bevalk-reference.log 2>&1 &
+          mkdir -p tests/e2e/results
+          node tools/serve-reference.cjs 8765 > tests/e2e/results/reference-server.log 2>&1 &
           echo $! > /tmp/bevalk-reference.pid
 
           wait_for_url() {
@@ -104,7 +114,7 @@ jobs:
             done
             echo "Timed out waiting for $name at $url"
             cat /tmp/bevalk-preview.log || true
-            cat /tmp/bevalk-reference.log || true
+            cat tests/e2e/results/reference-server.log || true
             return 1
           }
 
@@ -115,9 +125,9 @@ jobs:
         if: steps.changes.outputs.code == 'true'
         run: npm run e2e
 
-      - name: E2E baseline
+      - name: E2E family layout
         if: steps.changes.outputs.code == 'true'
-        run: npm run e2e:baseline
+        run: npm run e2e:family-layout
 
       - name: Invariants
         if: steps.changes.outputs.code == 'true'
@@ -143,27 +153,45 @@ jobs:
         if: steps.changes.outputs.code == 'true'
         run: npm run e2e:select
 
-      - name: Capture visual baseline
-        if: steps.changes.outputs.code == 'true'
-        run: npm run visual:baseline
+      - name: Visual smoke
+        id: visual-smoke
+        if: steps.changes.outputs.ui == 'true'
+        continue-on-error: ${{ contains(github.event.pull_request.labels.*.name, 'cambio-visual') }}
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          LAB_URL: http://localhost:4173/
+        run: npm run visual:smoke
 
-      - name: Visual comparison
-        if: steps.changes.outputs.code == 'true'
-        run: npm run visual
-
-      - name: Own visual (dropdowns)
-        if: steps.changes.outputs.code == 'true'
-        run: npm run visual:own
-
-      - name: Upload own visual artifacts
-        if: always() && steps.changes.outputs.code == 'true'
+      - name: Upload visual smoke diffs
+        if: always() && steps.changes.outputs.ui == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: qa-own-visual
+          name: qa-visual-smoke
           if-no-files-found: ignore
           path: |
-            tests/visual/own/current/
-            tests/visual/own/diff/
+            tests/visual/smoke-diff/
+
+      - name: Summarize visual smoke
+        if: always() && steps.changes.outputs.ui == 'true'
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          import fs from 'node:fs';
+          const path = 'tests/visual/smoke-diff/comparison-summary.json';
+          if (!fs.existsSync(path)) {
+            console.log('## Visual smoke\n\nNo se generó el resumen. Revisa el log del paso Visual smoke.');
+            process.exit(0);
+          }
+          const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+          console.log(`## Visual smoke\n\n${report.compared} pares · ${report.pass} PASS · ${report.fail} FAIL · ${report.missing} faltan.`);
+          const smokePath = 'tests/visual/smoke-diff/smoke-summary.json';
+          if (fs.existsSync(smokePath)) {
+            const smoke = JSON.parse(fs.readFileSync(smokePath, 'utf8'));
+            console.log(`\nTokens de color distintos: ${smoke.tokenDifferences.length}${smoke.tokenDifferences.length ? ` (${smoke.tokenDifferences.map(item => item.name).join(', ')})` : ''}.`);
+          }
+          console.log('\n| Captura | Diferencia | PNG diff |\n|---|---:|---|');
+          for (const item of report.results) console.log(`| ${item.name} | ${item.percent?.toFixed(3) ?? '—'}% | \`${item.currentName ? `tests/visual/smoke-diff/${item.currentName}` : '—'}\` |`);
+          NODE
 
       - name: Upload failure diagnostics
         if: failure()
@@ -174,10 +202,3 @@ jobs:
           path: |
             tests/visual/diff/
             tests/e2e/results/
-
-      - name: Upload visual comparison summary
-        if: success() && steps.changes.outputs.code == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: qa-visual-comparison-summary
-          path: tests/visual/diff/comparison-summary.json

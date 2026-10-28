@@ -1,12 +1,12 @@
 // @ts-nocheck
 // Copied from Main.dc.html lines 6715-10611; runtime-only methods paint/waitLucide are no-ops in phase 2.2.
 import { DCLogic } from './DCLogic';
-import { BASE, VIG, FINDINGS, ACT, SCEN, FLOWS, FLOW_MORE, LESSON_PTS, LESSONS, GUIDE, ALERTS, ALERT_TYPES, BR_SITES0, BR0, ALERT_INFO, NOTIS, AL_ITEMS, MARIA_FEATURES, MARIA_L3, MARIA_L2, MARIA_TOPICS, MARIA_CHATS, MARIA_TRANSCRIPT, AMBER, AMBER_LINE, AMBER_BG, AMBER_TEXT, ANALYZERS, AN_RECENTS, VERDICTS, AN_LEGEND, PZ_TYPE, PZ_BRANDS, PZ_WHAT, PZ_PLANS, HU_BULLETS, HU_KINDS, HU_LEAKS, AU0, OB0, OB_ZONAS, OB_EDADES, OB_TEMAS, OB_INTRO, OB_QS, OB_FINAL, richSegs, FAM_ROLES, FAM_MSGS, FAM_MOTIVES, FAM_CATS, FAM_CATS_MINE, FAM_PRICES, FAM_WHY, FAM_MEMBERS0, FAM_ADMIN_M, FAM_REQS0, FAM_SENT0, FAM_FAVS, FAM_MY_ITEMS, FAM_PETS0, FAM0, PF_CATS, PF_FEATS, PF_PLANS, PF_TOPICS, PF_REASONS, PF_CONSULTAS, PF_MONTHS, PR_ZONAS, PR_EDADES, PR_TEMAS, PR_FB, PR_LIMITS, PR_SEC, PR_MESES, PR_FA_APPS, PR_FA_KEY, PR_DEL, PR_FEATS, PR_BONUS, SOS_HELP, SOP_ASUNTOS, PW_COMMON, pwCommon, PR_PW_RULES, pwScore, pwOk, SCORE_STOPS, SCORE_BANDS, okLab, okHex, LAB_SEV, LAB_PLAN_NAME, LAB_VALUE_ICON, labTxt, labAuth, labLearned, labNoOff, LAB, LAB_AC_BY, LAB_QA } from '../data';
+import { BASE, VIG, FINDINGS, ACT, SCEN, FLOWS, FLOW_MORE, LESSON_PTS, LESSONS, GUIDE, ALERTS, ALERT_TYPES, BR_SITES0, BR0, ALERT_INFO, NOTIS, AL_ITEMS, MARIA_FEATURES, MARIA_L3, MARIA_L2, MARIA_TOPICS, MARIA_CHATS, MARIA_TRANSCRIPT, AMBER, AMBER_LINE, AMBER_BG, AMBER_TEXT, ANALYZERS, AN_RECENTS, VERDICTS, AN_LEGEND, PZ_TYPE, PZ_BRANDS, PZ_WHAT, PZ_PLANS, HU_BULLETS, HU_KINDS, HU_LEAKS, AU0, OB0, OB_ZONAS, OB_EDADES, OB_TEMAS, OB_INTRO, OB_QS, OB_FINAL, richSegs, FAM_ROLES, FAM_MSGS, FAM_MOTIVES, FAM_CATS, FAM_CATS_MINE, FAM_PRICES, FAM_WHY, FAM_MEMBERS0, FAM_MEMBERS_CALM, FAM_LOSE_MEMBER, FAM_LOSE_ADMIN, FAM_ADMIN_M, FAM_REQS0, FAM_SENT0, FAM_FAVS, FAM_MY_ITEMS, FAM_PETS0, FAM0, PF_CATS, PF_FEATS, PF_PLANS, PF_TOPICS, PF_REASONS, PF_CONSULTAS, PF_MONTHS, PR_ZONAS, PR_EDADES, PR_TEMAS, PR_FB, PR_LIMITS, PR_SEC, PR_MESES, PR_FA_APPS, PR_FA_KEY, PR_DEL, PR_FEATS, PR_BONUS, SOS_HELP, SOP_ASUNTOS, PW_COMMON, pwCommon, PR_PW_RULES, pwScore, pwOk, SCORE_STOPS, SCORE_BANDS, okLab, okHex, LAB_SEV, LAB_PLAN_NAME, LAB_VALUE_ICON, labTxt, labAuth, labLearned, labNoOff, LAB, LAB_AC_BY, LAB_QA } from '../data';
 import { labTrack as pureLabTrack, planWorld as purePlanWorld, scoreColor } from './pure';
 
 export class LabLogic extends DCLogic {
   state = {fam: FAM0(), br: BR0(false), cases:[], alDone:{}, autoOn:false, screen:"home", scen:null, world:null, shown:0, delta:0, actId:null, from:"home", flow:null, les:null, weekFresh:false,
-    sheet:null, notiOff:{}, sessionDelta:0, prev:null, read:[],
+    sheet:null, notiOff:{}, sessionDelta:0, prev:null, read:[], offHidden:false,
     maria:{view:"intro", topic:null, msgs:[], node:null, rate:null}, toast:null,
     an:{type:"enlace", view:"welcome", value:"", verdict:"danger", used:0, seen:{}, dontShow:{},
       legend:false, report:false, reportText:"", reportKind:"", reportErr:false, reviewed:null, plan:"anual"},
@@ -394,6 +394,7 @@ export class LabLogic extends DCLogic {
     if (prev && prev.desdeAviso !== this.props.desdeAviso && this.props.desdeAviso)
       this.setState({screen:"alertas", push:true, from:"home"});
     if (prev && prev.miFamilia !== this.props.miFamilia) this.setState({fam: FAM0(), screen:"home", sheet:null});
+    if (prev && prev.sinConexion !== this.props.sinConexion) this.setState({offline:null, offHidden:false});
     this.labTrack();
   }
 
@@ -555,8 +556,12 @@ export class LabLogic extends DCLogic {
     this.setScen(scenOverride || f.scen, plan);
     const fam0 = Object.assign(FAM0(), {role: f.fam || "none"});
     if (f.famClear) fam0.reqs = fam0.reqs.map(r => Object.assign({}, r, {reply:1}));
-    if (f.famPatch) Object.assign(fam0, JSON.parse(JSON.stringify(f.famPatch)));
-    this.setState(st => ({flow:f.id, les:null, bioOk:false, push:false, fam: fam0, from:"home",
+    if (f.famPatch) {
+      const famPatch = JSON.parse(JSON.stringify(f.famPatch));
+      for (const key of ["mem", "join", "offer", "crear", "myShare", "hidden"]) if (famPatch[key]) famPatch[key] = Object.assign({}, fam0[key], famPatch[key]);
+      Object.assign(fam0, famPatch);
+    }
+    this.setState(st => ({flow:f.id, les:null, bioOk:false, push:false, fam: fam0, from:"home", offHidden:false,
       br: BR0(f.br === "fresh"), cases: f.cases ? JSON.parse(JSON.stringify(f.cases)) : [], alDone:{}, autoOn:false,
       maria:{view:"intro", topic:null, msgs:[], node:null, rate:null},
       an: Object.assign({}, st.an, {view:"main", value:"", used:0, legend:false, report:false, pz:{plan:null, done:{}}})}));
@@ -564,13 +569,19 @@ export class LabLogic extends DCLogic {
     else if (f.start === "signup") this.setState({screen:"auth", splash:false, au: Object.assign(AU0(), {view:"signup"})});
     else if (f.start === "onb") this.setState({screen:"auth", splash:false, au: Object.assign(AU0(), {view:"onb"})});
     else if (f.start === "lesson") this.openLesson(f.lesson);
-    else if (f.start === "screen") this.go(f.screen, Object.assign({from: f.screen}, f.patch ? JSON.parse(JSON.stringify(f.patch)) : {}));
+    else if (f.start === "screen") {
+      const patch = f.patch ? JSON.parse(JSON.stringify(f.patch)) : {};
+      if (patch.pr) patch.pr = Object.assign({}, this.state.pr, patch.pr);
+      if (patch.pf) patch.pf = Object.assign({}, this.state.pf, patch.pf);
+      this.go(f.screen, Object.assign({from: f.screen}, patch));
+    }
     else if (f.start === "an") this.setState(st => ({screen:"analizador", sheet:null,
       an: Object.assign({}, st.an, {type: f.anType, from:"escaner", value:"", shot:false, view:"main", pz:{plan:null, done:{}}})}));
     else if (f.start === "pz") this.setState(st => ({screen:"analizador", sheet:null,
       an: Object.assign({}, st.an, {type:"enlace", from:"escaner", value:"https://clc.li/SeurPago-esp", verdict:"danger", view: f.pzView, pz:{plan: f.plan || null, done:{}}})}));
     else if (f.start === "fam") this.setState(st => ({screen:"familia", sheet:null,
       fam: Object.assign({}, st.fam, {view: f.famView || "hub", from:"tab", mid: f.mid || null, sheet: f.famSheet ? JSON.parse(JSON.stringify(f.famSheet)) : null})}));
+    if (f.anPatch) this.setState(st => ({an:Object.assign({}, st.an, JSON.parse(JSON.stringify(f.anPatch)))}));
   }
 
   allSteps(){ return FINDINGS.reduce((a, f) => a.concat(f.steps), []); }
@@ -1609,6 +1620,8 @@ export class LabLogic extends DCLogic {
       feedbackBack: () => { this.pfSet({msg:"", topic:"otros"}); this.go("perfil"); },
 
       delIsAviso: p.delStep === "aviso", delIsMotivo: p.delStep === "motivo",
+      familyDeleteWarning: p.delStep === "aviso" && this.famRole() === "admin",
+      familyStore:() => this.showToast("Te llevamos a la gestión de suscripciones de la tienda."),
       delIsConfirmar: p.delStep === "confirmar", delIsBorrando: p.delStep === "borrando",
       delIsHecho: p.delStep === "hecho",
       delLoses: [
@@ -1809,6 +1822,8 @@ export class LabLogic extends DCLogic {
   famBack(){
     const f = this.state.fam;
     if (f.sheet) return this.famClose();
+    if (f.view === "baja" && f.ret === "plan") { this.setState(s => ({screen:"perfil", pr:Object.assign({}, s.pr, {view:"plan"})})); return; }
+    if (f.view === "baja" || f.view === "salir") return this.famGo(f.ret || "hub");
     if (["ficha", "avisos", "ajustes"].indexOf(f.view) >= 0) return this.famGo("hub");
     return this.famLeaveTo();
   }
@@ -1858,6 +1873,29 @@ export class LabLogic extends DCLogic {
   famBuy(){
     this.famSheetSet({phase:"activating"});
     this.later(() => { this.setState(s => ({fam: Object.assign({}, s.fam, {sheet:null, view:"crear", role:"admin", created:false})})); this.labSetSimPlan("premium"); this.famTop(); }, 1600);
+  }
+  famRetryStore(){
+    const f = this.state.fam;
+    this.famSet({offer:Object.assign({}, f.offer, {retrying:true})});
+    this.later(() => this.famSet({offer:Object.assign({}, this.state.fam.offer, {err:null, retrying:false})}), 1200);
+  }
+  famApprove(){
+    this.setState(s => ({screen:"home", fam:Object.assign({}, s.fam, {view:"crear", role:"admin", pendingApproval:false, created:false, sheet:null})}));
+    this.showToast("Compra aprobada");
+    this.labSetSimPlan("premium");
+  }
+  famReject(){
+    this.setState(s => ({screen:"familia", fam:Object.assign({}, s.fam, {view:"oferta", pendingApproval:false, offer:Object.assign({}, s.fam.offer, {err:"rejected"})})}));
+  }
+  famUnjoin(){
+    this.setState(s => {
+      const target = s.fam.members.find(m => m.pending && m.nick === "Ana") || s.fam.members.find(m => m.pending);
+      return {screen:"familia", fam:Object.assign({}, s.fam, {view:"hub", sheet:{kind:"invite", step:"nick", nick:""}, members:target ? s.fam.members.filter(m => m.id !== target.id) : s.fam.members})};
+    });
+    this.famTop();
+  }
+  famReachEnd(){
+    this.setState(s => ({screen:"home", fam:Object.assign({}, s.fam, {ended:true, ending:false, hidden:{}, members:[], reqs:[]})}));
   }
   famCreate(){
     const f = this.state.fam;
@@ -1918,9 +1956,10 @@ export class LabLogic extends DCLogic {
     const rows = f.members.map(m => m.pending
       ? {name:m.nick, ini:m.ini, isPending:true, line:"Invitación pendiente · caduca el " + m.expires, lineIcon:"clock", lineColor:"var(--color-text-body)", shares:"",
          hasShares:false, avBg:"var(--color-accent)", aria: m.nick + ", invitación pendiente", open: () => this.famSheet({kind:"inviteView", id:m.id})}
-      : {name:m.nick, ini:m.ini, isPending:false, line: m.status + " · " + m.when, lineIcon: lvlIcon(m.level), lineColor: lvlTone(m.level),
+      : {name:m.nick, ini:m.ini, isPending:false, line: f.joined && m.id === "mama" ? "Se ha unido hoy" : m.status + " · " + m.when, lineIcon: f.joined && m.id === "mama" ? "circle-check" : lvlIcon(m.level), lineColor: lvlTone(m.level),
          shares: "Comparte: " + (FAM_CATS.filter(c => m.shares[c.id]).map(c => c.label === "Enlaces analizados" ? "Enlaces" : c.label).join(", ") || "nada por ahora"),
          hasShares:true, avBg:"var(--color-secondary)", aria:"Ver la ficha de " + m.nick, open: () => this.famGo("ficha", {mid:m.id})});
+    const full = people.length + pend.length >= 5;
     const hub = {
       groupName: f.groupName, seats: (people.length + pend.length + 1) + " de 6 plazas",
       hasReq: !!req0, reqTitle: reqFrom ? reqFrom.nick + " te pide ayuda" + ((n => n > 1 ? " (" + n + " veces)" : "")(openReqs.filter(x => x.from === req0.from && x.obj === req0.obj).length)) : "",
@@ -1932,7 +1971,7 @@ export class LabLogic extends DCLogic {
       avisosAria: "Avisos y peticiones" + (openReqs.length ? ", " + openReqs.length + " petición pendiente" : ""),
       openAvisos: () => this.famGo("avisos"),
       favCount: String(people.length ? FAM_FAVS.length : 0), openFavs: () => this.famSheet({kind:"favs"}),
-      invite: () => this.famSheet({kind:"invite", step:"nick", nick:""}),
+      invite: () => this.famSheet(full ? {kind:"lleno"} : {kind:"invite", step:"nick", nick:""}),
       avisarAll: () => this.famSheet({kind:"avisar", to:"all", obj:null, msg:null}),
       canAvisarAll: people.length > 1
     };
@@ -1945,7 +1984,7 @@ export class LabLogic extends DCLogic {
     const member = {
       admin: adminName, adminShort,
       welcome: !!mm.welcome, dismissWelcome: () => this.famSet({mem: Object.assign({}, mm, {welcome:false})}),
-      hasAviso: !!mm.aviso, avisoMsg: "«" + FAM_MSGS[6] + "»", avisoAbout: "Responde a tu petición: un mensaje o una llamada · «Me piden dinero»",
+      hasAviso: !!mm.aviso, avisoMsg: "«" + FAM_MSGS[mm.avisoMsg || 6] + "»", avisoAbout: "Responde a tu petición: un mensaje o una llamada · «Me piden dinero»",
       understood: () => { this.famSet({mem: Object.assign({}, mm, {aviso:false})}); this.showToast(adminShort + " verá que lo has entendido."); },
       toSos: () => this.sosOpen(),
       helpAbout: () => this.famSheet({kind:"ayuda", step:"form", obj:{kind:"other", t:"Un mensaje o una llamada", v:null}, motive:"Me piden dinero"}),
@@ -1958,7 +1997,7 @@ export class LabLogic extends DCLogic {
       muted: sw(mm.muted), toggleMute: () => this.famSet({mem: Object.assign({}, mm, {muted: !mm.muted})}),
       showName: sw(mm.showName), toggleName: () => this.famSet({mem: Object.assign({}, mm, {showName: !mm.showName})}),
       shownAs: mm.showName ? nombre + " Navarro" : "Un miembro de la familia",
-      leave: () => this.famSheet({kind:"salir"})
+      leave: () => this.famSheet({kind:"salir"}), ending:!!mm.ending, toPlan:() => this.go("perfil", {view:"plan"})
     };
 
     /* ---- ficha (shared template: admin → member, member → admin) ---- */
@@ -2036,13 +2075,15 @@ export class LabLogic extends DCLogic {
       ySh: o.period === "anual" ? "var(--shadow-sm)" : "none", mSh: o.period === "mensual" ? "var(--shadow-sm)" : "none",
       yBd: o.period === "anual" ? "var(--color-primary)" : "transparent", mBd: o.period === "mensual" ? "var(--color-primary)" : "transparent",
       pickYear: () => this.famSet({offer: Object.assign({}, o, {period:"anual"})}), pickMonth: () => this.famSet({offer: Object.assign({}, o, {period:"mensual"})}),
-      hasPrice: !!o.n, noPrice: !o.n,
+      hasPrice: !!o.n && o.err !== "store", noPrice: !o.n, isStoreError:o.err === "store", isRejected:o.err === "rejected",
+      retrying:!!o.retrying, retryStore:() => this.famRetryStore(),
       total: o.n ? fmt(total) : "", unit: o.period === "anual" ? "/ año" : "/ mes",
       per: o.n ? fmt(Math.round(total / o.n)) + " por persona " + (o.period === "anual" ? "al año" : "al mes") : "",
       save: o.period === "anual",
       cta: o.n ? "Continuar a la tienda" : "Elige cuántas personas", ctaBg: o.n ? "var(--color-primary)" : "var(--color-muted)",
       ctaFg: o.n ? "var(--color-on-fill)" : "var(--color-muted-foreground)", ctaDisabled: o.n ? "false" : "true",
-      go: () => { if (!o.n) return this.say("Elige cuántas personas."); this.famSheet({kind:"store", phase:"idle"}); },
+      go: () => { if (!o.n || o.err) return this.say("Elige un tamaño cuando se vean los precios."); this.famSheet({kind:"store", phase:"idle"}); },
+      endedNote:!!f.ended,
       product: "Plan familiar · " + o.n + " personas · " + (o.period === "anual" ? "Suscripción anual" : "Suscripción mensual")
     };
 
@@ -2057,6 +2098,11 @@ export class LabLogic extends DCLogic {
     /* ---- unirse ---- */
     const j = f.join, anyJ = j.share.huella || j.share.enlaces || j.share.actividad;
     const unirse = {
+      invalid:f.inv.state === "caducada" || f.inv.state === "anulada", expired:f.inv.state === "caducada",
+      valid:f.inv.state !== "caducada" && f.inv.state !== "anulada",
+      invalidText:f.inv.state === "anulada" ? "Lucía la ha anulado." : "Caducó el " + f.inv.expires + ". Por seguridad, las invitaciones duran 7 días.",
+      premiumOwn:!!f.premiumOwn, premiumRenewal:"Ya tienes Premium, que se renueva el 3 de diciembre",
+      premiumOwnStore:() => this.showToast("Te llevamos a la gestión de suscripciones de la tienda."),
       admin: adminName, adminShort,
       share: shareList(FAM_CATS_MINE, j.share, id => this.famSet({join: Object.assign({}, j, {share: Object.assign({}, j.share, {[id]: !j.share[id]})})})),
       showName: sw(j.showName), toggleName: () => this.famSet({join: Object.assign({}, j, {showName: !j.showName})}),
@@ -2073,7 +2119,11 @@ export class LabLogic extends DCLogic {
     const k = sh.kind || "";
     let sv = {visible: !!f.sheet, close: () => this.famClose(), title:"", kind:k};
     const toM = sh.to && sh.to !== "all" ? this.famMember(sh.to) : null;
-    if (k === "avisar") {
+    if (k === "lleno") {
+      sv = Object.assign(sv, {title:"No quedan plazas", isFull:true,
+        pending:pend.map(m => ({name:m.nick, cancel:() => this.famUnjoin()})),
+        changeSize:() => { this.famClose(); this.famGo("ajustes"); }});
+    } else if (k === "avisar") {
       const all = sh.to === "all";
       const ctx = {all, obj: sh.obj ? {kind:"link", v: sh.obj.v} : null};
       sv = Object.assign(sv, {title: all ? "Avisar al grupo" : "Avisar a " + toM.nick, isAvisar:true,
@@ -2167,13 +2217,21 @@ export class LabLogic extends DCLogic {
     }
 
     /* ---- headings ---- */
-    const heading = {hub:"Mi Familia", oferta:"Plan familiar", crear:"Crea tu grupo", ficha: ficha.name, avisos:"Avisos y peticiones", ajustes:"Ajustes de Mi Familia", unirse:"Invitación"}[f.view] || "Mi Familia";
+    const baja = {people:people.map(m => ({ini:m.ini, name:m.nick, st:"Pasa a Basic"})).concat([{ini:"E", name:"Tú", st:"Pasas a Basic"}]),
+      hasPending:pend.length > 0, pendingText:pend.map(m => m.nick).join(", ") + (pend.length === 1 ? ": su invitación se anula." : ": sus invitaciones se anulan."),
+      lose:FAM_LOSE_ADMIN.map((x,k) => ({icon:x[0], t:x[1], s:x[2], line:k ? "1px solid var(--color-border)" : "0"})),
+      notify:"Avisaremos a " + (people.map(m => m.nick).join(", ") || "tu grupo") + " hoy y 3 días antes.",
+      keep:() => { this.famBack(); this.showToast("Tu plan sigue igual."); }, go:() => this.famCancelConfirm()};
+    const salir = {lose:FAM_LOSE_MEMBER.map((x,k) => ({icon:x[0], t:x[1], s:x[2], line:k ? "1px solid var(--color-border)" : "0"})),
+      stay:() => { this.famGo("hub"); this.showToast("Sigues en Familia Navarro."); }, premium:() => this.famLeaveGroup(true), basic:() => this.famLeaveGroup(false)};
+    const heading = {hub:"Mi Familia", oferta:"Plan familiar", crear:"Crea tu grupo", ficha:ficha.name, avisos:"Avisos y peticiones", ajustes:"Ajustes de Mi Familia", unirse:"Invitación", baja:"Cancelar el plan", salir:"Salir del grupo"}[f.view] || "Mi Familia";
     return {
-      role, isAdmin, isMember, heading, back: () => this.famBack(),
+      role, isAdmin, isMember, heading, ending:!!f.ending, memberEnding:!!f.mem.ending, back: () => this.famBack(),
       canBack: !(f.from === "tab" && ["hub", "oferta", "unirse", "crear"].indexOf(f.view) >= 0),
       isHub: f.view === "hub", isAdminHub: f.view === "hub" && isAdmin, isMemberHub: f.view === "hub" && isMember,
-      isOffer: f.view === "oferta", isCrear: f.view === "crear", isFicha: f.view === "ficha" && !!fm, isAvisos: f.view === "avisos",
-      isAjustes: f.view === "ajustes", isUnirse: f.view === "unirse",
+      isOffer: f.view === "oferta", isPendingPurchase:f.view === "pendiente", pendingHome:() => { this.setState({screen:"home"}); },
+      isCrear: f.view === "crear", isFicha: f.view === "ficha" && !!fm, isAvisos: f.view === "avisos",
+      isAjustes: f.view === "ajustes", isUnirse: f.view === "unirse", isBaja:f.view === "baja", isSalir:f.view === "salir", baja, salir,
       showSettings: f.view === "hub" && isAdmin, openSettings: () => this.famGo("ajustes"),
       hub, member, ficha, avisos, ajustes, offer, crear, unirse, sh: sv
     };
@@ -2188,23 +2246,69 @@ export class LabLogic extends DCLogic {
       : [{ini:list[0], z:"2", top:"0", left:"0", size:"32px", font:"700 0.8125rem/1 var(--font-sans)"},
          {ini: list.length > 2 ? "+" + (list.length - 1) : list[1], z:"1", top:"16px", left:"16px", size:"32px", font:"700 0.8125rem/1 var(--font-sans)"}];
     const ini = av(people.map(m => m.ini));
+    const notice = v => {
+      const h = f.hidden || {}, items = v.items || [];
+      const calm = items.length === 1 && ["adm-calm", "adm-pending", "mem-idle", "promo"].includes(items[0]);
+      const hidden = items.length > 0 && (items.every(i => h[i]) || (calm && Object.keys(h).length > 0));
+      const where = v.where || "Mi Familia sigue en Perfil.";
+      return Object.assign(v, {show:!hidden, isCompact:!!v.isCompact && !hidden && this.state.lab.view !== "welcome", closeAria:"Cerrar aviso: " + v.title,
+        close:() => this.famHomeClose(items, where)});
+    };
     if (role === "admin") {
       const req = open[0], rm = req ? this.famMember(req.from) : null;
       const risky = people.filter(m => m.level !== "safe" && (!rm || m.id !== rm.id));
-      return {title:"Mi Familia", hasBadge: open.length > 0, badge: (n => n === 1 ? "1 petición" : n + " peticiones")(open.filter((r, i) => open.findIndex(x => x.from === r.from && x.obj === r.obj) === i).length),
+      if (f.ended) return notice({isDiscover:false, isCompact:true, title:"Tu plan familiar terminó el 14 de noviembre", hasBadge:false, badge:"", badgeBg:"var(--color-primary)", body:"Mamá, Abuelo Pep y Marcos están ahora en Basic. Ya no veis lo que compartíais.", avatars:[], hasAvatars:false, hasIcon:true, icon:"calendar-x", open:() => this.famGo("oferta", {offer:Object.assign({}, f.offer, {n:0, err:null})}), aria:"Tu plan familiar terminó", items:["adm-ended"], where:"Puedes volver a contratar desde Mi Familia."});
+      if (f.ending) return notice({isDiscover:false, isCompact:true, isEnding:true, title:"Mi Familia", hasBadge:true, badge:"Termina el 14 nov", badgeBg:"var(--yellow-700)", body:"Tu plan familiar termina el 14 de noviembre. Puedes reactivarlo hasta ese día.", avatars:ini, hasAvatars:true, hasIcon:false, open:() => this.famOpen("home"), aria:"Mi Familia, el plan termina el 14 de noviembre", items:["adm-ending"], where:"Puedes reactivar el plan desde Perfil, en Mi Familia.", reactivate:() => this.famReactivate()});
+      if (f.joined) return notice({isDiscover:false, isCompact:true, title:"Mamá se ha unido a Familia Navarro", hasBadge:false, badge:"", badgeBg:"var(--color-primary)", body:f.joinedShares ? "Ya podéis avisaros y pedir ayuda. Comparte contigo: Huella y Enlaces analizados." : "Mamá no comparte nada contigo, pero podéis avisaros.", avatars:av(["M"]), hasAvatars:true, hasIcon:false, open:() => this.famOpen("home"), aria:"Mamá se ha unido a Familia Navarro", items:["adm-joined"], where:"Mamá ya forma parte del grupo."});
+      const items = open.length ? open.map(r => "req:" + r.id).concat(risky.map(m => "risk:" + m.id + "-" + m.level)) : risky.length ? risky.map(m => "risk:" + m.id + "-" + m.level) : [people.length ? "adm-calm" : "adm-pending"];
+      return notice({isDiscover:false, isCompact:true, title:"Mi Familia", hasBadge: open.length > 0, badge: (n => n === 1 ? "1 petición" : n + " peticiones")(open.filter((r, i) => open.findIndex(x => x.from === r.from && x.obj === r.obj) === i).length),
         body: rm ? rm.nick + " te pide ayuda con un enlace." + (risky[0] ? " " + risky[0].nick + ": " + risky[0].status.toLowerCase() + "." : "")
-          : people.length ? (risky.length ? risky[0].nick + ": " + risky[0].status.toLowerCase() + "." : "Todo en orden en " + f.groupName + ".") : "Invita a tu familia para empezar.",
-        avatars: ini.length ? ini : av(["+"]), hasAvatars:true, hasIcon:false, icon:"", open: () => this.famOpen("home"),
-        aria: "Mi Familia" + (open.length ? ", " + open.length + " petición de ayuda pendiente" : "")};
+          : people.length ? (risky.length ? risky[0].nick + ": " + risky[0].status.toLowerCase() + "." : "Todo en orden en " + f.groupName + ". Nadie ha pedido ayuda.") : "Tus invitaciones están pendientes. Te avisaremos cuando alguien acepte.",
+        avatars: ini.length ? ini : f.members.slice(0, 3).map((m, k) => ({ini:m.ini, z:String(3-k), top:"0", left:k ? "-4px" : "0", size:"32px", font:"700 0.8125rem/1 var(--font-sans)"})), hasAvatars:true, hasIcon:false, icon:"", badgeBg:open.length ? "var(--color-destructive)" : "var(--color-primary)", open: () => this.famOpen("home"),
+        aria: "Mi Familia" + (open.length ? ", " + open.length + " petición de ayuda pendiente" : ""), items, where:rm ? "La petición de " + rm.nick + " sigue en Perfil, en Mi Familia." : "Volverá si hay novedades. Mi Familia sigue en Perfil."});
     }
-    if (role === "member") return {title:"Familia Navarro", hasBadge: !!f.mem.aviso, badge:"1 aviso nuevo",
+    if (role === "member" && f.memberEnded) return notice({isDiscover:false, isCompact:true, title:"El plan familiar de Lucía ha terminado", hasBadge:false, badge:"", badgeBg:"var(--color-primary)", body:"Desde hoy tu cuenta está en Basic. Lucía ya no ve lo que compartías.", avatars:[], hasAvatars:false, hasIcon:true, icon:"calendar-x", open:() => this.go("perfil", {view:"plan"}), aria:"El plan familiar de Lucía ha terminado. Ver planes Premium", items:["mem-ended"], where:"Los planes Premium están en Perfil."});
+    if (role === "member" && f.mem.ending) return notice({isDiscover:false, isCompact:true, isEnding:true, title:"Familia Navarro", hasBadge:true, badge:"Termina el 14 nov", badgeBg:"var(--yellow-700)", body:"El plan familiar termina el 14 de noviembre. Después tu cuenta será Basic.", avatars:av(["L"]), hasAvatars:true, hasIcon:false, open:() => this.famOpen("home"), aria:"Familia Navarro, el plan termina el 14 de noviembre", items:["mem-ending"], where:"Lo tienes en Perfil, en Mi Familia."});
+    if (role === "member") return notice({isDiscover:false, isCompact:true, isEnding:false, title:"Familia Navarro", hasBadge: !!f.mem.aviso, badge:"1 aviso nuevo",
       body: f.mem.aviso ? "Lucía ha respondido a tu petición de ayuda." : "¿Dudas con un mensaje o una llamada? Pide ayuda a Lucía.",
-      avatars: av(["L"]), hasAvatars:true, hasIcon:false, icon:"", open: () => this.famOpen("home"), aria:"Mi Familia" + (f.mem.aviso ? ", 1 aviso nuevo" : "")};
-    if (role === "invited") return {title:"Te han invitado", hasBadge:true, badge:"Invitación",
+      avatars: av(["L"]), hasAvatars:true, hasIcon:false, icon:"", badgeBg:f.mem.aviso ? "var(--color-destructive)" : "var(--color-primary)", open: () => this.famOpen("home"), aria:"Mi Familia" + (f.mem.aviso ? ", 1 aviso nuevo" : ""), items:[f.mem.aviso ? "mem-aviso" : "mem-idle"], where:f.mem.aviso ? "La respuesta de Lucía sigue en Perfil, en Mi Familia." : "Volverá si hay novedades. Mi Familia sigue en Perfil."});
+    if (role === "invited") return notice({isDiscover:false, isCompact:true, title:"Te han invitado", hasBadge:true, badge:"Invitación",
       body:"Lucía Navarro te invita a Familia Navarro. Revisa qué compartirías antes de unirte.", avatars: av(["L"]), hasAvatars:true, hasIcon:false, icon:"",
-      open: () => this.famOpen("home"), aria:"Invitación de Lucía Navarro a Familia Navarro"};
-    return {title:"Plan familiar", hasBadge:false, badge:"", body:"Cuida de las personas adultas de tu familia. Cada una decide qué comparte contigo.",
-      avatars:[], hasAvatars:false, hasIcon:true, icon:"users-round", open: () => this.famOpen("home"), aria:"Plan familiar"};
+      open: () => this.famOpen("home"), aria:"Invitación de Lucía Navarro a Familia Navarro", items:["invited"], where:"La invitación sigue en Perfil, en Mi Familia."});
+    if (f.pendingApproval) return notice({isDiscover:false, isCompact:true, title:"Plan familiar pendiente de aprobación", hasBadge:false, badge:"", hasAvatars:false, hasIcon:true, icon:"clock", body:"Te avisaremos cuando se apruebe.", open:() => this.famOpen("home"), aria:"Plan familiar pendiente de aprobación", items:["adm-pending-approval"], where:"Mi Familia sigue en Perfil."});
+    if (f.left && f.leftReason === "removed") return notice({isDiscover:false, isCompact:true, title:"Lucía te ha retirado de Familia Navarro", hasBadge:false, badge:"", hasAvatars:false, hasIcon:true, icon:"user-round-x", body:"Tu cuenta está en Basic desde hoy. Lucía ya no ve lo que compartías.", open:() => this.go("perfil", {view:"plan"}), aria:"Lucía te ha retirado de Familia Navarro. Ver planes Premium", items:["removed"], where:"Los planes Premium están en Perfil."});
+    if (f.left) return notice({isDiscover:false, isCompact:true, title:"Ya no estás en Familia Navarro", hasBadge:false, badge:"", hasAvatars:false, hasIcon:true, icon:"user-round-x",
+      body:"Tu cuenta es Basic desde hoy y Lucía ya no ve lo que compartías. Puedes contratar tu propio Premium cuando quieras.", open:() => this.go("perfil", {view:"plan"}), aria:"Ya no estás en Familia Navarro. Ver planes Premium", items:["left"], where:"Los planes Premium están en Perfil."});
+    const hidden = f.hidden || {}, items = ["promo"], isHidden = items.every(i => hidden[i]);
+    return {show:!isHidden, isDiscover:!!f.discover && !isHidden, isCompact:!f.discover && !isHidden, title:"Mi Familia", hasBadge:true, badge:"NUEVO", badgeBg:"var(--color-primary)", body:"Cuida de las personas adultas de tu familia. Cada una decide qué comparte contigo.",
+      avatars:[], hasAvatars:false, hasIcon:true, icon:"users-round", open: () => this.famOpen("home"), aria:"Mi Familia, nuevo", items, where:"Mi Familia sigue en Perfil cuando quieras.", closeAria:"Cerrar aviso: Mi Familia", close:() => this.famHomeClose(items, "Mi Familia sigue en Perfil cuando quieras."), discoverGo:() => { this.famSet({discover:false}); this.famOpen("home"); }, discoverLater:() => this.famHomeClose(items, "Mi Familia sigue en Perfil cuando quieras.")};
+  }
+
+  famPlanVals(){
+    const s = this.state, f = s.fam, role = this.famRole();
+    const show = s.screen === "perfil" && s.pr.view === "plan" && (role === "admin" || role === "member");
+    const people = f.members.filter(m => !m.pending);
+    return {show, isAdmin:role === "admin", isMember:role === "member", ending:role === "admin" ? !!f.ending : !!f.mem.ending,
+      seats:(people.length + 1) + " personas lo usan" + ((f.members.length - people.length) ? " y " + (f.members.length - people.length) + (f.members.length - people.length === 1 ? " invitación pendiente" : " invitaciones pendientes") : "") + " · " + (f.members.length + 1) + " de 6 plazas",
+      feats:PR_FEATS.filter(x => !x[1]).map(x => ({t:x[0]})), toFamily:() => this.famOpen("perfil"), store:() => this.showToast("Te llevamos a la gestión de suscripciones de la tienda."),
+      cancel:() => this.famGo("baja", {ret:"plan", from:"perfil"}), notEnding:!(role === "admin" ? f.ending : f.mem.ending), reactivate:() => this.famReactivate()};
+  }
+
+  famHomeClose(items, where){
+    const before = Object.assign({}, this.state.fam.hidden || {});
+    this.setState(s => ({fam:Object.assign({}, s.fam, {hidden:Object.assign({}, s.fam.hidden || {}, items.reduce((o, i) => (o[i] = true, o), {}))})}));
+    this.showToast("Aviso cerrado. " + where, {label:"Deshacer", fn:() => this.setState(s => ({fam:Object.assign({}, s.fam, {hidden:before})}))});
+  }
+  famCancelConfirm(){
+    this.setState(s => ({screen:"familia", fam:Object.assign({}, s.fam, {view:"hub", ending:true, sheet:null})}));
+    this.showToast("Cancelado en la tienda. Tu plan sigue activo hasta el 14 de noviembre.");
+  }
+  famReactivate(){ this.famSet({ending:false}); this.showToast("Tu plan sigue activo. Hemos avisado a tu familia."); }
+  famLeaveGroup(toPremium){
+    this.setState(s => Object.assign({sheet:null, scen:"free-aldia", world:null, labPlan:toPremium ? "premium" : "free", simPlan:toPremium ? "premium" : "free",
+      fam:Object.assign({}, s.fam, {role:"none", left:true, view:"oferta", sheet:null, mem:Object.assign({}, s.fam.mem, {ending:false})})},
+      toPremium ? {screen:"perfil", pr:Object.assign({}, s.pr, {view:"plan", sel:"anual"})} : {screen:"home"}));
+    this.showToast(toPremium ? "Has salido del grupo. Elige tu plan Premium." : "Has salido de Familia Navarro. Tu cuenta es Basic.");
   }
 
   renderVals(){
@@ -2443,7 +2547,7 @@ export class LabLogic extends DCLogic {
           label: eyebrow + ". " + title + ". " + meta};
       })
     };
-    const famHome = Object.assign(this.famHomeVals(), {top: this.famRole() !== "none"});
+    const famHome = this.famHomeVals();
     const camino = {
       sub: lessonNext ? learned.length + " de " + LESSONS.length + " temas · Siguiente: " + lessonNext.topic : "5 de 5 temas · lo has aprendido todo",
       dots: LESSONS.map(l => ({bg: learned.indexOf(l.id) >= 0 ? "var(--color-positive)" : "var(--color-secondary)"}))
@@ -3061,11 +3165,12 @@ export class LabLogic extends DCLogic {
         maria: () => this.go("maria", {from:"ayuda"})
       },
       week, camino, ap, le, side, lab: this.labVals(),
-      isFamilia: s.screen === "familia", fam: this.famVals(), famHome: famHome,
-      showFamHome: famHome.top,
+      isFamilia: s.screen === "familia", fam: this.famVals(), famHome: famHome, famPlan:this.famPlanVals(),
+      showFamHome: famHome.show && !famHome.isDiscover,
       famAn: (() => { const show = this.famRole() === "member" && s.screen === "analizador" && s.an.view === "result";
         let host = String(s.an.value || ""); try { host = new URL(/^https?:/.test(host) ? host : "https://" + host).hostname.replace(/^www\./, ""); } catch (e) {}
-        return {show, label:"Pedir ayuda a Lucía con esto",
+        const nudge = this.famRole() === "none" && s.screen === "analizador" && s.an.view === "result" && (s.an.verdict === "danger" || s.an.verdict === "suspicious");
+        return {show, label:"Pedir ayuda a Lucía con esto", nudge, nudgeOpen:() => this.famOpen("home"),
           open: () => this.famSheet({kind:"ayuda", step:"form", obj:{kind:"link", t: host, v: s.an.verdict}, motive:null})}; })(),
       isAprende: s.screen === "aprende",
       isLeccion: s.screen === "leccion",
@@ -3470,12 +3575,13 @@ export class LabLogic extends DCLogic {
       sheet,
 
       liveMsg: s.live || "",
-      offline: this.off(),
+      offline: this.off() && !(s.screen === "home" && s.offHidden),
       offlineNote: s.screen === "home" && /^Revisado /.test(w.checked || "")
         ? "Te enseñamos lo último que comprobamos, el " + w.checked.replace("Revisado ", "") + ". No podemos mirar nada nuevo hasta que vuelvas a tener red."
         : s.screen === "home" ? "Te enseñamos lo último que comprobamos. No podemos mirar nada nuevo hasta que vuelvas a tener red."
         : "No podemos comprobar nada nuevo hasta que vuelvas a tener red.",
-      offlineRetry: () => { this.setState({offline:false}); this.showToast("Ya hay conexión. Volvemos a mirar tus datos."); },
+      offlineRetry: () => { this.setState({offline:false, offHidden:false}); this.showToast("Ya hay conexión. Volvemos a mirar tus datos."); },
+      offlineClose: () => { this.setState({offHidden:true}); this.showToast("Aviso cerrado. Si algo necesita conexión, te lo diremos allí.", {label:"Deshacer", fn:() => this.setState({offHidden:false})}); },
       touchStart: e => { const t = e.touches[0]; this.tsx = t.clientX; this.tsy = t.clientY; },
       touchEnd: e => {
         const t = e.changedTouches[0];

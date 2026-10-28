@@ -1,6 +1,6 @@
 // Generado por tools/convert-template.mjs. No editar a mano.
 import { forwardRef, type ComponentPropsWithoutRef } from 'react';
-import { AlarmClock, Anchor, Apple, ArrowLeft, ArrowRight, ArrowUpRight, BadgeCheck, BadgeEuro, BadgePercent, BatteryFull, Bell, BellOff, BellRing, Bookmark, BookmarkCheck, Calendar, CalendarCheck, Camera, CameraOff, Car, ChartPie, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle, CircleAlert, CircleCheck, CircleDashed, CircleDot, CircleHelp, CirclePlus, CircleSlash, CircleUser, ClipboardList, ClipboardPaste, Clock, CloudOff, Code, Contact, Copy, CreditCard, Crown, Database, Dot, Download, Eraser, Euro, ExternalLink, Eye, EyeOff, FileLock, FileText, Fingerprint, Flag, Flame, FlameKindling, FlaskConical, Gem, Globe, GraduationCap, HandCoins, HandHeart, Handshake, Headphones, Headset, HeartHandshake, History, Home, House, IdCard, Image, ImagePlus, Inbox, Infinity, Info, KeyRound, KeySquare, Landmark, Laptop, Layers, LayoutGrid, LifeBuoy, Lightbulb, Link, Linkedin, List, ListChecks, Loader, LoaderCircle, Lock, LockOpen, LogOut, Mail, MailCheck, MailPlus, MapPin, Megaphone, MessageCircle, MessageCircleMore, MessageSquare, MessageSquareText, MessageSquareWarning, MessagesSquare, Minus, MousePointerClick, OctagonAlert, Package, Paperclip, Phone, PhoneCall, PhoneOff, PhoneOutgoing, Play, Plus, Pointer, QrCode, Radio, Repeat, Reply, Rocket, RotateCcw, Ruler, Scan, ScanFace, ScanLine, ScanSearch, Search, SearchCheck, SearchX, Send, ServerCrash, Settings, Settings2, Share2, Shield, ShieldAlert, ShieldCheck, ShieldOff, ShieldQuestion, ShieldX, ShoppingBag, Signal, Siren, SlidersHorizontal, Smartphone, Sparkles, SquareCheck, SquarePen, Star, Store, Table2, Target, Text, ThumbsDown, ThumbsUp, Timer, Trash2, TriangleAlert, Undo2, Upload, User, UserCheck, UserPen, UserPlus, UserRound, UserX, Users, UsersRound, Wifi, WifiOff, Wrench, X, Zap, type LucideIcon } from 'lucide-react';
+import { AlarmClock, Anchor, Apple, ArrowLeft, ArrowRight, ArrowUpRight, BadgeCheck, BadgeEuro, BadgePercent, BatteryFull, Bell, BellOff, BellRing, Bookmark, BookmarkCheck, Calendar, CalendarCheck, CalendarClock, CalendarX, Camera, CameraOff, Car, ChartPie, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Circle, CircleAlert, CircleCheck, CircleDashed, CircleDot, CircleHelp, CirclePlus, CircleSlash, CircleUser, ClipboardList, ClipboardPaste, Clock, CloudOff, Code, Contact, Copy, CreditCard, Crown, Database, Dot, Download, Eraser, Euro, ExternalLink, Eye, EyeOff, FileLock, FileText, Fingerprint, Flag, Flame, FlameKindling, FlaskConical, Gem, Globe, GraduationCap, HandCoins, HandHeart, Handshake, Headphones, Headset, HeartHandshake, History, Home, House, IdCard, Image, ImagePlus, Inbox, Infinity, Info, KeyRound, KeySquare, Landmark, Laptop, Layers, LayoutGrid, LifeBuoy, Lightbulb, Link, Linkedin, List, ListChecks, Loader, LoaderCircle, Lock, LockOpen, LogOut, Mail, MailCheck, MailPlus, MapPin, Megaphone, MessageCircle, MessageCircleMore, MessageSquare, MessageSquareText, MessageSquareWarning, MessagesSquare, Minus, MousePointerClick, OctagonAlert, Package, Paperclip, Phone, PhoneCall, PhoneOff, PhoneOutgoing, Play, Plus, Pointer, QrCode, Radio, Repeat, Reply, Rocket, RotateCcw, Ruler, Scan, ScanFace, ScanLine, ScanSearch, Search, SearchCheck, SearchX, Send, ServerCrash, Settings, Settings2, Share2, Shield, ShieldAlert, ShieldCheck, ShieldOff, ShieldQuestion, ShieldX, ShoppingBag, Signal, Siren, SlidersHorizontal, Smartphone, Sparkles, SquareCheck, SquarePen, Star, Store, Table2, Target, Text, ThumbsDown, ThumbsUp, Timer, Trash2, TriangleAlert, Undo2, Upload, User, UserCheck, UserPen, UserPlus, UserRound, UserRoundX, UserX, Users, UsersRound, Wifi, WifiOff, Wrench, X, Zap, type LucideIcon } from 'lucide-react';
 
 const ICONS: Record<string, LucideIcon> = Object.assign(Object.create(null), {
   "alarm-clock": AlarmClock,
@@ -20,6 +20,8 @@ const ICONS: Record<string, LucideIcon> = Object.assign(Object.create(null), {
   "bookmark-check": BookmarkCheck,
   "calendar": Calendar,
   "calendar-check": CalendarCheck,
+  "calendar-clock": CalendarClock,
+  "calendar-x": CalendarX,
   "camera": Camera,
   "camera-off": CameraOff,
   "car": Car,
@@ -171,6 +173,7 @@ const ICONS: Record<string, LucideIcon> = Object.assign(Object.create(null), {
   "user-pen": UserPen,
   "user-plus": UserPlus,
   "user-round": UserRound,
+  "user-round-x": UserRoundX,
   "user-x": UserX,
   "users": Users,
   "users-round": UsersRound,

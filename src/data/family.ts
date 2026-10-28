@@ -43,7 +43,7 @@ export const FAM_PRICES = {2:1399, 3:2099, 4:2699, 5:3299, 6:3899};
 export const FAM_WHY = {
   danger:["El dominio imita a una empresa de mensajería.","Se registró hace 3 días.","Pide datos de pago para entregar un paquete."],
   suspicious:["Promete un premio a cambio de tus datos.","El dominio no tiene historial."],
-  safe:["No hemos encontrado señales de peligro conocidas.","El dominio tiene años de historial y no aparece en listas de fraude."],
+  safe:["No hemos encontrado señales de peligro.","El dominio tiene historial y certificado válido."],
   unknown:["No tenemos información suficiente sobre este dominio."]
 };
 
@@ -90,14 +90,45 @@ export const FAM_PETS0 = [
   {t:"bit.ly/3xQ-tienda", motive:"No sé si es seguro", when:"Ayer", st:1, reply:null}
 ];
 
+// Escenarios de los flujos de Mi Familia v1.6.0.
+export const FAM_MEMBERS_CALM = [
+  {id:"mama", nick:"Mamá", ini:"M", level:"safe", status:"Sin novedades de riesgo", when:"hace 3 h",
+   shares:{huella:"12 oct", enlaces:"12 oct", actividad:"14 oct"},
+   links:[{d:"farmacia.ejemplo.com", v:"safe", when:"hace 3 h"}, {d:"tienda.ejemplo.com", v:"safe", when:"hace 1 día"}],
+   huella:[{t:"correo ••••@gmail.com", s:"2 filtraciones · 4 de 4 pasos hechos", warn:false}], act:[{d:"Hoy", t:"Analizó un enlace de riesgo bajo"}]},
+  {id:"pep", nick:"Abuelo Pep", ini:"AP", level:"safe", status:"Sin novedades de riesgo", when:"hace 1 día",
+   shares:{enlaces:"15 oct", actividad:"15 oct"}, links:[{d:"farmacia.ejemplo.com", v:"safe", when:"hace 1 día"}], huella:[], act:[{d:"Ayer", t:"Abrió una alerta"}]},
+  {id:"marcos", nick:"Marcos", ini:"MR", level:"safe", status:"Sin novedades de riesgo", when:"hace 3 días",
+   shares:{huella:"18 oct", enlaces:"18 oct", actividad:"18 oct"}, links:[{d:"correos.es", v:"safe", when:"hace 3 días"}],
+   huella:[{t:"correo ••••@outlook.es", s:"Sin filtraciones nuevas", warn:false}], act:[]}
+];
+
+export const FAM_LOSE_MEMBER = [
+  ["message-circle-more", "MarIA sin límite", "Con Basic, 10 mensajes al mes"],
+  ["link", "Verificar enlaces sin límite", "Con Basic, 3 al mes"],
+  ["scan-line", "Escáner de QR sin límite", "Con Basic, 3 al mes"],
+  ["bell", "Alertas de seguridad completas", "Con Basic, contenido bloqueado"],
+  ["hand-heart", "Pedir ayuda a Lucía y recibir sus avisos", "Solo dentro del grupo"]
+];
+
+export const FAM_LOSE_ADMIN = [
+  ["eye", "Ver de un vistazo cómo están", "La tarjeta de Inicio y el panel desaparecen"],
+  ["send", "Avisarles en un toque", "Con mensajes ya escritos"],
+  ["hand-heart", "Que te pidan ayuda desde la app", "Las peticiones dejan de llegar"],
+  ["star", "Las alertas favoritas de la familia", "La lista se borra"],
+  ["gem", "Premium para todo el grupo", "MarIA, enlaces y QR sin límite, alertas completas"]
+];
+
 export const FAM0 = () => ({role:null, view:"hub", from:"home", mid:null, sheet:null,
   members: FAM_MEMBERS0.map(m => Object.assign({}, m)), reqs: FAM_REQS0.map(r => Object.assign({}, r)), sent: FAM_SENT0.slice(),
   groupName:"Familia Navarro", created:true,
   myShare:{huella:1, enlaces:1, actividad:1},
-  offer:{n:0, period:"anual", phase:"idle"},
+  offer:{n:0, period:"anual", phase:"idle", err:null},
   crear:{name:"Familia Navarro", share:{huella:1, enlaces:1, actividad:1}},
   join:{share:{huella:1, enlaces:1, actividad:1}, showName:true, age:false, err:false},
-  mem:{aviso:true, muted:false, showName:true, share:{huella:1, enlaces:1, actividad:1}, pets: FAM_PETS0.map(p => Object.assign({}, p)), welcome:false, saved:""}});
+  mem:{aviso:true, muted:false, showName:true, share:{huella:1, enlaces:1, actividad:1}, pets: FAM_PETS0.map(p => Object.assign({}, p)), welcome:false, saved:"", ending:false},
+  inv:{state:"activa", cause:"caducada", expires:"4 de noviembre"}, pendingApproval:false, joined:false, joinedShares:true,
+  ended:false, memberEnded:false, leftReason:"self", premiumOwn:false, hidden:{}});
 
 
 // Color de la protección según la puntuación: tramos sólidos con transiciones interpoladas en OKLab.

@@ -18,3 +18,4 @@
 - `review.html` a 375 px no muestra el móvil al cargar: en e2e y capturas, cargar a 1440, reducir el viewport y pulsar la pestaña "Móvil".
 - Un componente con estado propio (borrador, `<details>` abierto) dentro de un popover que cambia de comentario necesita `key` por id, o arrastra el borrador al siguiente y lo envía al comentario equivocado.
 - Una tarea de Codex que queda "running" bloquea `--resume-last` de cualquier tarea nueva: lanzar con `--fresh` y dar el contexto completo en el prompt.
+- La comparación píxel contra `handoff` valía para el porte; con `src/` como fuente, compara rama contra base y solo cuando cambia la UI.
