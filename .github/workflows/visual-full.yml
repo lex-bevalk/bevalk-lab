@@ -1,0 +1,104 @@
+name: Visual full
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  visual-full:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    continue-on-error: true
+    env:
+      LAB_URL: http://localhost:4173/
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Cache handoff captures
+        id: reference-cache
+        uses: actions/cache@v4
+        with:
+          path: tests/visual/baseline/
+          key: ${{ runner.os }}-visual-reference-${{ hashFiles('handoff/**', 'tests/visual/capture.mjs') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium and system dependencies
+        run: npx playwright install --with-deps chromium
+
+      - name: Build current app
+        run: npm run build
+
+      - name: Start preview and reference servers
+        shell: bash
+        run: |
+          npm run preview > /tmp/bevalk-preview.log 2>&1 &
+          echo $! > /tmp/bevalk-preview.pid
+          node tools/serve-reference.cjs 8765 > /tmp/bevalk-reference.log 2>&1 &
+          echo $! > /tmp/bevalk-reference.pid
+
+          wait_for_url() {
+            local url="$1"
+            for attempt in $(seq 1 60); do
+              if curl --fail --silent --show-error --max-time 2 "$url" > /dev/null 2>&1; then return 0; fi
+              sleep 2
+            done
+            cat /tmp/bevalk-preview.log || true
+            cat /tmp/bevalk-reference.log || true
+            return 1
+          }
+          wait_for_url "http://localhost:4173/"
+          wait_for_url "http://localhost:8765/project/Main.dc.html"
+
+      - name: Capture handoff baseline
+        if: steps.reference-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        run: npm run visual:baseline
+
+      - name: Compare full visual suite
+        continue-on-error: true
+        run: npm run visual
+
+      - name: E2E baseline
+        continue-on-error: true
+        run: npm run e2e:baseline
+
+      - name: Upload full comparison summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-full-summary
+          if-no-files-found: ignore
+          path: |
+            tests/visual/diff/comparison-summary.json
+            tests/e2e/results/
+
+      - name: Add workflow summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f tests/visual/diff/comparison-summary.json ]]; then
+            node --input-type=module <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+            import fs from 'node:fs';
+            const report = JSON.parse(fs.readFileSync('tests/visual/diff/comparison-summary.json', 'utf8'));
+            console.log(`## Visual full\n\n${report.compared} pares · ${report.pass} PASS · ${report.fail} FAIL · ${report.missing} faltan.`);
+            NODE
+          else
+            echo '## Visual full' >> "$GITHUB_STEP_SUMMARY"
+            echo 'No se generó el resumen visual; revisa los logs del workflow.' >> "$GITHUB_STEP_SUMMARY"
+          fi
