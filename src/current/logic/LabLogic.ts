@@ -1,10 +1,10 @@
 // @ts-nocheck
-// Copied from design/current/current.html lines 6972-10690; paint() and waitLucide() are no-ops because G3 renders icons in React.
+// Copied from design/current/current.html lines 6977-10711; paint() and waitLucide() are no-ops because G3 renders icons in React.
 import { DCLogic } from './DCLogic';
-import { LAB_APP_GROUPS, SRC_LIST, LAB_APP_FLOWS, LAB_GROUPS, LAB_FLOWS, LAB_ALL_GROUPS, LAB_ALL_FLOWS, LAB_SEC_OF, LAB_SOON_OF, BASE, VIG, FINDINGS, ACT, SCEN, ALERTS, NOTIS, MARIA_FEATURES, MARIA_L3, MARIA_L2, MARIA_TOPICS, MARIA_CHATS, MARIA_TRANSCRIPT, AMBER, AMBER_LINE, AMBER_BG, AMBER_TEXT, ANALYZERS, AN_RECENTS, VERDICTS, AN_LEGEND, HU_BULLETS, HU_KINDS, HU_LEAKS, PF_CATS, PF_FEATS, PF_PLANS, PF_TOPICS, PF_REASONS, PF_CONSULTAS, PF_MONTHS, GUIDE, AL_ITEMS, PR_ZONAS, PR_EDADES, PR_TEMAS, AU0, OB0, OB_ZONAS, OB_EDADES, OB_TEMAS, OB_INTRO, OB_QS, OB_FINAL, PR_FB, PR_LIMITS, PR_SEC, PR_MESES, PR_FA_APPS, PR_FA_KEY, PR_PW_RULES, PR_DEL, PR_FEATS, PR_BONUS, SOS_HELP, SOP_ASUNTOS, richSegs, FAM_ROLES, FAM_MSGS, FAM_MOTIVES, FAM_CATS, FAM_CATS_MINE, FAM_PRICES, FAM_WHY, FAM_MEMBERS0, FAM_ADMIN_M, FAM_REQS0, FAM_SENT0, FAM_FAVS, FAM_MY_ITEMS, FAM_PETS0, FAM0, FAM_MEMBERS_CALM, FAM_LOSE_MEMBER, FAM_LOSE_ADMIN, AP_TEMAS, PZ_PLANES, AL_DETAIL, BR_SITES, BR_SEGUIMIENTO, BR_ST, CASES0 } from '../data';
+import { LAB_APP_GROUPS, SRC_LIST, LAB_APP_FLOWS, LAB_GROUPS, LAB_FLOWS, LAB_ALL_GROUPS, LAB_ALL_FLOWS, LAB_SEC_OF, SOON_PEEK_WHIPS, LAB_SOON_OF, BASE, VIG, FINDINGS, ACT, SCEN, ALERTS, NOTIS, MARIA_FEATURES, MARIA_L3, MARIA_L2, MARIA_TOPICS, MARIA_CHATS, MARIA_TRANSCRIPT, AMBER, AMBER_LINE, AMBER_BG, AMBER_TEXT, ANALYZERS, AN_RECENTS, VERDICTS, AN_LEGEND, HU_BULLETS, HU_KINDS, HU_LEAKS, PF_CATS, PF_FEATS, PF_PLANS, PF_TOPICS, PF_REASONS, PF_CONSULTAS, PF_MONTHS, GUIDE, AL_ITEMS, PR_ZONAS, PR_EDADES, PR_TEMAS, AU0, OB0, OB_ZONAS, OB_EDADES, OB_TEMAS, OB_INTRO, OB_QS, OB_FINAL, PR_FB, PR_LIMITS, PR_SEC, PR_MESES, PR_FA_APPS, PR_FA_KEY, PR_PW_RULES, PR_DEL, PR_FEATS, PR_BONUS, SOS_HELP, SOP_ASUNTOS, richSegs, FAM_ROLES, FAM_MSGS, FAM_MOTIVES, FAM_CATS, FAM_CATS_MINE, FAM_PRICES, FAM_WHY, FAM_MEMBERS0, FAM_ADMIN_M, FAM_REQS0, FAM_SENT0, FAM_FAVS, FAM_MY_ITEMS, FAM_PETS0, FAM0, FAM_MEMBERS_CALM, FAM_LOSE_MEMBER, FAM_LOSE_ADMIN, AP_TEMAS, PZ_PLANES, AL_DETAIL, BR_SITES, BR_SEGUIMIENTO, BR_ST, CASES0 } from '../data';
 
 export class LabLogic extends DCLogic {
-  state = {lab:{cur:null, q:"", rol:"Todos", caso:"", run:0, sec:"app", plan:"free"}, shr:null, dd:null, prontoWhat:"", prontoFrom:"home", fam: FAM0(), ap:{view:"list", tema:null, step:0, pick:null, done:{}}, pz:{view:"pick", plan:null, done:{}, from:"sos"}, cases:[], alSel:null, alDone:{}, autoOn:false, autoDev:"iphone", autoFrom:"escaner", br:{view:"intro", auth:false, err:false, st:{}, howOpen:false}, screen:"home", scen:null, world:null, shown:0, delta:0, actId:null, from:"home",
+  state = {lab:{cur:null, q:"", rol:"Todos", caso:"", run:0, sec:"app", plan:"free", whips:0, peek:[]}, shr:null, dd:null, prontoWhat:"", prontoFrom:"home", fam: FAM0(), ap:{view:"list", tema:null, step:0, pick:null, done:{}}, pz:{view:"pick", plan:null, done:{}, from:"sos"}, cases:[], alSel:null, alDone:{}, autoOn:false, autoDev:"iphone", autoFrom:"escaner", br:{view:"intro", auth:false, err:false, st:{}, howOpen:false}, screen:"home", scen:null, world:null, shown:0, delta:0, actId:null, from:"home",
     sheet:null, notiOff:{}, sessionDelta:0, prev:null, read:[],
     maria:{view:"intro", topic:null, msgs:[], node:null, rate:null}, toast:null,
     an:{type:"enlace", view:"welcome", value:"", verdict:"danger", used:0, seen:{}, dontShow:{},
@@ -2275,14 +2275,22 @@ export class LabLogic extends DCLogic {
   }
   labSoon(view){
     if (view === "whip") { this.labWhip(); this.setState(st => ({lab: Object.assign({}, st.lab, {soonOpen:true, soonView:"whipped", whips: (st.lab.whips || 0) + 1})})); }
+    else if (view === "peek") {
+      const lab = this.state.lab, peek = lab.peek || [];
+      const nextPeek = lab.cur && !peek.includes(lab.cur) ? peek.concat([lab.cur]) : peek;
+      this.labSet({peek:nextPeek, soonOpen:false});
+      setTimeout(() => { const main = document.querySelector("main.lab-col"); if (main) main.focus(); }, 40);
+      return;
+    }
     else this.labSet({soonOpen: view !== "close", soonView: view === "close" ? this.state.lab.soonView : view});
     setTimeout(() => { const b = document.querySelector("[data-lab-modal] button"); if (b && view !== "close") b.focus(); }, 40);
   }
   labOpen(id, caso){
     const f = LAB_ALL_FLOWS.find(x => x.id === id), soon = f && LAB_SOON_OF(f);
+    const peeked = !!soon && (this.state.lab.peek || []).includes(id);
     if (f && !this.state.lab.q) this.labSet({sec: LAB_SEC_OF(f)});
-    this.labSet({soonOpen: !!soon, soonView: soon === "whip" ? "ask" : "lex"});
-    if (soon) setTimeout(() => { const b = document.querySelector("[data-lab-modal] button"); if (b) b.focus(); }, 60);
+    this.labSet({soonOpen: !!soon && !peeked, soonView: soon === "whip" ? "ask" : "lex"});
+    if (soon && !peeked) setTimeout(() => { const b = document.querySelector("[data-lab-modal] button"); if (b) b.focus(); }, 60);
     this.labGo(id, caso);
     setTimeout(() => { const m = document.querySelector("main.lab-col"); if (m) m.scrollTop = 0; }, 0);
   }
@@ -2317,6 +2325,11 @@ export class LabLogic extends DCLogic {
     const fixed = f && isApp(f) && f.plan !== "both" && f.plan !== "none";
     const planNow = fSoon ? "Próximamente" : f && isApp(f) ? (f.plan === "none" ? "Sin cuenta" : worldPlan === "premium" ? "Premium" : "Freemium") : (f ? f.rol : "Quien gestiona");
     const whips = s.whips || 0;
+    const hasPeek = whips >= SOON_PEEK_WHIPS;
+    const peekLabels = ["Echar un vistazo", "Desbloquear", "Ojear lo que lleva Lex", "Vale, enséñamelo"];
+    const peekLabel = peekLabels[(whips - SOON_PEEK_WHIPS) % peekLabels.length];
+    const peeked = !!fSoon && (s.peek || []).includes(s.cur);
+    const soonLocked = !!fSoon && !peeked;
     const REACT = ["¡Chas! Lex ha escrito tres líneas de código del susto.", "¡Chas! Lex ha pedido un café doble y un abogado laboral.",
       "¡Chas! Recursos Humanos ha abierto un expediente. A ti, no a Lex.", "¡Chas! Lex ya teclea a 140 pulsaciones por minuto. Dale un respiro.",
       "¡Chas! Lex ha movido la tarea a «Terminado». No te lo creas todavía."];
@@ -2326,7 +2339,7 @@ export class LabLogic extends DCLogic {
         body:"Esta novedad todavía no está en vigor. Lex jura que «está casi». Tú decides cómo motivarle.",
         primaryLabel:"Sí", primary: () => this.labSoon("whip"), hasSecondary:true, secondaryLabel:"No", secondary: () => this.labSoon("no")},
       whipped: {pill:"Latigazos de hoy: " + whips, img:"/assets/current/acd48590e991cc6c7e6049cbd50a6efe.png", title: REACT[Math.min(whips, REACT.length) - 1] || REACT[0],
-        body:"Lex agradece la motivación. Su espalda, bastante menos.",
+        body:hasPeek ? "Lex se rinde: puedes ojear lo que lleva hecho. Aún no está en vigor." : "Lex agradece la motivación. Su espalda, bastante menos.",
         primaryLabel:"Otro latigazo", primary: () => this.labSoon("whip"), hasSecondary:true, secondaryLabel:"Vale, ya paro", secondary: () => this.labSoon("close")},
       no: {pill:"Novedad · próximamente", img:"/assets/current/05b1958df85a5fa95c4d617a6c7ea180.png", title:"Qué compasivo.",
         body:"Lex te dedicará el próximo commit. Mientras, el resto del prototipo funciona.",
@@ -2356,12 +2369,15 @@ export class LabLogic extends DCLogic {
       crumb: f ? SEC_NAME[LAB_SEC_OF(f)] + " · " + groupOf(f.g).t + " · " + f.id : "Portada",
       prev: () => this.labOpen(sameSec[(sIdx - 1 + sameSec.length) % sameSec.length].id),
       next: () => this.labOpen(sameSec[(sIdx + 1) % sameSec.length].id),
-      soon: {on: !!fSoon, blur: fSoon ? "blur(6px)" : "none", pe: fSoon ? "none" : "auto", hidden: fSoon ? "true" : "false",
+      soon: {on: !!fSoon, blur: soonLocked ? "blur(6px)" : "none", pe: soonLocked ? "none" : "auto", hidden: soonLocked ? "true" : "false",
         modal: !!fSoon && !!s.soonOpen, reopen: () => this.labSoon(fSoon === "whip" ? "ask" : "lex"), close: () => this.labSoon("close"),
-        bannerLabel: fSoon === "whip" ? "Novedad próximamente · Lex está en ello" : "Próximamente · Lex está en ello",
+        bannerPos: peeked ? "static" : "sticky", bannerTop: peeked ? "auto" : "72px", bannerH: peeked ? "auto" : "0",
+        bannerJustify: peeked ? "flex-start" : "center", bannerPadding: peeked ? "16px 24px 0" : "0", bannerButtonMargin: peeked ? "0" : "16px",
+        bannerLabel: peeked ? "Vistazo · aún no está en vigor" : fSoon === "whip" ? "Novedad próximamente · Lex está en ello" : "Próximamente · Lex está en ello",
         anim: sv === "whipped" ? (whips % 2 ? "lab-shake-a" : "lab-shake-b") : "",
         pill: MODAL.pill, img: MODAL.img, title: MODAL.title, body: MODAL.body, primaryLabel: MODAL.primaryLabel, primary: MODAL.primary,
-        hasSecondary: !!MODAL.hasSecondary, secondaryLabel: MODAL.secondaryLabel, secondary: MODAL.secondary},
+        hasSecondary: !!MODAL.hasSecondary, secondaryLabel: MODAL.secondaryLabel, secondary: MODAL.secondary,
+        hasPeek, peekLabel, peek: () => this.labSoon("peek")},
       restart: () => this.labGo(s.cur, ""),
       home: {
         stats: [[LIVE.length, "flujos disponibles"], [nSoon, "próximamente"], [runnable, "casos ejecutables"], [obs, "casos de observación"]].map((x, k) => ({n:String(x[0]), t:x[1], line: k ? "1px solid #E3DFEC" : "0"})),
