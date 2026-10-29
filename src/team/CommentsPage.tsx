@@ -322,7 +322,7 @@ export default function CommentsPage() {
           <div className="comments-filter">
             <label htmlFor="comments-proto-filter">Prototipo</label>
             <NativeSelect id="comments-proto-filter" value={proto} onChange={event => setProto(event.currentTarget.value as ProtoFilter)}>
-              <option value="current">Current version</option>
+              <option value="current">Current</option>
               <option value="concept">Concept</option>
               <option value="all">Todos</option>
             </NativeSelect>

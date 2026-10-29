@@ -70,7 +70,7 @@ export type CommentScreen = typeof SCREEN_LABELS_BY_PROTO[CommentProto][number];
 export const ALL_SCREEN_LABELS = [...new Set([...SCREEN_LABELS, ...SCREEN_LABELS_BY_PROTO.current])] as readonly CommentScreen[];
 
 export const COMMENT_PROTO_LABELS: Record<CommentProto, string> = {
-  current: 'Current version',
+  current: 'Current',
   concept: 'Concept'
 };
 

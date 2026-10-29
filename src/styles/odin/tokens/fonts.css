@@ -1,8 +1,11 @@
-/* Manrope + Geist Mono ship from Google Fonts. Guton is a commercial display face, supplied
-   by the brand owner and vendored in assets/fonts/. Fallback stays Manrope per design.md §2. */
-@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap");
-
-@font-face{font-family:"Guton";src:url("../assets/fonts/Guton-SemiBold.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+/* Both prototypes share the same local font files. */
+@font-face{font-family:"Manrope";font-style:normal;font-weight:400;font-display:swap;src:url("../../../current/styles/fonts/Manrope-400.woff2") format("woff2")}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:500;font-display:swap;src:url("../../../current/styles/fonts/Manrope-500.woff2") format("woff2")}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:600;font-display:swap;src:url("../../../current/styles/fonts/Manrope-600.woff2") format("woff2")}
+@font-face{font-family:"Manrope";font-style:normal;font-weight:700;font-display:swap;src:url("../../../current/styles/fonts/Manrope-700.woff2") format("woff2")}
+@font-face{font-family:"Geist Mono";font-style:normal;font-weight:400;font-display:swap;src:url("../../../current/styles/fonts/Geist-Mono-400.woff2") format("woff2")}
+@font-face{font-family:"Geist Mono";font-style:normal;font-weight:500;font-display:swap;src:url("../../../current/styles/fonts/Geist-Mono-500.woff2") format("woff2")}
+@font-face{font-family:"Guton";src:url("../../../current/styles/fonts/Guton-SemiBold.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
 
 :root{
   --font-display:"Guton","Manrope",system-ui,sans-serif;

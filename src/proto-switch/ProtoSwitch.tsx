@@ -15,7 +15,7 @@ export default function ProtoSwitch() {
 
   return (
     <nav className="proto-switch" aria-label="Prototipo">
-      <a href={currentHref} aria-current={proto === 'current' ? 'page' : undefined}>Current version</a>
+      <a href={currentHref} aria-current={proto === 'current' ? 'page' : undefined}>Current</a>
       <a href={conceptHref} aria-current={proto === 'concept' ? 'page' : undefined}>Concept</a>
     </nav>
   );
