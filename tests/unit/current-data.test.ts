@@ -46,8 +46,8 @@ describe('datos extraídos del prototipo Current', () => {
     }
   });
 
-  it('incluye los 62 flujos y 20 grupos', () => {
-    expect(generatedData.LAB_ALL_FLOWS).toHaveLength(62);
+  it('incluye los 63 flujos y 20 grupos', () => {
+    expect(generatedData.LAB_ALL_FLOWS).toHaveLength(63);
     expect(generatedData.LAB_ALL_GROUPS).toHaveLength(20);
   });
 });

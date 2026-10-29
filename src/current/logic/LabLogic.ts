@@ -1,5 +1,5 @@
 // @ts-nocheck
-// Copied from design/current/current.html lines 6917-10593; paint() and waitLucide() are no-ops because G3 renders icons in React.
+// Copied from design/current/current.html lines 6972-10690; paint() and waitLucide() are no-ops because G3 renders icons in React.
 import { DCLogic } from './DCLogic';
 import { LAB_APP_GROUPS, SRC_LIST, LAB_APP_FLOWS, LAB_GROUPS, LAB_FLOWS, LAB_ALL_GROUPS, LAB_ALL_FLOWS, LAB_SEC_OF, LAB_SOON_OF, BASE, VIG, FINDINGS, ACT, SCEN, ALERTS, NOTIS, MARIA_FEATURES, MARIA_L3, MARIA_L2, MARIA_TOPICS, MARIA_CHATS, MARIA_TRANSCRIPT, AMBER, AMBER_LINE, AMBER_BG, AMBER_TEXT, ANALYZERS, AN_RECENTS, VERDICTS, AN_LEGEND, HU_BULLETS, HU_KINDS, HU_LEAKS, PF_CATS, PF_FEATS, PF_PLANS, PF_TOPICS, PF_REASONS, PF_CONSULTAS, PF_MONTHS, GUIDE, AL_ITEMS, PR_ZONAS, PR_EDADES, PR_TEMAS, AU0, OB0, OB_ZONAS, OB_EDADES, OB_TEMAS, OB_INTRO, OB_QS, OB_FINAL, PR_FB, PR_LIMITS, PR_SEC, PR_MESES, PR_FA_APPS, PR_FA_KEY, PR_PW_RULES, PR_DEL, PR_FEATS, PR_BONUS, SOS_HELP, SOP_ASUNTOS, richSegs, FAM_ROLES, FAM_MSGS, FAM_MOTIVES, FAM_CATS, FAM_CATS_MINE, FAM_PRICES, FAM_WHY, FAM_MEMBERS0, FAM_ADMIN_M, FAM_REQS0, FAM_SENT0, FAM_FAVS, FAM_MY_ITEMS, FAM_PETS0, FAM0, FAM_MEMBERS_CALM, FAM_LOSE_MEMBER, FAM_LOSE_ADMIN, AP_TEMAS, PZ_PLANES, AL_DETAIL, BR_SITES, BR_SEGUIMIENTO, BR_ST, CASES0 } from '../data';
 
@@ -50,7 +50,7 @@ export class LabLogic extends DCLogic {
         || ps.an.view !== cs.an.view || ps.maria.view !== cs.maria.view || (ps.sos && cs.sos && ps.sos.view !== cs.sos.view) || (ps.al && cs.al && ps.al.view !== cs.al.view) || (ps.pr && cs.pr && ps.pr.view !== cs.pr.view) || (ps.fam && cs.fam && (ps.fam.view !== cs.fam.view || ps.fam.mid !== cs.fam.mid)) || ps.pf !== cs.pf && ps.pf.view !== cs.pf.view))
     { document.querySelectorAll(".tp-scroll").forEach(el => { el.scrollTop = 0; });
       this.later(() => document.querySelectorAll(".tp-scroll").forEach(el => { el.scrollTop = 0; }), 0); }
-    if (prev && prev.miFamilia !== this.props.miFamilia) this.setState({fam: FAM0(), screen:"home", sheet:null});
+    if (prev && prev.miFamilia !== this.props.miFamilia) this.setState({fam: FAM0(), screen:this.homeScreen(), sheet:null});
     if (prev && prev.sinConexion !== this.props.sinConexion) this.setState({offHidden:false});
     if (prev && prev.primeraVez !== this.props.primeraVez && this.props.primeraVez)
       this.setState({screen:"bienvenida", ob:{step:1, tick:0, done:false}, obDone:false});
@@ -95,7 +95,7 @@ export class LabLogic extends DCLogic {
   globalBack(){
     const s = this.state;
     if (s.sheet || s.an.legend || s.an.report) return this.closeOverlays();
-    if (s.screen === "home" || s.screen === "bienvenida") return;
+    if (s.screen === "home" || s.screen === "home2" || s.screen === "bienvenida") return;
     if (s.screen === "familia") return this.famBack();
     if (/anal/.test(s.screen)) return this.anBack();
     if (s.screen === "huflow") return this.huBack();
@@ -108,7 +108,7 @@ export class LabLogic extends DCLogic {
     if (st.step === 1) return this.setState({ob:{step:2, tick:0, done:false}});
     if (st.step === 2) { this.setState({ob:{step:3, tick:0, done:false}}); return this.obRun(); }
     if (!st.done) return;
-    this.setState({obDone:true, screen:"home"});
+    this.setState({obDone:true, screen:this.homeScreen()});
     this.animateTo(this.scoreOf(this.world()));
     this.say("Listo. Tu protección es " + this.scoreOf(this.world()) + " de 100.");
   }
@@ -177,10 +177,11 @@ export class LabLogic extends DCLogic {
   }
 
   go(screen, extra){
-    if (screen === "huella" && this.bioOn() && !this.state.bioOk)
+    const destination = screen === "home" ? this.homeScreen() : screen;
+    if (destination === "huella" && this.bioOn() && !this.state.bioOk)
       return this.setState(Object.assign({screen:"bloqueo", sheet:null}, extra || {}));
-    this.setState(Object.assign({screen, sheet:null, push: screen === "alertas" ? this.state.push : false}, extra || {}));
-    if (screen === "huella") {
+    this.setState(Object.assign({screen:destination, sheet:null, push: destination === "alertas" ? this.state.push : false}, extra || {}));
+    if (destination === "huella") {
       const w = this.world();
       const d = w.act.huella;
       if (w.plan === "premium" && !(w.nuevo || (d !== undefined && d !== null && d <= 60))) {
@@ -188,6 +189,8 @@ export class LabLogic extends DCLogic {
       }
     }
   }
+
+  homeScreen(){ return this.state.lab.cur === "A39" ? "home2" : "home"; }
 
   showToast(text, act){
     this.setState({toast:{text, act: act || null}});
@@ -314,7 +317,7 @@ export class LabLogic extends DCLogic {
   }
   auSet(p){ this.setState(st => ({au: Object.assign({}, st.au, p)})); }
   auGo(view, p){ this.setState(st => ({screen:"auth", sheet:null, au: Object.assign({}, st.au, {view}, p || {})})); }
-  auEnter(msg){ this.setState({screen:"home", splash:false, au: AU0()}); if (msg) this.showToast(msg); }
+  auEnter(msg){ this.setState({screen:this.homeScreen(), splash:false, au: AU0()}); if (msg) this.showToast(msg); }
   auBack(){
     const v = this.state.au.view;
     if (v === "login" || v === "signup") return this.auGo("intro", {err:{}, tried:false});
@@ -401,7 +404,7 @@ export class LabLogic extends DCLogic {
       this.later(() => { const el = document.querySelector('[data-screen-label="SOS"] [role="alert"]'); if (el) el.scrollIntoView({block:"center"}); }, 60);
       return;
     }
-    this.setState(s => ({screen:"home", sos: Object.assign({}, s.sos, {view:"aviso", help:"", service:"", desc:"", consent:false, files:0, err:{}})}));
+    this.setState(s => ({screen:this.homeScreen(), sos: Object.assign({}, s.sos, {view:"aviso", help:"", service:"", desc:"", consent:false, files:0, err:{}})}));
     this.showToast("Caso enviado. Te escribiremos a " + o.email.trim() + ".");
   }
 
@@ -1124,7 +1127,7 @@ export class LabLogic extends DCLogic {
       delNextLabel: p.delStep === "aviso" ? "Continuar" : p.delStep === "motivo" ? "Continuar" : "Borrar mi cuenta",
       delCancel: () => this.pfGo("seguridad"),
       delKeep: () => { this.pfGo("seguridad"); this.showToast("Tu cuenta sigue activa."); },
-      delRestart: () => this.setState({screen:"home"})
+      delRestart: () => this.setState({screen:this.homeScreen()})
     };
   }
 
@@ -1249,14 +1252,14 @@ export class LabLogic extends DCLogic {
     const p = this.state.prev;
     if (!p) { this.go("home"); return; }
     const back = this.scoreOf(p);
-    this.setState({world:p, prev:null, screen:"home", delta:0});
+    this.setState({world:p, prev:null, screen:this.homeScreen(), delta:0});
     this.animateTo(back);
   }
 
   setScen(k){
     const s = SCEN[k];
     this.clearT();
-    this.setState({scen:k, world:null, prev:null, screen:"home", sessionDelta:0, sheet:null, read:[],
+    this.setState({scen:k, world:null, prev:null, screen:this.homeScreen(), sessionDelta:0, sheet:null, read:[],
       hu: Object.assign({}, this.state.hu, {view:"picker", kind:"email", value:"", consent:false, declara:false,
         err:null, otp:"", attempts:0, sel:0, leak:null, paso:null, fresh:false, taken:false,
         items: s.huItems ? s.huItems.slice() : [{kind:"email", value:"micorreo@empresa.com", added:"6 may 2026"}],
@@ -1289,12 +1292,12 @@ export class LabLogic extends DCLogic {
   famOpen(from){
     const role = this.famRole();
     const view = role === "none" ? "oferta" : role === "invited" ? "unirse" : "hub";
-    this.famGo(view, {from: from || "home", mid:null});
+    this.famGo(view, {from: from === "home" ? this.homeScreen() : from || "home", mid:null});
   }
   famLeaveTo(){
     const f = this.state.fam.from;
     if (f === "perfil") this.setState(s => ({screen:"perfil", sheet:null, fam: Object.assign({}, s.fam, {sheet:null}), pr: Object.assign({}, s.pr, {view:"hub"})}));
-    else this.setState(s => ({screen:"home", sheet:null, fam: Object.assign({}, s.fam, {sheet:null})}));
+    else this.setState(s => ({screen:this.homeScreen(), sheet:null, fam: Object.assign({}, s.fam, {sheet:null})}));
   }
   famBack(){
     const f = this.state.fam;
@@ -1373,7 +1376,7 @@ export class LabLogic extends DCLogic {
   }
   famApplyFlow(id, caso){
     const base = FAM0();
-    let st = {screen:"home", sheet:null, scen:"prem-amitad", world:null, prev:null, toast:null};
+    let st = {screen:this.homeScreen(), sheet:null, scen:"prem-amitad", world:null, prev:null, toast:null};
     let f = base;
     const an = (value, verdict) => Object.assign({}, this.state.an, {type:"enlace", view:"result", value, verdict, from:"home", legend:false, report:false, reviewed:null, used:1});
     const admin = p => Object.assign(f, {role:"admin"}, p || {});
@@ -1439,7 +1442,7 @@ export class LabLogic extends DCLogic {
   famLeaveGroup(toPremium){
     this.setState(s => Object.assign({sheet:null, scen:"free-aldia", world:null,
       fam: Object.assign({}, s.fam, {role:"none", left:true, view:"oferta", sheet:null, mem: Object.assign({}, s.fam.mem, {ending:false})})},
-      toPremium ? {screen:"perfil", pr: Object.assign({}, s.pr, {view:"plan", sel:"anual"})} : {screen:"home"}));
+    toPremium ? {screen:"perfil", pr: Object.assign({}, s.pr, {view:"plan", sel:"anual"})} : {screen:this.homeScreen()}));
     this.showToast(toPremium ? "Has salido del grupo. Elige tu plan Premium." : "Has salido de Familia Navarro. Tu cuenta es Basic.");
     this.later(() => document.querySelectorAll(".tp-scroll").forEach(el => { el.scrollTop = 0; }), 30);
   }
@@ -1694,7 +1697,7 @@ export class LabLogic extends DCLogic {
     } else if (k === "salir") {
       sv = Object.assign(sv, {title:"¿Salir de " + f.groupName + "?", isSalir:true,
         lines:[{t:"El cambio es inmediato: tu cuenta pasa a Basic ahora mismo."}, {t:adminShort + " deja de ver lo que compartes."}, {t:"Podrás contratar tu propio Premium cuando quieras."}],
-        confirm: () => { this.setState(st => ({screen:"home", fam: Object.assign({}, st.fam, {sheet:null, role:"none", view:"oferta"})})); this.showToast("Has salido del grupo. Tu cuenta es Basic."); }});
+        confirm: () => { this.setState(st => ({screen:this.homeScreen(), fam: Object.assign({}, st.fam, {sheet:null, role:"none", view:"oferta"})})); this.showToast("Has salido del grupo. Tu cuenta es Basic."); }});
     } else if (k === "ayuda") {
       const step = sh.step;
       const items = FAM_MY_ITEMS.map((it, i) => ({t:it.t, sub:it.sub, line: i ? "1px solid var(--color-border)" : "0",
@@ -1872,7 +1875,7 @@ export class LabLogic extends DCLogic {
   }
 
   ftAn0(){ return {type:"enlace", view:"welcome", value:"", verdict:"danger", used:0, seen:{}, dontShow:{},
-    legend:false, report:false, reportText:"", reportKind:"", reportErr:false, reviewed:null, plan:"anual", from:"home"}; }
+    legend:false, report:false, reportText:"", reportKind:"", reportErr:false, reviewed:null, plan:"anual", from:this.homeScreen()}; }
 
   // ===== Presets del Lab para los flujos de la app (A01–A36) =====
   appApplyFlow(id, caso, plan){
@@ -1994,6 +1997,7 @@ export class LabLogic extends DCLogic {
         if (caso === "compartir") st.shr = {title: (AL_ITEMS.find(x => x.id === "hirudo") || {}).title || ""};
         if (caso === "favoritos") st.al = Object.assign(st.al, {view:"list", tab:"favoritos", fav:{hirudo:true}, sel:null});
         break;
+      case "A39": st.scen = both("free-aldia", "prem-amitad"); st.screen = "home2"; break;
       default: return;
     }
     this.clearT();
@@ -2206,7 +2210,7 @@ export class LabLogic extends DCLogic {
   prontoOpen(what){ this.setState(s => ({screen:"pronto", sheet:null, dd:null, prontoWhat: what, prontoFrom: s.screen})); }
   prontoVals(){ const s = this.state;
     return {show: s.screen === "pronto", title:"Próximamente", what: s.prontoWhat || "Esta función",
-      back: () => this.setState({screen: s.prontoFrom || "home", sheet:null})}; }
+      back: () => this.go(s.prontoFrom || "home")}; }
 
   // ===== Compartir (hoja del sistema simulada) =====
   shrOpen(title){ this._shrTrigger = document.activeElement; this.setState({shr:{title}}); setTimeout(() => { const b = document.querySelector("[data-share] button"); if (b) b.focus(); }, 40); }
@@ -2239,6 +2243,11 @@ export class LabLogic extends DCLogic {
     this.labSet({plan:x});
     const k = this.scenKey(), want = x === "premium", isPrem = ((SCEN[k] || {}).plan === "premium");
     if (want === isPrem) return;
+    if (this.state.lab.cur === "A39") {
+      this.setState({scen: want ? "prem-amitad" : "free-aldia", world:null});
+      this.showToast(want ? "Ahora ves la app como usuario Premium." : "Ahora ves la app como usuario del plan gratuito.");
+      return;
+    }
     const map = {"free-recien":"prem-sinresolver", "free-limpio":"prem-aldia", "free-aldia":"prem-aldia", "free-dormido":"prem-dormido", "free-tope":"prem-aldia", "free-critico":"prem-sinresolver",
       "prem-sinresolver":"free-aldia", "prem-amitad":"free-aldia", "prem-aldia":"free-aldia", "prem-dormido":"free-dormido"};
     this.setState({scen: map[k] || (want ? "prem-aldia" : "free-aldia"), world:null});
@@ -2380,6 +2389,7 @@ export class LabLogic extends DCLogic {
 
   renderVals(){
     const s = this.state;
+    const isHomeRoot = s.screen === "home" || s.screen === "home2";
     const w = this.world();
     const prem = w.plan === "premium";
     const p = this.parts(w);
@@ -2387,6 +2397,33 @@ export class LabLogic extends DCLogic {
     const level = this.levelOf(score);
     const ringColor = level === "green" ? "var(--color-positive)" : level === "amber" ? AMBER : "var(--color-destructive)";
     const pending = this.pending(w);
+    const homeGroups = [{title:"Seguridad digital", hasTitle:true, titleMargin:"12px 0 0", cards:[
+        {title:"Analizador de enlaces", body:"Webs, emails o mensajes analizados para decidir mejor", img:"/assets/current/884b6c89689c7abf963c0226d11273f9.png", isNew:false, open:() => this.anOpen("enlace")},
+        {title:"Mi huella", body:"Te avisamos si tu email o tu nombre aparecen en filtraciones", img:"/assets/current/b1cef0bc1fa518596962685b084e28c5.png", isNew:true, open:() => this.go("huella")},
+        {title:"Chat con MarIA", body:"Preguntas, dudas o sospechas aclaradas con criterio experto", img:"/assets/current/a1e93b2da05e5d16c7750a07e3daf956.png", isNew:false, open:() => this.go("maria")},
+        {title:"Escáner de QRs", body:"Detectamos trampas ocultas tras cualquier código escaneado", img:"/assets/current/0c8ee5bd41fe0619ee1aa08b05ca324c.png", isNew:false, open:() => this.anOpen("qr")},
+        {title:"Alertas", body:"Avisos en tiempo real ante fraudes activos recientes en tu entorno", img:"/assets/current/199ed66c1694aa3b0b85113292605ae3.png", isNew:false, open:() => this.setState(st => ({screen:"alinfo", sheet:null, al: Object.assign({}, st.al, {view:"list"})}))}]},
+        {title:"Comunidad y recursos", hasTitle:true, titleMargin:"12px 0 0", cards:[
+        {title:"¿Cómo se usa?", body:"Aprende a usar BeValk de la mejor manera posible", img:"/assets/current/5e27af880bafc3844b2a92b0e936936e.png", isNew:false, open:() => this.go("guia")}]},
+        {title:"Asistencia y protección", hasTitle:true, titleMargin:"12px 0 0", cards:[
+        {title:"Soporte técnico", body:"Si algo falla o no lo ves claro, lo revisamos contigo y te damos una solución", img:"/assets/current/0beb1826d93ed4cd84248c2e12b6e47e.png", isNew:false, open:() => this.setState(st => ({screen:"soporte", sheet:null, sop: Object.assign({}, st.sop, {err:{}})}))}]}
+      ];
+    const famHome = this.famHomeVals();
+    const homeTools = homeGroups.flatMap(group => group.cards).map(card => ({
+      label: card.title === "¿Cómo se usa?" ? "¿Cómo se usa BeValk?" : card.title,
+      icon: ({"Analizador de enlaces":"link", "Mi huella":"fingerprint", "Chat con MarIA":"message-circle-more",
+        "Escáner de QRs":"qr-code", "Alertas":"bell-ring", "¿Cómo se usa?":"circle-help", "Soporte técnico":"headset"})[card.title],
+      isNew:false, open:card.open
+    }));
+    const familyTile = {label:"Mi Familia", icon:"users-round", isNew:true,
+      open:() => famHome.isDiscover ? famHome.discoverGo() : famHome.open()};
+    homeTools.splice(5, 0, familyTile);
+    const home2Step = this.allSteps().find(step => w.done.indexOf(step.id) < 0);
+    const home2Owner = home2Step ? this.stepOwner(home2Step.id) : null;
+    const home2Target = home2Step ? Object.entries(HU_LEAKS)
+      .flatMap(([kind, leaks]) => leaks.map(leak => ({kind, leak})))
+      .find(item => item.leak.steps.some(step => step.id === home2Step.id)) : null;
+
     const nOpen = pending.filter(x => x.kind === "step" || x.kind === "base" || x.kind === "vig").length;
 
     let title, subtitle;
@@ -2587,7 +2624,7 @@ export class LabLogic extends DCLogic {
     const scanFresh2 = w.nuevo || (w.act.scan !== undefined && w.act.scan <= 30);
 
     const tabDef = [
-      {id:"home", label:"Inicio", icon:"house", screens:["home","desglose","acciones","pasos","hitos","alertas","escaner","analizador","guia","soporte","alinfo","aprende","auto","aviso","pronto"]},
+       {id:"home", label:"Inicio", icon:"house", screens:["home","home2","desglose","acciones","pasos","hitos","alertas","escaner","analizador","guia","soporte","alinfo","aprende","auto","aviso","pronto"]},
       {id:"sos", label:"SOS", icon:"shield-alert", screens:["sos","plan"]},
       {id:"huella", label:"Mi huella", icon:"fingerprint", screens:["huella","huflow","borrar"]},
       {id:"maria", label:"MarIA", icon:"message-circle-more", screens:["maria"]},
@@ -2619,7 +2656,7 @@ export class LabLogic extends DCLogic {
          body:"Se borran tus datos, tu historial con MarIA y los datos que vigilamos. No se puede deshacer.",
          hasList:false, list:[], hasPrimary:false, primaryLabel:"", primary:() => {},
          hasDanger:true, dangerLabel:"Eliminar cuenta",
-         danger:() => { this.setState(st => ({sheet:null, screen:"home", pr: Object.assign({}, st.pr, {view:"hub", del:{reason:"", err:false}})})); this.showToast("Tu cuenta se ha eliminado."); },
+          danger:() => { this.setState(st => ({sheet:null, screen:this.homeScreen(), pr: Object.assign({}, st.pr, {view:"hub", del:{reason:"", err:false}})})); this.showToast("Tu cuenta se ha eliminado."); },
          closeLabel:"Cancelar", close:() => this.setState({sheet:null})}
       : sheetKind === "pr-cancel"
       ? {visible:true, title:"¿Cancelar tu suscripción?",
@@ -2773,7 +2810,7 @@ export class LabLogic extends DCLogic {
           send: () => {
             const err = {asunto: !o.asunto, desc: !(o.desc || "").trim(), email: !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test((o.email || "").trim())};
             if (err.asunto || err.desc || err.email) { set({err}); this.say("Revisa los campos marcados."); return; }
-            this.setState(st => ({screen:"home", sop: Object.assign({}, st.sop, {asunto:"", desc:"", err:{}})}));
+             this.setState(st => ({screen:this.homeScreen(), sop: Object.assign({}, st.sop, {asunto:"", desc:"", err:{}})}));
             this.showToast("Solicitud enviada. Te responderemos en " + o.email.trim() + ".");
           }
         };
@@ -3021,8 +3058,8 @@ export class LabLogic extends DCLogic {
         errConsent: !!soErr.consent,
         send: () => this.sosSend()
       },
-      isHome: s.screen === "home",
-      isFamilia: s.screen === "familia", fam: this.famVals(), famHome: this.famHomeVals(), famPlan: this.famPlanVals(), lab: this.labVals(), ft: this.ftVals(), dd: this.ddVals(), pronto: this.prontoVals(), shr: this.shrVals(),
+       isHome: s.screen === "home", isHome2: s.screen === "home2",
+       isFamilia: s.screen === "familia", fam: this.famVals(), famHome, famPlan: this.famPlanVals(), lab: this.labVals(), ft: this.ftVals(), dd: this.ddVals(), pronto: this.prontoVals(), shr: this.shrVals(),
       
       famAn: (() => { const show = this.famRole() === "member" && s.screen === "analizador" && s.an.view === "result";
         let host = String(s.an.value || ""); try { host = new URL(/^https?:/.test(host) ? host : "https://" + host).hostname.replace(/^www\./, ""); } catch (e) {}
@@ -3030,17 +3067,22 @@ export class LabLogic extends DCLogic {
         return {show, label:"Pedir ayuda a Lucía con esto", nudge, nudgeOpen: () => this.famOpen("home"),
           open: () => this.famSheet({kind:"ayuda", step:"form", obj:{kind:"link", t: host, v: s.an.verdict}, motive:null})}; })(),
       homeTitle: prem ? "BeValk Premium" : "BeValk",
-      homeGroups: [{title:"Seguridad digital", hasTitle:true, titleMargin:"12px 0 0", cards:[
-        {title:"Analizador de enlaces", body:"Webs, emails o mensajes analizados para decidir mejor", img:"/assets/current/884b6c89689c7abf963c0226d11273f9.png", isNew:false, open:() => this.anOpen("enlace")},
-        {title:"Mi huella", body:"Te avisamos si tu email o tu nombre aparecen en filtraciones", img:"/assets/current/b1cef0bc1fa518596962685b084e28c5.png", isNew:true, open:() => this.go("huella")},
-        {title:"Chat con MarIA", body:"Preguntas, dudas o sospechas aclaradas con criterio experto", img:"/assets/current/a1e93b2da05e5d16c7750a07e3daf956.png", isNew:false, open:() => this.go("maria")},
-        {title:"Escáner de QRs", body:"Detectamos trampas ocultas tras cualquier código escaneado", img:"/assets/current/0c8ee5bd41fe0619ee1aa08b05ca324c.png", isNew:false, open:() => this.anOpen("qr")},
-        {title:"Alertas", body:"Avisos en tiempo real ante fraudes activos recientes en tu entorno", img:"/assets/current/199ed66c1694aa3b0b85113292605ae3.png", isNew:false, open:() => this.setState(st => ({screen:"alinfo", sheet:null, al: Object.assign({}, st.al, {view:"list"})}))}]},
-        {title:"Comunidad y recursos", hasTitle:true, titleMargin:"12px 0 0", cards:[
-        {title:"¿Cómo se usa?", body:"Aprende a usar BeValk de la mejor manera posible", img:"/assets/current/5e27af880bafc3844b2a92b0e936936e.png", isNew:false, open:() => this.go("guia")}]},
-        {title:"Asistencia y protección", hasTitle:true, titleMargin:"12px 0 0", cards:[
-        {title:"Soporte técnico", body:"Si algo falla o no lo ves claro, lo revisamos contigo y te damos una solución", img:"/assets/current/0beb1826d93ed4cd84248c2e12b6e47e.png", isNew:false, open:() => this.setState(st => ({screen:"soporte", sheet:null, sop: Object.assign({}, st.sop, {err:{}})}))}]}
-      ],
+      homeGroups,
+       home2: {
+         hasPending: !!home2Step,
+         taskTitle: home2Step ? home2Step.title : "",
+         taskMeta: home2Step && home2Owner ? home2Owner.label + " · " + home2Step.time : "",
+         openTask: () => {
+           if (!home2Step || !home2Target) return;
+           if (!prem) return this.go("paywall");
+           const items = s.hu.items || [];
+           const itemIndex = items.findIndex(item => item.kind === home2Target.kind);
+           this.huGo("paso", {kind:home2Target.kind, sel:itemIndex < 0 ? 0 : itemIndex,
+             leak:home2Target.leak.id, paso:home2Step.id, fresh:false});
+         },
+         verTodo: () => this.go("huella"),
+         tools:homeTools
+       },
       isDesglose: s.screen === "desglose",
       isAcciones: s.screen === "acciones",
       isPasos: s.screen === "pasos",
@@ -3368,10 +3410,10 @@ export class LabLogic extends DCLogic {
       sheet,
 
       liveMsg: s.live || "",
-      offline: this.off() && !(s.screen === "home" && s.offHidden),
-      offlineCanClose: s.screen === "home",
+      offline: this.off() && !(isHomeRoot && s.offHidden),
+      offlineCanClose: isHomeRoot,
       offlineClose: () => { this.setState({offHidden:true}); this.showToast("Aviso cerrado. Si algo necesita conexión, te lo diremos allí.", {label:"Deshacer", fn: () => this.setState({offHidden:false})}); },
-      offlineNote: s.screen === "home"
+      offlineNote: isHomeRoot
         ? "Te enseñamos lo último que comprobamos, el " + w.checked.replace("Revisado ", "") + ". No podemos mirar nada nuevo hasta que vuelvas a tener red."
         : "No podemos comprobar nada nuevo hasta que vuelvas a tener red.",
       offlineRetry: () => { this.setState({offline:false, offHidden:false}); this.showToast("Ya hay conexión. Volvemos a mirar tus datos."); },
@@ -3430,7 +3472,7 @@ export class LabLogic extends DCLogic {
           ctaCursor: o.step === 3 && !o.done ? "not-allowed" : "pointer",
           next: () => this.wbNext(),
           hasSkip: o.step < 3,
-          skip: () => { this.setState({obDone:true, screen:"home"}); this.animateTo(this.scoreOf(this.world())); }
+           skip: () => { this.setState({obDone:true, screen:this.homeScreen()}); this.animateTo(this.scoreOf(this.world())); }
         };
       })(),
       scoreAria: "Tu protección: " + score + " de 100. " + title + ".",
@@ -3521,7 +3563,7 @@ export class LabLogic extends DCLogic {
       activarPremium: () => {
         const nw = JSON.parse(JSON.stringify(this.world()));
         nw.plan = "premium"; nw.vig = {vemail:1, vname:1, vemail2:1}; nw.alertsLeft = 99;
-        this.setState({world:nw, screen:"home", shown:0});
+         this.setState({world:nw, screen:this.homeScreen(), shown:0});
         this.animateTo(this.scoreOf(nw));
       },
       closePaywall: () => this.go("home"),

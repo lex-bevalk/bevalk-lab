@@ -38,8 +38,8 @@ afterEach(() => {
 });
 
 describe('lógica extraída de Current', () => {
-  it('monta y renderiza los 62 flujos al abrirlos', () => {
-    expect(LAB_ALL_FLOWS).toHaveLength(62);
+  it('monta y renderiza los 63 flujos al abrirlos', () => {
+    expect(LAB_ALL_FLOWS).toHaveLength(63);
     for (const flow of LAB_ALL_FLOWS) {
       const logic = setupLogic();
       expect(() => {
