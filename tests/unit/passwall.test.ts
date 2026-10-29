@@ -8,7 +8,7 @@ import {
   RATE_LIMIT_WINDOW_MS
 } from '../../server/rate-limit';
 import { createNeonRateLimitStore, type NeonSqlClient } from '../../server/neon-rate-limit';
-import { SESSION_MAX_AGE_SECONDS, verifySession, signSession } from '../../server/session';
+import { SESSION_MAX_AGE_SECONDS, sessionCookie, verifySession, signSession } from '../../server/session';
 
 const SESSION_SECRET = 'a-test-only-session-secret-with-enough-entropy';
 const LOGIN_ENV = {
@@ -65,6 +65,18 @@ describe('passwall session', () => {
     await expect(verifySession(token, SESSION_SECRET, now + (SESSION_MAX_AGE_SECONDS + 1) * 1000)).resolves.toBeNull();
     await expect(verifySession(token, `${SESSION_SECRET}-rotated`, now)).resolves.toBeNull();
   });
+
+  it('accepts the root-scoped session cookie on a same-origin prerender GET', async () => {
+    const now = Date.UTC(2026, 9, 29, 12);
+    const token = await signSession('team', SESSION_SECRET, now);
+    const cookie = sessionCookie(token).split(';', 1)[0];
+    const request = new Request('https://bevalk.test/concept/review', { headers: { cookie } });
+    const requestCookie = request.headers.get('cookie')?.match(/(?:^|;\s*)bvl_session=([^;]+)/)?.[1];
+
+    await expect(verifySession(requestCookie, SESSION_SECRET, now)).resolves.toMatchObject({ role: 'team' });
+    expect(classifyRequest(request.method, new URL(request.url).pathname, true)).toBe('next');
+    expect(sessionCookie(token)).toContain('SameSite=Lax; Path=/');
+  });
 });
 
 describe('passwall redirects and public resources', () => {
@@ -97,6 +109,7 @@ describe('passwall redirects and public resources', () => {
     expect(classifyRequest('GET', '/assets/index-Abc123.js', false)).toBe('login-redirect');
     expect(classifyRequest('GET', '/api/x', false)).toBe('unauthorized-api');
     expect(classifyRequest('GET', '/', true)).toBe('next');
+    expect(classifyRequest('GET', '/concept/review', true)).toBe('next');
   });
 });
 

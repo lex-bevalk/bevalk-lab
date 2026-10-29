@@ -61,6 +61,7 @@ async function snapshot(page) {
     for (const selector of selectors) {
       const element = document.querySelector(selector);
       const controls = [...(element?.querySelectorAll('button,a,input,select,textarea,[role="button"],[role="tab"],[role="radio"],[role="checkbox"]') || [])]
+        .filter(control => !control.closest('.proto-switch'))
         .filter(isVisible)
         .map(control => ({
           tag: control.tagName.toLowerCase(),
@@ -72,8 +73,16 @@ async function snapshot(page) {
           href: control.getAttribute('href'),
           type: control.getAttribute('type')
         }));
+      const switchers = [...(element?.querySelectorAll('.proto-switch') || [])];
+      const switcherStyles = switchers.map(switcher => [switcher, switcher.getAttribute('style')]);
+      switchers.forEach(switcher => { switcher.style.display = 'none'; });
+      const areaText = normalize(element?.innerText || '');
+      switcherStyles.forEach(([switcher, style]) => {
+        if (style === null) switcher.removeAttribute('style');
+        else switcher.setAttribute('style', style);
+      });
       areas[selector] = {
-        text: normalize(element?.innerText || ''),
+        text: areaText,
         buttons: controls.filter(control => control.tag === 'button' || control.aria['role'] === 'button').length,
         links: controls.filter(control => control.tag === 'a').length,
         controls

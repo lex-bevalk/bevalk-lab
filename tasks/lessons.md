@@ -24,3 +24,6 @@
 - La paridad de navegador se corre contra `vite preview`. Si 4173 está ocupado, usa otro puerto y ajusta `LAB_URL`; para Current fija también `REF_URL` y `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` al Chrome local.
 - Vite deduplica las fuentes Guton idénticas: Current debe usar el nombre compartido `Guton-SemiBold.woff2`. Comprueba `npm run build && npm run check-login-assets` y `npm run e2e:current:parity`.
 - Un agente que edita documentos de historial puede reescribirlos: revisar `git diff --stat` de `tasks/lessons.md` y `tasks/todo.md` antes del commit (solo deben crecer).
+- Antes de aceptar la regeneración de un conversor, comparar el generado contra `main` ignorando ids de plantilla y ejecutar `e2e:family-layout`.
+
+- G7: Para servir la plantilla familiar como referencia usa `node tools/serve-reference.cjs 8765 design/familia/Main.dc.html`; `npm run serve:reference` apunta a la referencia anterior. Si Playwright no encuentra Chromium, fija `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` al Chrome local. Los gates Concept deben considerar que App/Mi Familia filtra la lista y que los objetivos nuevos de la navegación afectan a la secuencia de foco.

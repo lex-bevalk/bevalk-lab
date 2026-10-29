@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     modulePreload: { polyfill: false },
-    // Chunk mayor medido en las entradas Concept/Current: 1274.10 kB.
-    chunkSizeWarningLimit: 1275,
+    // Chunk mayor observado en las entradas Concept/Current: 1275.49 kB.
+    chunkSizeWarningLimit: 1276,
     rollupOptions: {
       external: id => id.includes('app-background.png'),
       input: {

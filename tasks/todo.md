@@ -1,6 +1,6 @@
 # Porte BeValk Product Experience Lab · plan
 
-Spec inicial: retirada en v2.0.0 (ver historial de git). Rama de trabajo actual: `feat/proto-selector`. No hacer commit ni push sin OK.
+Spec inicial: retirada en v2.0.0 (ver historial de git). Sin rama de trabajo abierta (v2.0.0 en `main`). No hacer commit ni push sin OK.
 Roles: Claude orquesta, revisa y verifica · Codex escribe todo el código de producto y de pruebas · el usuario aprueba merges y todo lo de Vercel.
 
 ## Fase 0 · Inventario (26 oct 2026) · HECHA
@@ -251,3 +251,22 @@ Rama `feat/mi-familia-flujos`. Spec Codex archivada: `tasks/archive/codex-f12.md
 |---|---|---|---|---|
 | Current | `design/current/current.html` | `npm run extract:current && npm run convert:current` | `npm run e2e:current:parity`, `npm run e2e:current:geometry` | `npm run guard:proto -- current` |
 | Concept | `handoff/reference/project/Main.dc.html` + `design/familia/Main.dc.html` | `node tools/extract-data.mjs && node tools/extract-logic.mjs && node tools/copy-assets.mjs && node tools/copy-odin.mjs && npm run convert-template` | `npm run e2e:baseline`, `npm run visual:smoke` | `npm run guard:proto -- concept` |
+
+## Resultado v2.0.0 (29 oct 2026) · CERRADA
+- PR #15 (merge e767dc8): Current en `/` y `/review`, Concept en `/concept` y `/concept/review`, selector de prototipo,
+  comentarios separados por prototipo (columna `proto`) y guardia por rutas. 5 commits, uno por tier.
+- CI de la PR #15 (run 40799373262): verde en 10 min 34 s. Paridad de Current 149/149; humo visual de Concept 50/50 a 0 %.
+- Producción: despliegue de Vercel Ready (bevalk-6ek0893d0, lex-4275). Sin sesión, `/`, `/review`, `/concept`,
+  `/concept/review`, `/comments`, `/changelog` y los `.html` directos → 302 a login; `/api/comments` → 401; `/login` → 200.
+- Sin verificar por Claude (requiere sesión): contenido servido tras el login y la migración `proto` en Neon, que se ejecuta
+  con la primera petición a `/api/comments`. Lo valida el usuario.
+
+- Deriva en Concept: regenerar desde `design/familia/Main.dc.html` pisa contenido de v1.6.0 (inicio, mi-familia, perfil, perfil-flujo, analizador, live-preview). No ejecutar `convert-template` hasta reconciliar la plantilla.
+
+
+## Resultado G7 (29 oct 2026) · COMPLETADA
+- Nav Concept alineada con Current; medidas comparadas en `e2e:proto-switch` con diferencias 0 px a 1440×900. Pestañas App/Mi Familia filtran 21/36 flujos; búsqueda global encuentra ambas secciones.
+- `--only=navigation,css` quedó idempotente y solo tocó sus salidas; comparación normalizada de 30 archivos frente a `main`: 0 diferencias en pantallas v1.6.0, `live-preview.tsx` y `drawer.tsx`.
+- Cambio entre prototipos: view transition de 160 ms con `prefers-reduced-motion`, reglas prerender moderadas en las cuatro entradas; testea destinos y passwall con cookie `SameSite=Lax`. La inspección de Review confirma solo GET automático.
+- Gates: tsc, build sin avisos, 207/207 unitarios, check-login-assets, check-middleware-esm, Current parity 149/149, geometry 30/30, family-layout 36/36, baseline 43/43, invariants 17/17, sweep 0 errores, a11y sin violaciones, focus Current idéntico y Concept conserva la secuencia compartida con 25 objetivos adicionales, select 5/5, review y proto-switch (161 checks) verdes.
+- Sin commit ni push.

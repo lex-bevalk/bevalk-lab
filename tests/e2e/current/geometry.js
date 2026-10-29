@@ -44,7 +44,7 @@ async function boxes(page) {
 async function lastFlowCoverage(page) {
   return page.evaluate(async () => {
     const nav = document.querySelector('nav.lab-col');
-    const selector = document.querySelector('#proto-root .proto-switch');
+    const selector = document.querySelector('nav.lab-col .proto-switch');
     const items = [...(nav?.querySelectorAll('button.lab-item') || [])].filter(element => {
       const style = getComputedStyle(element);
       return style.display !== 'none' && style.visibility !== 'hidden';
@@ -89,8 +89,9 @@ function delta(expected, actual) {
       reference.waitForFunction(() => !!document.querySelector('.lab') && !!document.querySelector('.tp-phone'), null, { timeout: 30000 }),
       app.waitForFunction(() => !!window.__lab?.labOpen && !!document.querySelector('.lab'), null, { timeout: 30000 })
     ]);
-    const reservationStyle = await reference.addStyleTag({ content: 'html[data-geometry-reservation="true"] nav.lab-col{padding-bottom:56px!important}' });
-
+    const reservationStyle = await reference.addStyleTag({
+      content: '@media (max-width:760px){html[data-geometry-reservation="true"] nav.lab-col{padding-bottom:68px!important}}'
+    });
     const results = [];
     const flowCoverage = [];
     for (const width of widths) {
@@ -126,7 +127,7 @@ function delta(expected, actual) {
       widths,
       selectors,
       tolerancePx: 1,
-      normalizedAgainst: 'Referencia Current con la misma reserva de 56 px para el selector del prototipo.',
+      normalizedAgainst: 'Referencia Current con un slot de 52 px para el selector integrado en el nav, solo en el layout apilado.',
       compared: results.length,
       passed: results.length - failed.length,
       rawReferenceMismatches: results.filter(result => result.rawDelta && Object.values(result.rawDelta).some(value => Math.abs(value) > 1)).length,
@@ -136,7 +137,7 @@ function delta(expected, actual) {
     const output = path.resolve('tests/e2e/results/current-geometry.json');
     await fs.mkdir(path.dirname(output), { recursive: true });
     await fs.writeFile(output, JSON.stringify(report, null, 2));
-    console.log(`CURRENT GEOMETRY · ${report.passed}/${report.compared} cajas dentro de ±1 px · ${report.rawReferenceMismatches} cajas difieren en bruto por la reserva del selector`);
+    console.log(`CURRENT GEOMETRY · ${report.passed}/${report.compared} cajas dentro de ±1 px · ${report.rawReferenceMismatches} cajas cambian en bruto por los 52 px del selector`);
     console.log(`Último flujo fuera del selector: ${flowCoverage.filter(item => item.pass).length}/${flowCoverage.length} anchos`);
     console.log(`Informe: ${output}`);
     for (const result of failed) console.log(`FAIL ${result.width}px ${result.selector}: ${JSON.stringify(result.delta || { expected: result.expected, actual: result.actual })}`);

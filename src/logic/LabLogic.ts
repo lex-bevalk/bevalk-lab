@@ -34,7 +34,7 @@ export class LabLogic extends DCLogic {
       pA:"", pB:"", pC:"", passErr:null,
       topic:"otros", msg:"", msgErr:null,
       delStep:"aviso", delReason:"", delOther:"", delConfirm:""},
-    lab:{view:"welcome", case:null, reached:{}, armed:{}, prepping:false, snap:null, notice:null, q:"", tab:"info", pv:"closed", loose:null},
+    lab:{view:"welcome", case:null, reached:{}, armed:{}, prepping:false, snap:null, notice:null, q:"", sec:"app", tab:"info", pv:"closed", loose:null},
     labPlan:null, simPlan:null, labFail:null, netBlock:null, labScale:1};
   timers = [];
 
@@ -167,6 +167,10 @@ export class LabLogic extends DCLogic {
     const w = this.world(), plan = w.plan;
     const norm = t => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const q = norm(L.q || "").trim();
+    const section = L.sec === "family" ? "family" : "app";
+    const isFamilyFlow = fl => /^Mi Familia(?:\s|$)/.test(String(fl.group || ""));
+    const appFlowCount = FLOWS.filter(fl => !isFamilyFlow(fl)).length;
+    const familyFlowCount = FLOWS.length - appFlowCount;
     const allowed = f ? this.labAllowed(f) : ["free", "premium"];
     const pin = allowed.length === 1;
     const sevOf = k => LAB_SEV[k] || LAB_SEV.low;
@@ -175,6 +179,7 @@ export class LabLogic extends DCLogic {
     /* ---- navegación ---- */
     const groups = [];
     FLOWS.forEach((fl, i) => {
+      if (!q && (section === "family") !== isFamilyFlow(fl)) return;
       const dd = LAB[fl.id] || {};
       const hay = norm([fl.label, fl.sub, fl.group, dd.desc, dd.role, dd.stage].join(" "));
       if (q && hay.indexOf(q) < 0) return;
@@ -194,7 +199,14 @@ export class LabLogic extends DCLogic {
     const nav = {
       count: FLOWS.length + " flujos · " + FLOWS.reduce((a, x) => a.indexOf(x.group) < 0 ? a.concat([x.group]) : a, []).length + " grupos",
       q: L.q || "", hasQ: !!(L.q || ""), setQ: e => this.labLabSet({q: e.target.value}), clearQ: () => this.labLabSet({q:""}),
+      secs: [["app", "App", appFlowCount], ["family", "Mi Familia", familyFlowCount]].map(([key, label, count]) => {
+        const on = section === key && !q;
+        return {t:label, n:String(count), on:on ? "true" : "false", bg:on ? "#FFFFFF" : "transparent",
+          shadow:on ? "0 1px 2px rgba(22,18,31,.12)" : "none", fg:on ? "#4900AC" : "#4B4658",
+          pick:() => this.labLabSet({sec:key, q:""})};
+      }),
       groups, empty: groups.length === 0,
+      planHelp: "Algunos cambios de plan reinician el flujo o el caso.",
       plans: ["free", "premium"].map(k => {
         const on = plan === k, dis = allowed.indexOf(k) < 0;
         return {label: LAB_PLAN_NAME[k], icon: k === "premium" ? "crown" : "shield", on: on ? "true" : "false", disabled: dis ? "true" : "false",

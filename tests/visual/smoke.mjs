@@ -98,7 +98,7 @@ async function captureSite(url, outDir) {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(url, { waitUntil: 'load' });
   await page.addStyleTag({ content: `*,*::before,*::after{animation:none!important;animation-duration:0s!important;animation-delay:0s!important;transition:none!important;transition-duration:0s!important;transition-delay:0s!important;scroll-behavior:auto!important;caret-color:transparent!important}` });
-  await page.addStyleTag({ content: '#proto-root{visibility:hidden!important}' });
+  await page.addStyleTag({ content: '.proto-switch{visibility:hidden!important}' });
   await page.evaluate(() => Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 15000))]));
   await page.waitForFunction(() => document.querySelector('.lab') && (window.__lab || [...Object.keys(document.querySelector('.tp-phone') || {})].some(key => key.startsWith('__reactFiber'))));
   const logic = expression => page.evaluate(`(()=>{${getLogic}const c=getC();if(!c)throw new Error('No se encontró la lógica del Lab');${expression}})()`);
@@ -141,7 +141,7 @@ async function captureSite(url, outDir) {
     for (const [id, target] of Object.entries(dropdowns)) {
       await page.goto(url, { waitUntil: 'load' });
       await page.addStyleTag({ content: `*,*::before,*::after{animation:none!important;animation-duration:0s!important;animation-delay:0s!important;transition:none!important;transition-duration:0s!important;transition-delay:0s!important;scroll-behavior:auto!important;caret-color:transparent!important}` });
-      await page.addStyleTag({ content: '#proto-root{visibility:hidden!important}' });
+      await page.addStyleTag({ content: '.proto-switch{visibility:hidden!important}' });
       await page.evaluate(() => Promise.race([document.fonts.ready, new Promise(resolve => setTimeout(resolve, 15000))]));
       await page.waitForFunction(() => window.__lab);
       await logic(`${target.setup}c.labLabSet({tab:'phone',pv:'closed',case:null,view:'flow'});`);

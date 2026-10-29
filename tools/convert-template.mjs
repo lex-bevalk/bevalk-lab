@@ -5,7 +5,18 @@ import { chromium } from 'playwright';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outputRoot = path.join(root, 'src', 'ui', 'generated');
-const referenceUrl = process.argv[2] || 'http://127.0.0.1:8765/project/Main.dc.html';
+const args = process.argv.slice(2);
+const onlyArg = args.find(argument => argument.startsWith('--only='));
+const onlyOutputs = onlyArg
+  ? new Set(onlyArg.slice('--only='.length).split(',').map(output => output.trim()).filter(Boolean))
+  : null;
+const allowedOutputs = new Set([
+  'root', 'runtime', 'navigation', 'tabs', 'cover', 'flow', 'live-preview', 'drawer', 'screens', 'icon', 'css',
+]);
+if (onlyOutputs && (!onlyOutputs.size || [...onlyOutputs].some(output => !allowedOutputs.has(output)))) {
+  throw new Error('Salidas no válidas para --only: ' + (onlyArg.slice('--only='.length) || '(vacío)') + '. Válidas: ' + [...allowedOutputs].join(', ') + '.');
+}
+const referenceUrl = args.find(argument => !argument.startsWith('--')) || 'http://127.0.0.1:8765/project/Main.dc.html';
 const launchOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
   ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
   : {};
@@ -96,6 +107,33 @@ if (![tabsNode, navigationNode, coverNode, flowNode, livePreviewNode, drawerNode
   throw new Error('La estructura del Lab cambió: faltan una o más secciones esperadas.');
 }
 
+function injectProtoSwitch(navigation, title) {
+  const hasText = (node, value) => node.type === 'text'
+    ? node.value.trim() === value
+    : (node.children || []).some(child => hasText(child, value));
+  const anchors = [];
+  walk(navigation, node => {
+    const style = attr(node, 'style') || '';
+    if (node.type === 'element' && node.tag === 'div'
+      && /display\s*:\s*flex/.test(style) && /align-items\s*:\s*center/.test(style)
+      && hasText(node, title) && hasText(node, '{{ lab.nav.count }}')) anchors.push(node);
+  });
+  if (anchors.length !== 1) {
+    throw new Error('Anclaje de ProtoSwitch ambiguo en Concept: se esperaba una fila única con «' + title + '» y «{{ lab.nav.count }}»; se encontraron ' + anchors.length + '.');
+  }
+  const anchor = anchors[0];
+  const parents = [];
+  walk(navigation, node => {
+    if ((node.children || []).includes(anchor)) parents.push(node);
+  });
+  if (parents.length !== 1) throw new Error('Anclaje de ProtoSwitch ambiguo en Concept: la fila de cabecera tiene ' + parents.length + ' padres.');
+  const parent = parents[0];
+  const index = parent.children.indexOf(anchor);
+  if (index < 0) throw new Error('No se pudo insertar ProtoSwitch después de la fila de cabecera en Concept.');
+  parent.children.splice(index + 1, 0, { type: 'element', tag: 'proto-switch-slot', attributes: [], children: [] });
+}
+injectProtoSwitch(navigationNode, 'BeValk Lab');
+
 const labelGroups = new Map();
 for (const node of nodes) {
   const label = attr(node, 'data-screen-label');
@@ -126,6 +164,45 @@ function replaceAssets(node) {
 }
 replaceAssets(template.root);
 template.globalCss = replaceBlobUrls(template.globalCss);
+
+function setCssDeclaration(rule, name, value) {
+  const open = rule.indexOf('{');
+  const declarations = rule.slice(open + 1, -1).split(';').map(item => item.trim()).filter(Boolean);
+  const matches = declarations.flatMap((item, index) => item.slice(0, item.indexOf(':')).trim() === name ? [index] : []);
+  if (matches.length !== 1) throw new Error('Geometría de Concept: se esperaba una declaración ' + name + ' y se encontraron ' + matches.length + '.');
+  declarations[matches[0]] = name + ':' + value;
+  return rule.slice(0, open + 1) + declarations.join(';') + '}';
+}
+
+const baseLabRules = [...template.globalCss.matchAll(/\.lab\{[^}]*\}/g)]
+  .map(match => match[0])
+  .filter(rule => rule.includes('height:100vh;') && rule.includes('grid-template-columns:'));
+if (baseLabRules.length !== 1) {
+  throw new Error('Geometría de Concept: no se encontró una regla base única de .lab para alinear con design/current/current.html.');
+}
+let baseLabRule = baseLabRules[0];
+for (const [name, value] of [
+  ['padding', '16px'],
+  ['gap', '16px'],
+  ['grid-template-columns', '300px minmax(0,1fr) 470px'],
+]) {
+  baseLabRule = setCssDeclaration(baseLabRule, name, value);
+}
+template.globalCss = template.globalCss.replace(baseLabRules[0], '/* Geometría de Current, design/current/current.html. */\n' + baseLabRule + '\n@media (min-width:900px){.lab{min-height:892px}}');
+
+const compactBreakpoints = [...template.globalCss.matchAll(/@media\s*\(max-width:\s*(?:1279|1180)px\)/g)];
+if (compactBreakpoints.length !== 1) {
+  throw new Error('Geometría de Concept: se esperaba un breakpoint compacto de 1279 o 1180 px y se encontraron ' + compactBreakpoints.length + '.');
+}
+template.globalCss = template.globalCss.replace(compactBreakpoints[0][0], '@media (max-width:1180px)');
+const compactLabRules = [...template.globalCss.matchAll(/\.lab\{[^}]*\}/g)]
+  .map(match => match[0])
+  .filter(rule => rule.includes('grid-template-columns:minmax(232px,28fr) minmax(0,72fr)')
+    || rule.includes('grid-template-columns:280px minmax(0,1fr)'));
+if (compactLabRules.length !== 1) {
+  throw new Error('Geometría de Concept: se esperaba una pista compacta única antigua o de 280 px para alinear con Current.');
+}
+template.globalCss = template.globalCss.replace(compactLabRules[0], setCssDeclaration(compactLabRules[0], 'grid-template-columns', '280px minmax(0,1fr)'));
 
 const pseudoNames = new Map();
 for (const node of nodes) {
@@ -233,6 +310,8 @@ for (const node of nodes) {
   const name = attr(node, 'data-icon');
   if (name && !name.includes('{{')) iconNames.add(name);
 }
+const familyTemplateSource = await readFile(path.join(root, 'design', 'familia', 'Main.dc.html'), 'utf8');
+for (const match of familyTemplateSource.matchAll(/data-icon="([a-z0-9-]+)"/g)) iconNames.add(match[1]);
 async function collectSourceFiles(directory) {
   const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -334,6 +413,7 @@ function expressionForAttribute(scope, value) {
 function renderNode(node, scope, replacements = new Map()) {
   if (node.type === 'text') return '{__renderText(' + scope + ', ' + JSON.stringify(node.value) + ')}';
   if (node.type !== 'element') return '';
+  if (node.tag === 'proto-switch-slot') return '<ProtoSwitch />';
   const id = attr(node, 'data-dc-tpl');
   const replacement = id && replacements.get(id);
   if (replacement) {
@@ -636,6 +716,7 @@ function generatedImports(body, runtimePath, iconPath) {
   const usedHelpers = runtimeHelpers.filter(helper => body.includes(helper + '('));
   if (usedHelpers.length) imports.push("import { " + usedHelpers.join(', ') + " } from '" + runtimePath + "';");
   if (/<Icon\s/.test(body)) imports.push("import { Icon } from '" + iconPath + "';");
+  if (body.includes('<ProtoSwitch />')) imports.push("import ProtoSwitch from '../../proto-switch/ProtoSwitch';");
   if (/<OptSelect\s/.test(body)) imports.push("import { OptSelect } from '" + (runtimePath === '../runtime' ? '../../OptSelect' : '../OptSelect') + "';");
   return imports;
 }
@@ -704,21 +785,26 @@ const iconSource = '// Generado por tools/convert-template.mjs. No editar a mano
   "      {IconView ? <IconView width={size} height={size} style={{ display: 'block' }} /> : null}\n" +
   '    </i>\n  );\n});\n';
 
-await mkdir(path.join(outputRoot, 'screens'), { recursive: true });
-await mkdir(path.join(root, 'src', 'ui'), { recursive: true });
-await mkdir(path.join(root, 'src', 'styles'), { recursive: true });
-await writeFile(path.join(outputRoot, 'runtime.tsx'), runtimeSource, 'utf8');
-await writeFile(path.join(outputRoot, 'Root.tsx'), rootSource, 'utf8');
-for (const [filename, source] of componentFiles) {
-  const output = path.join(outputRoot, filename);
+const generatedOutputs = [
+  ['runtime', path.join(outputRoot, 'runtime.tsx'), runtimeSource],
+  ['root', path.join(outputRoot, 'Root.tsx'), rootSource],
+  ...componentFiles.map(([filename, source]) => [
+    filename.startsWith('screens/') ? 'screens' : filename.replace(/\.tsx$/, ''),
+    path.join(outputRoot, filename),
+    source,
+  ]),
+  ['icon', path.join(root, 'src', 'ui', 'Icon.tsx'), iconSource],
+  ['css', path.join(root, 'src', 'styles', 'main.css'), mainCss],
+];
+for (const [name, output, source] of generatedOutputs) {
+  if (onlyOutputs && !onlyOutputs.has(name)) continue;
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(output, source, 'utf8');
 }
-await writeFile(path.join(root, 'src', 'ui', 'Icon.tsx'), iconSource, 'utf8');
-await writeFile(path.join(root, 'src', 'styles', 'main.css'), mainCss, 'utf8');
 
 if (missingIcons.length) console.warn('Iconos sin export de lucide-react; se dejará el error ruidoso en tiempo de ejecución:', missingIcons.join(', '));
 const generatedScreens = componentFiles.filter(([filename]) => filename.startsWith('screens/')).length;
 console.log('Plantilla ' + template.name + ': ' + generatedScreens + ' archivos de pantalla, 6 secciones y Root.tsx.');
+if (onlyOutputs) console.log('Salidas escritas: ' + [...onlyOutputs].join(', ') + '.');
 console.log('Iconos mapeados estáticamente: ' + iconMap.size + (missingIcons.length ? ' · faltan ' + missingIcons.length : ''));
 console.log('CSS global: src/styles/main.css · ' + pseudoNames.size + ' reglas style-hover/style-active.');

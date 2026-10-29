@@ -5,8 +5,43 @@ const GETC = `const getC = () => { if (window.__lab) return window.__lab; const 
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto((process.env.LAB_URL || 'http://localhost:4173/concept.html')); await p.waitForTimeout(2200);
   const ev = s => p.evaluate(`(() => { ${GETC} const c = getC(); ${s} })()`);
-  const sel = async id => { await p.locator('.lab-a button[aria-current]').nth(await ev(`return c.labFlows().findIndex(x => x.id === ${JSON.stringify(id)})`)).click(); await p.waitForTimeout(450); };
+  const sel = async id => {
+    const flow = await ev(`return c.labFlows().find(x => x.id === ${JSON.stringify(id)})`);
+    if (!flow) throw new Error(`No existe el flujo ${id}`);
+    const family = String(flow.group || '').startsWith('Mi Familia');
+    const sectionButtons = p.locator('.lab-a [aria-label="Sección"] button');
+    const sectionIndex = family ? 1 : 0;
+    if (await sectionButtons.nth(sectionIndex).getAttribute('aria-pressed') !== 'true') {
+      await sectionButtons.nth(sectionIndex).click();
+      await p.waitForFunction(index => document.querySelector(`.lab-a [aria-label="Sección"] button:nth-child(${index + 1})`)?.getAttribute('aria-pressed') === 'true', sectionIndex, { timeout: 2000 });
+    }
+    if (family) {
+      await ev(`c.labSelect(c.labFlows().find(x => x.id === ${JSON.stringify(id)}), {nav:true})`);
+      await p.waitForFunction(expected => window.__lab?.state?.flow === expected, id, { timeout: 2000 });
+      await p.waitForTimeout(450);
+      return;
+    }
+    const flows = await ev('return c.labFlows().map(x => ({id:x.id, group:x.group}))');
+    const flowNumber = flows.findIndex(x => x.id === id) + 1;
+    const row = p.locator(`.lab-a .lab-scroll button[aria-label^="Flujo ${flowNumber}:"]`);
+    await row.waitFor({ state: 'visible', timeout: 2000 });
+    await row.scrollIntoViewIfNeeded();
+    await row.click();
+    await p.waitForFunction(label => [...document.querySelectorAll('.lab-a .lab-scroll button[aria-current]')]
+      .some(button => button.getAttribute('aria-current') === 'page' && button.innerText.includes(label)), flow.label, { timeout: 2000 });
+    await p.waitForTimeout(450);
+  };
   const planUI = () => p.evaluate(() => document.querySelector('.lab-a [role=radio][aria-checked=true]').textContent.trim());
+  const openCase = async index => {
+    const buttons = p.locator('.lab-b article button');
+    const count = await buttons.count();
+    if (count <= index) {
+      throw new Error(`Faltan tarjetas para el caso ${index}; flujo ${await ev('return c.state.flow')}, botones ${count}, centro: ${(await p.locator('.lab-b').innerText()).slice(0, 140)}`);
+    }
+    const button = buttons.nth(index);
+    await button.scrollIntoViewIfNeeded();
+    await button.click();
+  };
   const res = [];
   const T = (name, ok, extra) => res.push((ok ? 'PASS ' : 'FAIL ') + name + (extra ? ' · ' + extra : ''));
   const scen0 = await ev('return c.labScenJSON()');
@@ -22,11 +57,11 @@ const GETC = `const getC = () => { if (window.__lab) return window.__lab; const 
   // 3 premium does not imply admin
   await sel('aldia'); T('Premium no implica rol de administradora', await planUI() === 'Premium' && await ev('return c.famRole()') === 'none');
   // 4 case does not contaminate other flows
-  await sel('famadmin'); await p.locator('.lab-b article button').nth(2).click(); await p.waitForTimeout(800);
+  await sel('famadmin'); await openCase(2); await p.waitForTimeout(800);
   const offIn = await ev('return c.off()');
   await sel('ayuda'); T('un caso con «sin conexión» no contamina otro flujo', offIn === true && await ev('return c.off()') === false && await ev('return c.state.lab.case') === null);
   // 5 reset reproducible
-  await sel('famadmin'); await p.locator('.lab-b article button').nth(0).click(); await p.waitForTimeout(800);
+  await sel('famadmin'); await openCase(0); await p.waitForTimeout(800);
   await ev('c.famSheet({kind:"reply", req:"r1", msg:null})'); await p.waitForTimeout(300);
   const r1 = await ev('return Object.keys(c.state.lab.reached).length');
   await p.locator('#lab-case-detail button', {hasText:'Reiniciar caso'}).click(); await p.waitForTimeout(900);
