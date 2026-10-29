@@ -21,6 +21,7 @@
     "e2e:select": "node tests/e2e/select.js",
     "e2e:proto-switch": "node tests/e2e/proto-switch.js",
     "guard:proto": "node tools/check-proto-guard.mjs",
+    "extract:current": "node tools/current/extract-assets.mjs && node tools/current/extract-styles.mjs && node tools/current/extract-data.mjs && node tools/current/extract-logic.mjs",
     "visual:baseline": "node tests/visual/capture.mjs http://127.0.0.1:8765/project/Main.dc.html tests/visual/baseline",
     "visual": "node tests/visual/visual.mjs",
     "visual:smoke": "node tests/visual/smoke.mjs",

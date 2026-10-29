@@ -61,20 +61,20 @@ jobs:
           echo "Run visual smoke: $ui"
           echo "ui=$ui" >> "$GITHUB_OUTPUT"
 
-      - name: Prototype guard · Current
-        if: startsWith(github.head_ref, 'current/') || contains(github.event.pull_request.labels.*.name, 'proto:current')
-        run: npm run guard:proto -- current
-
-      - name: Prototype guard · Concept
-        if: startsWith(github.head_ref, 'concept/') || contains(github.event.pull_request.labels.*.name, 'proto:concept')
-        run: npm run guard:proto -- concept
-
       - name: Set up Node.js 24
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || startsWith(github.head_ref, 'current/') || contains(github.event.pull_request.labels.*.name, 'proto:current') || startsWith(github.head_ref, 'concept/') || contains(github.event.pull_request.labels.*.name, 'proto:concept')
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+
+      - name: Prototype guard · Current
+        if: startsWith(github.head_ref, 'current/') || contains(github.event.pull_request.labels.*.name, 'proto:current')
+        run: npm run guard:proto -- current --base "origin/${{ github.base_ref }}"
+
+      - name: Prototype guard · Concept
+        if: startsWith(github.head_ref, 'concept/') || contains(github.event.pull_request.labels.*.name, 'proto:concept')
+        run: npm run guard:proto -- concept --base "origin/${{ github.base_ref }}"
 
       - name: Install dependencies
         if: steps.changes.outputs.code == 'true'

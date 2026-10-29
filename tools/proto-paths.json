@@ -18,6 +18,9 @@
     "review.html",
     "src/current/**",
     "design/current/**",
-    "public/assets/current/**"
+    "public/assets/current/**",
+    "tools/current/**",
+    "tests/unit/current-*",
+    "tests/e2e/current/**"
   ]
 }
