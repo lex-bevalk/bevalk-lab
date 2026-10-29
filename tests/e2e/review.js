@@ -53,7 +53,8 @@ async function assertAxe(page, selector, label) {
 (async () => {
   assert.ok(fs.existsSync(teamHtml), `Build team.html first: ${teamHtml}`);
   const launchOptions = { headless: true };
-  if (process.env.LAB_CHROMIUM_EXECUTABLE) launchOptions.executablePath = process.env.LAB_CHROMIUM_EXECUTABLE;
+  const chromiumExecutable = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || process.env.LAB_CHROMIUM_EXECUTABLE;
+  if (chromiumExecutable) launchOptions.executablePath = chromiumExecutable;
   const browser = await chromium.launch(launchOptions);
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   page.on('console', message => {

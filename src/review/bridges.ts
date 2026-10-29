@@ -1,3 +1,5 @@
+import { LAB_ALL_FLOWS } from '../current/data';
+
 export interface Bridge {
   proto: 'concept' | 'current';
   current(): { flow: string | null; plan: string | null };
@@ -14,7 +16,6 @@ type LabApi = {
   world?: () => { plan?: string };
   labFlows?: () => Array<{ id: string }>;
   labSelect?: (flow: { id: string }, options?: { plan?: string }) => void;
-  labAllFlows?: () => Array<{ id: string }> | undefined;
   labOpen?: (flowId: string) => boolean | void;
   labPlan?: (plan: 'free' | 'premium') => void;
 };
@@ -56,8 +57,7 @@ function currentBridge(lab: LabApi | undefined): Bridge {
     },
     select(flowId, plan) {
       if (!lab) return false;
-      const allFlows = lab.labAllFlows?.();
-      if (Array.isArray(allFlows) && !allFlows.some(flow => flow.id === flowId)) return false;
+      if (!LAB_ALL_FLOWS.some(flow => flow.id === flowId)) return false;
       if (typeof lab.labOpen !== 'function') return false;
       if (lab.labOpen(flowId) === false) return false;
       if (plan) {

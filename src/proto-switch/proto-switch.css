@@ -2,6 +2,10 @@ html[data-proto="concept"] .lab-a .lab-scroll {
   padding-bottom: 56px !important;
 }
 
+html[data-proto="current"] nav.lab-col {
+  padding-bottom: 56px !important;
+}
+
 .proto-switch {
   position: fixed;
   z-index: 2147483000;

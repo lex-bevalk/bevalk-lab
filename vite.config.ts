@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   build: {
     modulePreload: { polyfill: false },
-    // Concept se carga eager; permitir el chunk compartido resultante de las dos entradas.
-    chunkSizeWarningLimit: 1350,
+    // Chunk mayor medido en las entradas Concept/Current: 1274.10 kB.
+    chunkSizeWarningLimit: 1275,
     rollupOptions: {
       external: id => id.includes('app-background.png'),
       input: {
