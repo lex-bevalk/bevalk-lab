@@ -230,7 +230,7 @@ describe('comment validation', () => {
 
   it('keeps the current screen whitelist aligned with generated data-screen-label values', () => {
     const generated = generatedScreenLabels(join(process.cwd(), 'src/current/ui/generated'));
-    expect(generated).toHaveLength(29);
+    expect(generated).toHaveLength(30);
     expect([...SCREEN_LABELS_BY_PROTO.current].sort()).toEqual(generated);
     expect(ALL_SCREEN_LABELS).toContain('Escáner');
     expect(ALL_SCREEN_LABELS).toContain('Ayuda');

@@ -108,8 +108,8 @@ for (const node of nodes) {
   group.push(node);
   labelGroups.set(label, group);
 }
-if (labelGroups.size !== 29) {
-  throw new Error('La plantilla contiene ' + labelGroups.size + ' etiquetas de pantalla; se esperaban 29.');
+if (labelGroups.size !== 30) {
+  throw new Error('La plantilla contiene ' + labelGroups.size + ' etiquetas de pantalla; se esperaban 30.');
 }
 
 const sourceHtml = await readFile(currentSourcePath(), 'utf8');

@@ -47,6 +47,7 @@ export const SCREEN_LABELS_BY_PROTO = {
     'Escáner',
     'Hitos',
     'Inicio',
+    'Inicio rediseñado',
     'MarIA',
     'Mi Familia',
     'Mi huella · flujo',

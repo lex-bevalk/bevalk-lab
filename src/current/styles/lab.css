@@ -44,6 +44,7 @@ sc-if,sc-for{display:contents}
 .scp1:active{opacity:.6 !important}
 .scp2:hover{border-color:var(--color-ring) !important}
 .scp3:hover{background:var(--color-surface-hover) !important}
-.scp4:hover{background:#FAFAFA !important}
-.scp5:active{opacity:.7 !important}
-.scp6:hover{outline:1px solid var(--color-ring) !important}
+.scp4:hover{border-color:var(--color-primary) !important}
+.scp5:hover{background:#FAFAFA !important}
+.scp6:active{opacity:.7 !important}
+.scp7:hover{outline:1px solid var(--color-ring) !important}

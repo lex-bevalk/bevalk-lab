@@ -187,6 +187,12 @@ jobs:
           REF_URL: http://localhost:8766/project/Main.dc.html
         run: npm run e2e:current:a11y
 
+      - name: Current redesigned home
+        if: steps.changes.outputs.code == 'true'
+        env:
+          LAB_URL: http://localhost:4173/
+        run: npm run e2e:current:home
+
       - name: Current focus order
         if: steps.changes.outputs.code == 'true'
         env:
