@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex" />
-    <title>BeValk Lab · Current version</title>
-    <script type="speculationrules">{"prerender":[{"source":"list","urls":["/concept/review"],"eagerness":"moderate"}]}</script>
+    <title>BeValk Lab · Current</title>
+    <script type="speculationrules">{"prerender":[{"source":"list","urls":["/concept/review"],"eagerness":"immediate"}]}</script>
   </head>
   <body>
     <div id="root"></div>
     <div id="review-root"></div>
-    <script type="module" src="/src/current/main.tsx"></script>
-    <script type="module" src="/src/review/main.tsx"></script>
+    <script type="module" src="/src/current/main.tsx" blocking="render"></script>
+    <script type="module" src="/src/review/main.tsx" blocking="render"></script>
   </body>
 </html>

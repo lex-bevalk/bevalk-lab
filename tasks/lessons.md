@@ -27,3 +27,5 @@
 - Antes de aceptar la regeneración de un conversor, comparar el generado contra `main` ignorando ids de plantilla y ejecutar `e2e:family-layout`.
 
 - G7: Para servir la plantilla familiar como referencia usa `node tools/serve-reference.cjs 8765 design/familia/Main.dc.html`; `npm run serve:reference` apunta a la referencia anterior. Si Playwright no encuentra Chromium, fija `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` al Chrome local. Los gates Concept deben considerar que App/Mi Familia filtra la lista y que los objetivos nuevos de la navegación afectan a la secuencia de foco.
+- G8: Un `@import` remoto de fuentes en el CSS de una entrada anula la transición entre documentos (`pagereveal` llega sin `viewTransition`) y deja ver un fotograma en blanco. Fuentes siempre locales; comprobar con `npm run e2e:proto-switch` (gate de cambio sin blanco).
+- G8: Al limitar `--only` en una tarea de plantilla, incluir todas las salidas cuyo estilo se cambia (p. ej. `root` para migas y cabecera); si no, el agente parchea con `!important`. Revisar `git diff` de la plantilla buscando `!important` nuevos.

@@ -341,7 +341,7 @@ async function assertAxe(page, selector, label) {
     await page.getByRole('heading', { name: 'Comentarios', exact: true }).waitFor({ state: 'visible' });
     await page.getByText('Comentario de Current', { exact: true }).waitFor({ state: 'visible' });
     assert.equal(await page.getByText('Revisar este punto', { exact: true }).count(), 0, 'the default comments filter should show Current only');
-    assert.equal(await page.locator(`[data-comment-id="${currentId}"] .comments-proto`).textContent(), 'Current version');
+    assert.equal(await page.locator(`[data-comment-id="${currentId}"] .comments-proto`).textContent(), 'Current');
     const protoFilter = page.getByLabel('Prototipo', { exact: true });
     const screenFilter = page.locator('.comments-filters select').nth(1);
     const currentScreenOptions = await screenFilter.locator('option').evaluateAll(options => options.map(option => option.value));

@@ -1,9 +1,28 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { resolve } from 'node:path';
+import { basename, resolve } from 'node:path';
+
+const renderBlockingPages = new Set(['index.html', 'concept.html', 'review.html', 'concept-review.html']);
+
+function blockAppRenderingUntilMount() {
+  return {
+    name: 'block-app-rendering-until-mount',
+    apply: 'build' as const,
+    transformIndexHtml: {
+      order: 'post' as const,
+      handler(html: string, context: { filename: string }) {
+        if (!renderBlockingPages.has(basename(context.filename))) return html;
+        return html.replace(/<script\b([^>]*)>/gi, (tag, attributes: string) => {
+          if (!/\btype=["']module["']/i.test(attributes) || /\bblocking=["']render["']/i.test(attributes)) return tag;
+          return `<script${attributes} blocking="render">`;
+        });
+      }
+    }
+  };
+}
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), blockAppRenderingUntilMount()],
   build: {
     modulePreload: { polyfill: false },
     // Chunk mayor observado en las entradas Concept/Current: 1275.49 kB.

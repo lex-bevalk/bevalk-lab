@@ -5,9 +5,9 @@ import { describe, expect, it } from 'vitest';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const speculationEntries = [
-  { file: 'index.html', target: '/concept', title: 'BeValk Lab · Current version' },
+  { file: 'index.html', target: '/concept', title: 'BeValk Lab · Current' },
   { file: 'concept.html', target: '/', title: 'BeValk Lab · Concept' },
-  { file: 'review.html', target: '/concept/review', title: 'BeValk Lab · Current version' },
+  { file: 'review.html', target: '/concept/review', title: 'BeValk Lab · Current' },
   { file: 'concept-review.html', target: '/review', title: 'BeValk Lab · Concept' }
 ];
 
@@ -17,9 +17,14 @@ describe('prototype switching documents', () => {
     const script = html.match(/<script\s+type="speculationrules">([\s\S]*?)<\/script>/i)?.[1];
 
     expect(html.match(/<title>(.*?)<\/title>/i)?.[1]).toBe(title);
+    const moduleScripts = [...html.matchAll(/<script\b([^>]*)>/gi)]
+      .map(match => match[1])
+      .filter(attributes => /\btype=["']module["']/i.test(attributes));
+    expect(moduleScripts.length, `${file} module entry scripts`).toBeGreaterThan(0);
+    expect(moduleScripts.every(attributes => /\bblocking=["']render["']/i.test(attributes))).toBe(true);
     expect(script, `${file} speculation rules`).toBeTruthy();
     expect(JSON.parse(script!)).toEqual({
-      prerender: [{ source: 'list', urls: [target], eagerness: 'moderate' }]
+      prerender: [{ source: 'list', urls: [target], eagerness: 'immediate' }]
     });
   });
 

@@ -1,6 +1,8 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const path = require('node:path');
 const { chromium } = require('playwright');
+const { PNG } = require('pngjs');
 
 const baseUrl = (process.env.LAB_URL || 'http://localhost:4173/concept.html')
   .replace(/\/concept\.html\/?$/, '')
@@ -171,6 +173,284 @@ async function measureColumns(page, path, width) {
   });
 }
 
+const FONT_FIELDS = ['fontSize', 'lineHeight', 'fontWeight', 'fontFamily', 'letterSpacing'];
+const CONCEPT_CENTER_SCALE = new Set(['11px', '12px', '13px', '14px', '15px', '16px', '17px', '28px', '32px']);
+
+async function measureCoverTypography(page, pathname) {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${baseUrl}${pathname}`, { waitUntil: 'load' });
+  await page.evaluate(() => document.fonts.ready);
+  const hasCoverageDetails = await page.locator('.lab-b details > summary').filter({ hasText: 'Cobertura de flujos' }).count();
+  if (hasCoverageDetails) await page.locator('.lab-b details > summary').filter({ hasText: 'Cobertura de flujos' }).first().click();
+
+  return page.evaluate(() => {
+    const concept = document.documentElement.dataset.proto === 'concept';
+    const center = document.querySelector(concept ? '.lab-b' : 'main.lab-col');
+    if (!center) throw new Error('No se encontró el panel central para medir la portada.');
+    const font = (element, role) => {
+      if (!element) throw new Error(`Falta el rol tipográfico de portada: ${role}.`);
+      const style = getComputedStyle(element);
+      return {
+        fontSize: style.fontSize,
+        lineHeight: style.lineHeight,
+        fontWeight: style.fontWeight,
+        fontFamily: style.fontFamily,
+        letterSpacing: style.letterSpacing
+      };
+    };
+    const heading = center.querySelector('h1');
+    const hero = heading?.parentElement;
+    const eyebrow = hero?.querySelector(':scope > span');
+    const intro = hero?.querySelector(':scope > p');
+    const statNumber = [...center.querySelectorAll('span')].find(element =>
+      element.textContent.trim() && getComputedStyle(element).fontSize === '28px');
+    if (!heading || !statNumber) throw new Error('No se encontraron el titular o las estadísticas de la portada.');
+    const statCard = statNumber.closest('div');
+    const statLabel = [...statCard.querySelectorAll('span')].find(element =>
+      element !== statNumber && getComputedStyle(element).fontSize === '14px');
+    let statsGrid = statNumber;
+    while (statsGrid && getComputedStyle(statsGrid).display !== 'grid') statsGrid = statsGrid.parentElement;
+    const statsRows = statsGrid
+      ? new Set([...statsGrid.children].map(element => Math.round(element.getBoundingClientRect().top))).size
+      : 0;
+    const howHeading = [...center.querySelectorAll('h2')].find(element => element.textContent.trim() === 'Cómo se usa');
+    const firstStep = howHeading?.parentElement.querySelector('ol li');
+    const stepNumber = firstStep?.querySelector('span[aria-hidden="true"]');
+    const stepTitle = [...(firstStep?.querySelectorAll('span') || [])].find(element => getComputedStyle(element).fontSize === '15px');
+    const stepDescription = [...(firstStep?.querySelectorAll('span') || [])].find(element =>
+      !element.closest('[aria-hidden="true"]') && getComputedStyle(element).fontSize === '14px');
+    const startHeading = [...center.querySelectorAll('h2')].find(element => element.textContent.trim() === 'Empieza por aquí');
+    const firstStart = startHeading?.parentElement.querySelector('button');
+    const startSpans = [...(firstStart?.querySelectorAll('span') || [])].filter(element => element.textContent.trim());
+    const startMeta = startSpans.find(element => getComputedStyle(element).fontSize === '12px'
+      && getComputedStyle(element).fontFamily.includes('Geist Mono'));
+    const startTitle = startSpans.find(element => getComputedStyle(element).fontSize === '17px');
+    const startDescription = startSpans.find(element => getComputedStyle(element).fontSize === '14px');
+    const table = center.querySelector('[role="table"], table');
+    const tableRows = table ? [...table.querySelectorAll('[role="row"], tr')] : [];
+    const header = table?.querySelector('[role="columnheader"], th');
+    const firstDataRow = tableRows.find(row => row.querySelector('[role="cell"], td'));
+    const cells = firstDataRow?.querySelectorAll('[role="cell"], td');
+    const coverageName = cells?.[0]?.querySelector('button') || cells?.[0];
+    const coveragePlan = cells?.[1];
+    const coverageNumber = cells?.[2];
+    const sectionEyebrow = element => font(element);
+    return {
+      breadcrumb: font(center.querySelector('nav[aria-label="Ruta"]'), 'breadcrumb'),
+      eyebrow: sectionEyebrow(eyebrow, 'eyebrow'),
+      title: font(heading, 'title'),
+      intro: font(intro, 'intro'),
+      statNumber: font(statNumber, 'statNumber'),
+      statLabel: font(statLabel, 'statLabel'),
+      howEyebrow: font(howHeading, 'howEyebrow'),
+      stepNumber: font(stepNumber, 'stepNumber'),
+      stepTitle: font(stepTitle, 'stepTitle'),
+      stepDescription: font(stepDescription, 'stepDescription'),
+      startEyebrow: font(startHeading, 'startEyebrow'),
+      startMeta: font(startMeta, 'startMeta'),
+      startTitle: font(startTitle, 'startTitle'),
+      startDescription: font(startDescription, 'startDescription'),
+      coverageHeader: font(header, 'coverageHeader'),
+      coverageName: font(coverageName, 'coverageName'),
+      coveragePlan: font(coveragePlan, 'coveragePlan'),
+      coverageNumber: font(coverageNumber, 'coverageNumber'),
+      statsItems: statsGrid?.children.length || 0,
+      statsRows,
+      fontSizes: [...center.querySelectorAll('*')]
+        .filter(element => element.textContent.trim())
+        .map(element => getComputedStyle(element).fontSize)
+    };
+  });
+}
+
+async function selectFlow(page, pathname) {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${baseUrl}${pathname}`, { waitUntil: 'load' });
+  const concept = pathname.startsWith('/concept');
+  const navigation = page.locator(concept ? '.lab-a' : 'nav.lab-col');
+  await navigation.getByRole('searchbox').fill('Le llega un enlace peligroso');
+  const rows = concept ? navigation.locator('.lab-scroll button') : navigation.locator('.lab-item');
+  await rows.filter({ hasText: 'Le llega un enlace peligroso' }).first().click();
+  await page.locator(concept ? '.lab-b h1' : 'main.lab-col h1').filter({ hasText: 'Le llega un enlace peligroso' }).waitFor();
+  await page.evaluate(() => document.fonts.ready);
+}
+
+async function measureFlowTypography(page, pathname) {
+  await selectFlow(page, pathname);
+  return page.evaluate(() => {
+    const concept = document.documentElement.dataset.proto === 'concept';
+    const center = document.querySelector(concept ? '.lab-b' : 'main.lab-col');
+    if (!center) throw new Error('No se encontró el panel central para medir la ficha.');
+    const font = element => {
+      if (!element) throw new Error('Falta un rol tipográfico de ficha.');
+      const style = getComputedStyle(element);
+      return {
+        fontSize: style.fontSize,
+        lineHeight: style.lineHeight,
+        fontWeight: style.fontWeight,
+        fontFamily: style.fontFamily,
+        letterSpacing: style.letterSpacing
+      };
+    };
+    const normalized = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    const heading = [...center.querySelectorAll('h2')].find(element => normalized(element.textContent).includes('casos extremos'));
+    const groupSummary = [...(heading?.parentElement.children || [])].find(element => element !== heading && element.tagName === 'SPAN');
+    const code = [...center.querySelectorAll('span')].find(element => /^[A-Z]\d{2}$/.test(element.textContent.trim()));
+    const group = [...(code?.parentElement.querySelectorAll('span') || [])].find(element => element !== code
+      && element.textContent.trim() && getComputedStyle(element).fontSize === '14px');
+    const dataList = center.querySelector('dl');
+    const dataLabel = dataList?.querySelector('dt');
+    const dataValue = dataList?.querySelector('dd');
+    const storyHeading = center.querySelector(concept ? '#lab-us' : '#lab-jtbd');
+    const storyList = storyHeading?.parentElement.querySelector('dl');
+    const storyTerm = storyList?.querySelector('dt');
+    const storyText = storyList?.querySelector('dd');
+    const watchHeading = [...center.querySelectorAll('h2')].find(element => normalized(element.textContent) === 'que mirar');
+    const watchBody = watchHeading?.parentElement.querySelector('p');
+    const firstCase = center.querySelector('article');
+    const caseSpans = [...(firstCase?.querySelectorAll('span') || [])];
+    const caseCode = caseSpans.find(element => getComputedStyle(element).fontSize === '12px'
+      && getComputedStyle(element).fontFamily.includes('Geist Mono'));
+    const caseChip = caseSpans.find(element => getComputedStyle(element).fontSize === '11px');
+    const caseTitle = firstCase?.querySelector('h3');
+    const caseDescription = firstCase?.querySelector('p');
+    const caseButton = [...(firstCase?.querySelectorAll('button') || [])].find(element => /Probar/.test(element.textContent));
+    const sectionTitles = [...center.querySelectorAll('h2')].map(font);
+    const allDetails = [...center.querySelectorAll('details summary')];
+    const acceptanceTitle = allDetails.find(element => normalized(element.textContent).includes('criterios de aceptacion del flujo'));
+    const environmentTitle = allDetails.find(element => normalized(element.textContent).startsWith('entorno de prueba'));
+    const problemLabel = [...center.querySelectorAll('span')].find(element => normalized(element.textContent) === 'problema');
+    const problemBody = [...(problemLabel?.parentElement.querySelectorAll('span') || [])].find(element => element !== problemLabel
+      && element.textContent.trim() && getComputedStyle(element).fontSize === '14px');
+    const gwtLabel = [...center.querySelectorAll('strong')].find(element => element.textContent.trim() === 'GIVEN');
+    const gwtBodies = [...center.querySelectorAll('strong')]
+      .filter(element => /^(GIVEN|WHEN|THEN)$/.test(element.textContent.trim()))
+      .map(element => font(element.parentElement));
+    const environmentLabel = center.querySelector('[role="radiogroup"] > span');
+    const caseSummary = groupSummary;
+    return {
+      breadcrumb: font(center.querySelector('nav[aria-label="Ruta"]')),
+      resetButton: font([...center.querySelectorAll('button')].find(element => element.textContent.includes('Reiniciar'))),
+      metaCode: font(code),
+      metaGroup: font(group),
+      dataLabel: font(dataLabel),
+      dataValue: font(dataValue),
+      sectionTitles,
+      storyTerm: font(storyTerm),
+      storyText: font(storyText),
+      caseSummary: font(caseSummary),
+      caseCode: font(caseCode),
+      caseChip: font(caseChip),
+      caseTitle: font(caseTitle),
+      caseDescription: font(caseDescription),
+      caseButton: font(caseButton),
+      watchBody: font(watchBody),
+      problemLabel: concept ? font(problemLabel) : null,
+      problemBody: concept ? font(problemBody) : null,
+      acceptanceTitle: concept ? font(acceptanceTitle) : null,
+      environmentTitle: concept ? font(environmentTitle) : null,
+      gwtLabel: concept ? font(gwtLabel) : null,
+      gwtBodies: concept ? gwtBodies : null,
+      environmentLabel: concept ? font(environmentLabel) : null,
+      environmentRadio: concept ? font(center.querySelector('button[role="radio"]')) : null,
+      fontSizes: [...center.querySelectorAll('*')]
+        .filter(element => element.textContent.trim())
+        .map(element => getComputedStyle(element).fontSize)
+    };
+  });
+}
+
+function assertFontParity(label, current, concept) {
+  for (const field of FONT_FIELDS) {
+    assert.equal(concept[field], current[field], `${label}.${field}: Current ${current[field]}, Concept ${concept[field]}`);
+  }
+}
+
+function relativeLuminance(data) {
+  const linear = channel => {
+    const value = channel / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  };
+  let total = 0;
+  let count = 0;
+  for (let index = 0; index < data.length; index += 4) {
+    total += 0.2126 * linear(data[index]) + 0.7152 * linear(data[index + 1]) + 0.0722 * linear(data[index + 2]);
+    count += 1;
+  }
+  return total / count;
+}
+
+async function capturePrototypeTransition(browser, from, to, name) {
+  const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+  await page.addInitScript(() => {
+    window.__g8Pagereveal = null;
+    window.addEventListener('pagereveal', event => {
+      const root = document.querySelector('#root');
+      const reviewRoot = document.querySelector('#review-root');
+      window.__g8Pagereveal = {
+        hasViewTransition: Boolean(event.viewTransition),
+        rootContent: Boolean(root?.childElementCount && root.textContent.trim()),
+        reviewContent: !location.pathname.includes('review') || Boolean(reviewRoot?.childElementCount && reviewRoot.textContent.trim()),
+        pathname: location.pathname
+      };
+    });
+  });
+  await page.goto(`${baseUrl}${from}`, { waitUntil: 'load' });
+  await page.evaluate(() => { window.__g8Pagereveal = null; });
+
+  const client = await page.context().newCDPSession(page);
+  await client.send('Page.enable');
+  const frames = [];
+  let capture = false;
+  let clickedAt = 0;
+  let brightestFrame = null;
+  client.on('Page.screencastFrame', frame => {
+    client.send('Page.screencastFrameAck', { sessionId: frame.sessionId }).catch(() => {});
+    if (!capture) return;
+    const elapsedMs = Date.now() - clickedAt;
+    if (elapsedMs < 0 || elapsedMs > 1500) return;
+    const data = Buffer.from(frame.data, 'base64');
+    const image = PNG.sync.read(data);
+    const meanLuminance = relativeLuminance(image.data);
+    const sample = { elapsedMs, meanLuminance: Number(meanLuminance.toFixed(5)) };
+    frames.push(sample);
+    if (!brightestFrame || meanLuminance > brightestFrame.meanLuminance) {
+      brightestFrame = { ...sample, meanLuminance, data };
+    }
+  });
+  await client.send('Page.startScreencast', { format: 'png', maxWidth: 1440, maxHeight: 900, everyNthFrame: 2 });
+  capture = true;
+  clickedAt = Date.now();
+  const targetName = to.includes('concept') ? 'Concept' : 'Current';
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'load' }),
+    page.locator('.proto-switch').getByRole('link', { name: targetName, exact: true }).click()
+  ]);
+  const remainingMs = Math.max(0, 1500 - (Date.now() - clickedAt));
+  if (remainingMs) await page.waitForTimeout(remainingMs);
+  capture = false;
+  await client.send('Page.stopScreencast');
+  const reveal = await page.evaluate(() => window.__g8Pagereveal);
+  const artifactDirectory = path.resolve(__dirname, '../../.tmp/proto-switch-gate');
+  fs.mkdirSync(artifactDirectory, { recursive: true });
+  const framePath = path.join(artifactDirectory, `${name}.png`);
+  if (brightestFrame) fs.writeFileSync(framePath, brightestFrame.data);
+  const reportPath = path.join(artifactDirectory, `${name}.json`);
+  fs.writeFileSync(reportPath, JSON.stringify({ from, to, reveal, frameCount: frames.length, frames }, null, 2));
+  await client.detach();
+  await page.close();
+  return {
+    name,
+    from,
+    to,
+    reveal,
+    frames,
+    maxLuminance: brightestFrame?.meanLuminance ?? null,
+    framePath,
+    reportPath
+  };
+}
+
 (async () => {
   const browser = await chromium.launch({
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
@@ -190,7 +470,7 @@ async function measureColumns(page, path, width) {
       assert.equal(await nav.locator('a').count(), 2, `${item.path}: two prototype links`);
       const currentHref = item.review ? '/review' : '/';
       const conceptHref = item.review ? '/concept/review' : '/concept';
-      const current = nav.getByRole('link', { name: 'Current version', exact: true });
+      const current = nav.getByRole('link', { name: 'Current', exact: true });
       const concept = nav.getByRole('link', { name: 'Concept', exact: true });
       assert.equal(await current.getAttribute('href'), currentHref, `${item.path}: Current href`);
       assert.equal(await concept.getAttribute('href'), conceptHref, `${item.path}: Concept href`);
@@ -320,6 +600,111 @@ async function measureColumns(page, path, width) {
     assert.ok(labels.some(label => label.startsWith('Mi Familia')), 'search finds Mi Familia flows while App is selected');
     assertions += 7;
 
+    const currentCover = await measureCoverTypography(page, '/');
+    const conceptCover = await measureCoverTypography(page, '/concept');
+    const coverRoleNames = [
+      'breadcrumb', 'eyebrow', 'title', 'intro', 'statNumber', 'statLabel', 'howEyebrow',
+      'stepNumber', 'stepTitle', 'stepDescription', 'startEyebrow', 'startMeta', 'startTitle',
+      'startDescription', 'coverageHeader', 'coverageName', 'coveragePlan', 'coverageNumber'
+    ];
+    for (const role of coverRoleNames) {
+      assertFontParity(`cover.${role}`, currentCover[role], conceptCover[role]);
+      assertions += FONT_FIELDS.length;
+    }
+    assert.equal(conceptCover.statsItems, 4, 'Concept has four statistics');
+    assert.equal(conceptCover.statsRows, 1, 'Concept statistics fit on one row at 1440px');
+    assertions += 2;
+
+    const currentFlow = await measureFlowTypography(page, '/');
+    const conceptFlow = await measureFlowTypography(page, '/concept');
+    const flowRoleNames = [
+      'breadcrumb', 'resetButton', 'metaCode', 'metaGroup', 'dataLabel', 'dataValue', 'storyTerm',
+      'storyText', 'caseSummary', 'caseCode', 'caseChip', 'caseTitle', 'caseDescription', 'caseButton', 'watchBody'
+    ];
+    for (const role of flowRoleNames) {
+      assertFontParity(`flow.${role}`, currentFlow[role], conceptFlow[role]);
+      assertions += FONT_FIELDS.length;
+    }
+    assert.deepEqual(conceptFlow.sectionTitles, currentFlow.sectionTitles, 'all flow section titles match between Current and Concept');
+    assertions += conceptFlow.sectionTitles.length * FONT_FIELDS.length;
+
+    const assertConceptFont = (role, actual, expected) => {
+      for (const [field, value] of Object.entries(expected)) {
+        assert.equal(actual[field], value, `Concept ${role}.${field}: expected ${value}, got ${actual[field]}`);
+        assertions += 1;
+      }
+    };
+    assertConceptFont('problem label', conceptFlow.problemLabel, {
+      fontSize: '13px', lineHeight: '16px', fontWeight: '500',
+      fontFamily: 'Manrope, system-ui, -apple-system, sans-serif'
+    });
+    assertConceptFont('problem body', conceptFlow.problemBody, {
+      fontSize: '14px', lineHeight: '20px', fontWeight: '400',
+      fontFamily: 'Manrope, system-ui, -apple-system, sans-serif'
+    });
+    assertConceptFont('acceptance summary', conceptFlow.acceptanceTitle, {
+      fontSize: '15px', lineHeight: '22px', fontWeight: '600',
+      fontFamily: 'Manrope, system-ui, -apple-system, sans-serif'
+    });
+    assertConceptFont('environment summary', conceptFlow.environmentTitle, {
+      fontSize: '15px', lineHeight: '22px', fontWeight: '600',
+      fontFamily: 'Manrope, system-ui, -apple-system, sans-serif'
+    });
+    assertConceptFont('GIVEN label', conceptFlow.gwtLabel, {
+      fontSize: '12px', lineHeight: '16px', fontWeight: '600',
+      fontFamily: '"Geist Mono", ui-monospace, monospace'
+    });
+    assert.ok(conceptFlow.gwtBodies.length > 0, 'Concept renders GIVEN/WHEN/THEN body roles');
+    for (const [index, body] of conceptFlow.gwtBodies.entries()) {
+      assertConceptFont(`GWT body ${index + 1}`, body, {
+        fontSize: '14px', lineHeight: '20px', fontWeight: '400',
+        fontFamily: 'Manrope, system-ui, -apple-system, sans-serif'
+      });
+    }
+    assertConceptFont('environment label', conceptFlow.environmentLabel, {
+      fontSize: '13px', lineHeight: '16px', fontWeight: '500',
+      fontFamily: 'Manrope, system-ui, -apple-system, sans-serif'
+    });
+    assertConceptFont('environment radio chip', conceptFlow.environmentRadio, {
+      fontSize: '12px', lineHeight: '16px', fontWeight: '500',
+      fontFamily: 'Manrope, system-ui, -apple-system, sans-serif'
+    });
+
+    for (const [label, sizes] of [['cover', conceptCover.fontSizes], ['flow', conceptFlow.fontSizes]]) {
+      const outsideScale = [...new Set(sizes)].filter(size => !CONCEPT_CENTER_SCALE.has(size));
+      assert.deepEqual(outsideScale, [], `Concept ${label} uses only the Current center type scale`);
+      assertions += 1;
+    }
+
+    await page.goto(`${baseUrl}/concept`, { waitUntil: 'load' });
+    const freePin = page.locator('.lab-a .lab-scroll button').filter({ hasText: 'Free' }).first()
+      .locator('span').filter({ hasText: 'Free' }).first();
+    const freePinStyle = await freePin.evaluate(element => {
+      const style = getComputedStyle(element);
+      return { fontSize: style.fontSize, lineHeight: style.lineHeight, fontWeight: style.fontWeight, fontFamily: style.fontFamily };
+    });
+    assert.deepEqual(freePinStyle, {
+      fontSize: '11px', lineHeight: '16px', fontWeight: '700', fontFamily: '"Geist Mono", ui-monospace, monospace'
+    }, 'Concept Free navigation chip uses the Current 11/16/700 Geist Mono role');
+    assertions += 4;
+
+    const transitionRows = [];
+    for (const item of [
+      { from: '/', to: '/concept', name: 'current-to-concept' },
+      { from: '/concept', to: '/', name: 'concept-to-current' },
+      { from: '/review', to: '/concept/review', name: 'review-to-concept-review' },
+      { from: '/concept/review', to: '/review', name: 'concept-review-to-review' }
+    ]) {
+      const row = await capturePrototypeTransition(browser, item.from, item.to, item.name);
+      assert.ok(row.reveal, `${item.name}: pagereveal fired in the new document`);
+      assert.equal(row.reveal.hasViewTransition, true, `${item.name}: pagereveal has a ViewTransition`);
+      assert.equal(row.reveal.rootContent, true, `${item.name}: #root has content during pagereveal`);
+      assert.ok(row.frames.length > 0, `${item.name}: CDP captured frames during the 1.5s gate`);
+      assert.ok(row.maxLuminance <= 0.97, `${item.name}: brightest frame mean luminance ${row.maxLuminance} is at most 0.97`);
+      transitionRows.push(row);
+      assertions += 6;
+    }
+
     console.log(`PROTO SWITCH PASS · ${pages.length} páginas · ${viewports.length} anchos · ${assertions} comprobaciones · 0 violaciones axe`);
     console.log('PROTO SWITCH LAYOUT · x / width (px), diferencias Concept − Current; tolerancia ±1 px');
     console.log('| Viewport | Columna | Current x / width | Concept x / width | Δx / Δwidth |');
@@ -335,6 +720,40 @@ async function measureColumns(page, path, width) {
       console.log(`| ${key} | ${format(currentNav.measurements[key])} | ${format(conceptNav.measurements[key])} |`);
     }
     console.log(`PROTO SWITCH NAV BACKGROUND · ${currentNav.labBackground} / ${conceptNav.labBackground}`);
+    console.log('PROTO SWITCH TYPOGRAPHY · Current/Concept · 1440×900 · font-size / line-height · weight · family');
+    console.log('| Rol | Current | Concept |');
+    console.log('|---|---|---|');
+    const formatFont = value => `${value.fontSize}/${value.lineHeight} · ${value.fontWeight} · ${value.fontFamily.includes('Geist Mono') ? 'Geist Mono' : value.fontFamily.includes('Guton') ? 'Guton' : 'Manrope'}`;
+    const typographyRows = [
+      ...[
+        ['Migas', 'breadcrumb'], ['Antetítulo', 'eyebrow'], ['H1', 'title'], ['Entradilla', 'intro'],
+        ['Número de estadística', 'statNumber'], ['Etiqueta de estadística', 'statLabel'],
+        ['Antetítulo «Cómo se usa»', 'howEyebrow'], ['Número de paso', 'stepNumber'],
+        ['Título de paso', 'stepTitle'], ['Descripción de paso', 'stepDescription'],
+        ['Antetítulo «Empieza por aquí»', 'startEyebrow'], ['Meta de tarjeta', 'startMeta'],
+        ['Título de tarjeta', 'startTitle'], ['Descripción de tarjeta', 'startDescription'],
+        ['Cabecera de tabla', 'coverageHeader'], ['Nombre de fila', 'coverageName'],
+        ['Plan de fila', 'coveragePlan'], ['Número de fila', 'coverageNumber']
+      ].map(([label, role]) => [label, currentCover[role], conceptCover[role]]),
+      ...[
+        ['Migas de ficha', 'breadcrumb'], ['Reiniciar', 'resetButton'], ['Código de flujo', 'metaCode'],
+        ['Grupo', 'metaGroup'], ['Etiqueta de dato', 'dataLabel'], ['Valor de dato', 'dataValue'],
+        ['Término de user story', 'storyTerm'], ['Texto de user story', 'storyText'],
+        ['Resumen de casos', 'caseSummary'], ['Código de caso', 'caseCode'], ['Chip de caso', 'caseChip'],
+        ['Título de caso', 'caseTitle'], ['Descripción de caso', 'caseDescription'],
+        ['Botón de caso', 'caseButton'], ['Cuerpo «Qué mirar»', 'watchBody']
+      ].map(([label, role]) => [label, currentFlow[role], conceptFlow[role]])
+    ];
+    for (const [label, current, concept] of typographyRows) {
+      console.log(`| ${label} | ${formatFont(current)} | ${formatFont(concept)} |`);
+    }
+    console.log(`PROTO SWITCH CONCEPT SCALE · cover ${[...new Set(conceptCover.fontSizes)].join(', ')} · flow ${[...new Set(conceptFlow.fontSizes)].join(', ')}`);
+    console.log('PROTO SWITCH FRAMES · CDP Page.startScreencast · 1440×900 · 0–1500ms after click');
+    console.log('| Cambio | Fotogramas | Luminancia máxima | Evidencia PNG |');
+    console.log('|---|---:|---:|---|');
+    for (const row of transitionRows) {
+      console.log(`| ${row.from} → ${row.to} | ${row.frames.length} | ${row.maxLuminance.toFixed(5)} | ${row.framePath} |`);
+    }
   } finally {
     await browser.close();
   }
