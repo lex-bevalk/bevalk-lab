@@ -24,6 +24,7 @@
     "e2e:current:geometry": "node tests/e2e/current/geometry.js",
     "e2e:current:a11y": "node tests/e2e/current/a11y.js",
     "e2e:current:home": "node tests/e2e/current/home-redisenada.js",
+    "e2e:current:peek": "node tests/e2e/current/soon-peek.js",
     "guard:proto": "node tools/check-proto-guard.mjs",
     "extract:current": "node tools/current/extract-assets.mjs && node tools/current/extract-styles.mjs && node tools/current/extract-data.mjs && node tools/current/extract-logic.mjs",
     "convert:current": "node tools/current/convert-template.mjs",

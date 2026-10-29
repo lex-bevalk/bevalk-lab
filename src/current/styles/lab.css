@@ -25,6 +25,7 @@ sc-if,sc-for{display:contents}
 .lab{--ink:#16121F;--ink2:#4B4658;--line:#E3DFEC;--soft:#F4F2F8;--card:#FFFFFF;--brand:#4900AC;--brand-soft:#F2EFFF;--warn:#8A5A00;--warn-soft:#FFF4D6;--ok:#15803D;--ok-soft:#E9F7EE}
 .lab button{font-family:inherit}
 .lab :focus-visible{outline:3px solid #4900AC;outline-offset:2px;border-radius:8px}
+.lab-soon-peek:focus-visible{outline:3px solid #4900AC;outline-offset:3px;border-radius:8px}
 .lab-col{scrollbar-width:thin}
 .lab-item[aria-current="true"]{background:#F2EFFF;border-color:#BEADFF}
 .lab-item:hover{background:#F7F5FB}

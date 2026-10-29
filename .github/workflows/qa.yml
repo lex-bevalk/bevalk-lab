@@ -193,6 +193,12 @@ jobs:
           LAB_URL: http://localhost:4173/
         run: npm run e2e:current:home
 
+      - name: Current upcoming flow peek
+        if: steps.changes.outputs.code == 'true'
+        env:
+          LAB_URL: http://localhost:4173/
+        run: npm run e2e:current:peek
+
       - name: Current focus order
         if: steps.changes.outputs.code == 'true'
         env:
