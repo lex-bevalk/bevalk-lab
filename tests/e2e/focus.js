@@ -18,7 +18,7 @@ const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
     const count = await page.evaluate(() => {
       const selector = 'a[href], area[href], button, input, select, textarea, iframe, object, embed, [contenteditable="true"], summary, [tabindex]';
       return [...document.querySelectorAll(selector)].filter(element => {
-        if (element.closest('#proto-root')) return false;
+        if (element.closest('.proto-switch')) return false;
         if (element.tabIndex < 0) return false;
         const style = getComputedStyle(element);
         return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
@@ -33,7 +33,7 @@ const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
       const item = await page.evaluate(() => {
         const element = document.activeElement;
         if (!element || element === document.body) return { tag: 'BODY', label: '' };
-        if (element.closest('#proto-root')) return null;
+        if (element.closest('.proto-switch')) return null;
         const tag = element.tagName.toLowerCase();
         const label = element.getAttribute('aria-label')
           || element.getAttribute('title')

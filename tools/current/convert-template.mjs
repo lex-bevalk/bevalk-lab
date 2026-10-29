@@ -73,6 +73,33 @@ if (![gridNode, navigationNode, mainNode, previewNode, modalNode].every(Boolean)
   throw new Error('La estructura de Current cambió: se esperaban .lab-grid, nav/main.lab-col, aside.lab-pv y [data-lab-modal].');
 }
 
+function injectProtoSwitch(navigation, title) {
+  const hasText = (node, value) => node.type === 'text'
+    ? node.value.trim() === value
+    : (node.children || []).some(child => hasText(child, value));
+  const anchors = [];
+  walk(navigation, node => {
+    const style = attr(node, 'style') || '';
+    if (node.type === 'element' && node.tag === 'div'
+      && /display\s*:\s*flex/.test(style) && /align-items\s*:\s*center/.test(style)
+      && hasText(node, title) && hasText(node, '{{ lab.nav.count }}')) anchors.push(node);
+  });
+  if (anchors.length !== 1) {
+    throw new Error('Anclaje de ProtoSwitch ambiguo en Current: se esperaba una fila única con «' + title + '» y «{{ lab.nav.count }}»; se encontraron ' + anchors.length + '.');
+  }
+  const anchor = anchors[0];
+  const parents = [];
+  walk(navigation, node => {
+    if ((node.children || []).includes(anchor)) parents.push(node);
+  });
+  if (parents.length !== 1) throw new Error('Anclaje de ProtoSwitch ambiguo en Current: la fila de cabecera tiene ' + parents.length + ' padres.');
+  const parent = parents[0];
+  const index = parent.children.indexOf(anchor);
+  if (index < 0) throw new Error('No se pudo insertar ProtoSwitch después de la fila de cabecera en Current.');
+  parent.children.splice(index + 1, 0, { type: 'element', tag: 'proto-switch-slot', attributes: [], children: [] });
+}
+injectProtoSwitch(navigationNode, 'BeValk Lab');
+
 const labelGroups = new Map();
 for (const node of nodes) {
   const label = attr(node, 'data-screen-label');
@@ -295,6 +322,7 @@ function expressionForAttribute(scope, value) {
 function renderNode(node, scope, replacements = new Map()) {
   if (node.type === 'text') return '{__renderText(' + scope + ', ' + JSON.stringify(node.value) + ')}';
   if (node.type !== 'element') return '';
+  if (node.tag === 'proto-switch-slot') return '<ProtoSwitch />';
   const id = attr(node, 'data-dc-tpl');
   const replacement = id && replacements.get(id);
   if (replacement) {
@@ -594,6 +622,7 @@ function generatedImports(body, runtimePath, iconPath) {
   const usedHelpers = runtimeHelpers.filter(helper => body.includes(helper + '('));
   if (usedHelpers.length) imports.push("import { " + usedHelpers.join(', ') + " } from '" + runtimePath + "';");
   if (/<Icon\s/.test(body)) imports.push("import { Icon } from '" + iconPath + "';");
+  if (body.includes('<ProtoSwitch />')) imports.push("import ProtoSwitch from '../../../proto-switch/ProtoSwitch';");
   return imports;
 }
 function screenSource(screen) {

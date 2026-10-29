@@ -96,6 +96,33 @@ if (![tabsNode, navigationNode, coverNode, flowNode, livePreviewNode, drawerNode
   throw new Error('La estructura del Lab cambió: faltan una o más secciones esperadas.');
 }
 
+function injectProtoSwitch(navigation, title) {
+  const hasText = (node, value) => node.type === 'text'
+    ? node.value.trim() === value
+    : (node.children || []).some(child => hasText(child, value));
+  const anchors = [];
+  walk(navigation, node => {
+    const style = attr(node, 'style') || '';
+    if (node.type === 'element' && node.tag === 'div'
+      && /display\s*:\s*flex/.test(style) && /align-items\s*:\s*center/.test(style)
+      && hasText(node, title) && hasText(node, '{{ lab.nav.count }}')) anchors.push(node);
+  });
+  if (anchors.length !== 1) {
+    throw new Error('Anclaje de ProtoSwitch ambiguo en Concept: se esperaba una fila única con «' + title + '» y «{{ lab.nav.count }}»; se encontraron ' + anchors.length + '.');
+  }
+  const anchor = anchors[0];
+  const parents = [];
+  walk(navigation, node => {
+    if ((node.children || []).includes(anchor)) parents.push(node);
+  });
+  if (parents.length !== 1) throw new Error('Anclaje de ProtoSwitch ambiguo en Concept: la fila de cabecera tiene ' + parents.length + ' padres.');
+  const parent = parents[0];
+  const index = parent.children.indexOf(anchor);
+  if (index < 0) throw new Error('No se pudo insertar ProtoSwitch después de la fila de cabecera en Concept.');
+  parent.children.splice(index + 1, 0, { type: 'element', tag: 'proto-switch-slot', attributes: [], children: [] });
+}
+injectProtoSwitch(navigationNode, 'Flow Explorer');
+
 const labelGroups = new Map();
 for (const node of nodes) {
   const label = attr(node, 'data-screen-label');
@@ -126,6 +153,44 @@ function replaceAssets(node) {
 }
 replaceAssets(template.root);
 template.globalCss = replaceBlobUrls(template.globalCss);
+
+function setCssDeclaration(rule, name, value) {
+  const open = rule.indexOf('{');
+  const declarations = rule.slice(open + 1, -1).split(';').map(item => item.trim()).filter(Boolean);
+  const matches = declarations.flatMap((item, index) => item.slice(0, item.indexOf(':')).trim() === name ? [index] : []);
+  if (matches.length !== 1) throw new Error('Geometría de Concept: se esperaba una declaración ' + name + ' y se encontraron ' + matches.length + '.');
+  declarations[matches[0]] = name + ':' + value;
+  return rule.slice(0, open + 1) + declarations.join(';') + '}';
+}
+
+const baseLabRules = [...template.globalCss.matchAll(/\.lab\{[^}]*\}/g)]
+  .map(match => match[0])
+  .filter(rule => rule.includes('height:100vh;') && rule.includes('grid-template-columns:'));
+if (baseLabRules.length !== 1) {
+  throw new Error('Geometría de Concept: no se encontró una regla base única de .lab para alinear con design/current/current.html.');
+}
+let baseLabRule = baseLabRules[0];
+for (const [name, value] of [
+  ['padding', '16px'],
+  ['gap', '16px'],
+  ['grid-template-columns', '300px minmax(0,1fr) 470px'],
+]) {
+  baseLabRule = setCssDeclaration(baseLabRule, name, value);
+}
+template.globalCss = template.globalCss.replace(baseLabRules[0], '/* Geometría de Current, design/current/current.html. */\n' + baseLabRule + '\n@media (min-width:900px){.lab{min-height:892px}}');
+
+const compactBreakpoints = [...template.globalCss.matchAll(/@media\s*\(max-width:\s*1279px\)/g)];
+if (compactBreakpoints.length !== 1) {
+  throw new Error('Geometría de Concept: se esperaba un breakpoint compacto de 1279 px y se encontraron ' + compactBreakpoints.length + '.');
+}
+template.globalCss = template.globalCss.replace(compactBreakpoints[0][0], '@media (max-width:1180px)');
+const compactLabRules = [...template.globalCss.matchAll(/\.lab\{[^}]*\}/g)]
+  .map(match => match[0])
+  .filter(rule => rule.includes('grid-template-columns:minmax(232px,28fr) minmax(0,72fr)'));
+if (compactLabRules.length !== 1) {
+  throw new Error('Geometría de Concept: se esperaba una pista compacta única de 232/28fr para alinear con Current.');
+}
+template.globalCss = template.globalCss.replace(compactLabRules[0], setCssDeclaration(compactLabRules[0], 'grid-template-columns', '280px minmax(0,1fr)'));
 
 const pseudoNames = new Map();
 for (const node of nodes) {
@@ -233,6 +298,8 @@ for (const node of nodes) {
   const name = attr(node, 'data-icon');
   if (name && !name.includes('{{')) iconNames.add(name);
 }
+const familyTemplateSource = await readFile(path.join(root, 'design', 'familia', 'Main.dc.html'), 'utf8');
+for (const match of familyTemplateSource.matchAll(/data-icon="([a-z0-9-]+)"/g)) iconNames.add(match[1]);
 async function collectSourceFiles(directory) {
   const files = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
@@ -334,6 +401,7 @@ function expressionForAttribute(scope, value) {
 function renderNode(node, scope, replacements = new Map()) {
   if (node.type === 'text') return '{__renderText(' + scope + ', ' + JSON.stringify(node.value) + ')}';
   if (node.type !== 'element') return '';
+  if (node.tag === 'proto-switch-slot') return '<ProtoSwitch />';
   const id = attr(node, 'data-dc-tpl');
   const replacement = id && replacements.get(id);
   if (replacement) {
@@ -636,6 +704,7 @@ function generatedImports(body, runtimePath, iconPath) {
   const usedHelpers = runtimeHelpers.filter(helper => body.includes(helper + '('));
   if (usedHelpers.length) imports.push("import { " + usedHelpers.join(', ') + " } from '" + runtimePath + "';");
   if (/<Icon\s/.test(body)) imports.push("import { Icon } from '" + iconPath + "';");
+  if (body.includes('<ProtoSwitch />')) imports.push("import ProtoSwitch from '../../proto-switch/ProtoSwitch';");
   if (/<OptSelect\s/.test(body)) imports.push("import { OptSelect } from '" + (runtimePath === '../runtime' ? '../../OptSelect' : '../OptSelect') + "';");
   return imports;
 }
