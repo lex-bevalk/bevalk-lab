@@ -30,7 +30,10 @@ await mkdir(imageDir, { recursive: true });
 await mkdir(fontDir, { recursive: true });
 await Promise.all([
   ...[...images].map(([filename, entry]) => writeFile(path.join(imageDir, filename), entry.bytes)),
-  ...fonts.map(font => writeFile(path.join(fontDir, font.filename), font.bytes))
+  ...fonts.map(font => writeFile(
+    path.join(fontDir, font.filename === 'Guton-600.woff2' ? 'Guton-SemiBold.woff2' : font.filename),
+    font.bytes
+  ))
 ]);
 
 console.log(`Current: ${images.size} imágenes únicas, ${fonts.length} fuentes woff2.`);

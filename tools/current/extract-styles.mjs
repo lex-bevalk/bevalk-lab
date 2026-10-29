@@ -10,7 +10,10 @@ if (styles.length < 2) throw new Error(`Se esperaban los estilos de cabecera del
 
 // El primer style es el reset del visor (safe area, márgenes por defecto e imágenes); no forma parte del diseño Odin.
 const designStyles = styles.slice(1);
-const fonts = new Map(fontFaceAssets(designStyles.map(style => style.css).join('\n')).map(font => [font.uri, font.filename]));
+const fonts = new Map(fontFaceAssets(designStyles.map(style => style.css).join('\n')).map(font => [
+  font.uri,
+  font.filename === 'Guton-600.woff2' ? 'Guton-SemiBold.woff2' : font.filename
+]));
 const css = designStyles.map(({ css: sourceCss }) => replaceDataUris(sourceCss, (uri, entry) => {
   if (entry.mime === 'font/woff2') {
     const filename = fonts.get(uri);

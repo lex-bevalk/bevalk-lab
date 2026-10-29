@@ -3,7 +3,7 @@
 Decisiones del usuario: dependencias y Neon aprobados, seguir en Hobby, modo comentario en `/review` (ver `tasks/todo.md`, autorización 14).
 
 ## Principio
-Alcance: este principio rige solo para changelog, acceso y comentarios. El dropdown de los selectores (`tasks/codex-f5.md`) es otro cambio aprobado que sí modifica `/` mediante divergencias declaradas en los generadores.
+Alcance: este principio rige solo para changelog, acceso y comentarios. El dropdown de los selectores (`tasks/archive/codex-f5.md`) es otro cambio aprobado que sí modifica `/` mediante divergencias declaradas en los generadores.
 `/` no se toca: ni `index.html`, `main.tsx`, `Host.tsx`, `main.css`, `LabLogic.ts`, el conversor ni `src/ui/generated/**`. Todo lo nuevo son archivos
 nuevos (`middleware.ts`, `api/`, `review.html`, `team.html`, `src/review/`, `src/team/`, `CHANGELOG.md`) más ediciones mínimas en `vercel.json`,
 `vite.config.ts` (`rollupOptions.input`, `define`), `tsconfig.json` (`include`) y `package.json`. La CI corre contra `vite preview`, donde

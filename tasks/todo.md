@@ -1,6 +1,6 @@
 # Porte BeValk Product Experience Lab · plan
 
-Spec: `handoff/PROMPT_CLAUDE_CODE.md` (Parte B). Rama de trabajo: `feat/port`. Nada entra en `main` sin OK.
+Spec inicial: retirada en v2.0.0 (ver historial de git). Rama de trabajo actual: `feat/proto-selector`. No hacer commit ni push sin OK.
 Roles: Claude orquesta, revisa y verifica · Codex escribe todo el código de producto y de pruebas · el usuario aprueba merges y todo lo de Vercel.
 
 ## Fase 0 · Inventario (26 oct 2026) · HECHA
@@ -78,7 +78,7 @@ Agrupadas por las áreas de Fase 2:
     verificado en local y en CI), sin bypass de Vercel Authentication. El modo auto bloqueó crear el bypass y el usuario eligió esta vía.
 12. **Producción protegida** (26 oct, 21:40): Vercel Authentication en All Deployments. Se volverá a Standard solo cuando el login de app
     esté desplegado y verificado (ver `tasks/plan-equipo.md`).
-13. **Selectores → dropdown Odin** (26 oct, 22:15): primera divergencia de producto; blueprint en `tasks/codex-f5.md`. Merges de mantenimiento
+13. **Selectores → dropdown Odin** (26 oct, 22:15): primera divergencia de producto; blueprint en `tasks/archive/codex-f5.md`. Merges de mantenimiento
     con CI en verde autorizados ("adelante con todas tus recomendaciones").
 14. **Changelog, acceso y comentarios** (26 oct, 22:45): plan en `tasks/plan-equipo.md`. Aprobadas `@vercel/functions`,
     `@neondatabase/serverless` y `@types/node` y la provisión de Neon vía Marketplace. Modo comentario en `/review` (`/` intacto).
@@ -190,7 +190,7 @@ comprobación final contra https://bevalk-lab.vercel.app/ (requiere quitar Verce
 - Riesgo aceptado: respuestas, estados y borrados comparten el cupo de 30 escrituras cada 10 min por IP.
 
 ## v1.6.0 · Mi Familia: 26 flujos de `mi-familia-lab/Lab.dc.html` (28 oct 2026) · EN CURSO
-Rama `feat/mi-familia-flujos`. Spec Codex: `tasks/codex-f12.md` (fase A) y `tasks/codex-f13.md` (fase B, tras verificar A).
+Rama `feat/mi-familia-flujos`. Spec Codex archivada: `tasks/archive/codex-f12.md` (fase A) y `tasks/archive/codex-f13.md` (fase B, tras verificar A).
 
 ### Hechos verificados
 - `Lab.dc.html` define 26 flujos en 8 grupos (`LAB_FLOWS`/`LAB_GROUPS`, l. 4126-4416) y tiene pantalla para los 26 (`famApplyFlow`, l. 6497).
@@ -210,7 +210,7 @@ Rama `feat/mi-familia-flujos`. Spec Codex: `tasks/codex-f12.md` (fase A) y `task
 17. Fase B («los que faltan»): estados y flujos sin pantalla en `Lab.dc.html`, diseñados por Claude con los patrones existentes.
 
 ### Decisiones del usuario (28 oct 2026: «procede con tu mejor recomendación aplicando siempre el mejor UX»)
-18. Fase B aprobada con los 10 flujos de `tasks/codex-f13.md`.
+18. Fase B aprobada con los 10 flujos de `tasks/archive/codex-f13.md`.
 19. Tarjeta compacta «Mi Familia · NUEVO» en Inicio para todo usuario sin grupo (como la referencia): se mantiene; cerrable y no vuelve (F26).
 20. `mi-familia-lab/` se versiona como referencia de solo lectura (igual que `handoff/`).
 21. Revisión del usuario sobre el Preview de Vercel de la PR antes de fusionar.
@@ -234,3 +234,20 @@ Rama `feat/mi-familia-flujos`. Spec Codex: `tasks/codex-f12.md` (fase A) y `task
   `/api/comments` → 401, `/login` → 200. Contenido servido no verificado por Claude (assets tras sesión): lo valida el usuario.
 - Pregunta de producto abierta: al eliminar la cuenta, ¿BeValk cancela la suscripción de la tienda? La app dice que sí; `Lab.dc.html`
   (F14 C1) dice que no. La app es hoy coherente consigo misma (F13b).
+
+## v2.0.0 · Dos prototipos (29 oct 2026)
+
+### Decisiones del usuario
+24. `/` muestra Current y `/concept` muestra Concept.
+25. Current replica `design/current/current.html` con su propio shell y pills de rol.
+26. `/comments` muestra Current por defecto.
+27. Se retira `mi-familia-lab/`; su contenido queda en el historial de git. Esta decisión sustituye la decisión 20.
+28. Para cambios de Current solamente, usar una rama `current/*` o la etiqueta `proto:current`, y validar con `npm run guard:proto -- current`.
+29. Cada prototipo tiene sus propios extractores y conversor: `tools/convert-template.mjs` y `tools/extract-*.mjs` para Concept;
+    `tools/current/*` para Current.
+
+### Cómo trabajar en un prototipo
+| Prototipo | Fuente | Regeneración | Paridad | Rutas protegidas |
+|---|---|---|---|---|
+| Current | `design/current/current.html` | `npm run extract:current && npm run convert:current` | `npm run e2e:current:parity`, `npm run e2e:current:geometry` | `npm run guard:proto -- current` |
+| Concept | `handoff/reference/project/Main.dc.html` + `design/familia/Main.dc.html` | `node tools/extract-data.mjs && node tools/extract-logic.mjs && node tools/copy-assets.mjs && node tools/copy-odin.mjs && npm run convert-template` | `npm run e2e:baseline`, `npm run visual:smoke` | `npm run guard:proto -- concept` |

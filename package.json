@@ -2,7 +2,7 @@
   "name": "bevalk-lab",
   "private": true,
   "type": "module",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

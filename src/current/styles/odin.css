@@ -7,7 +7,7 @@
 /* Manrope + Geist Mono ship from Google Fonts. Guton is a commercial display face, supplied
    by the brand owner and vendored in assets/fonts/. Fallback stays Manrope per design.md §2. */
 
-@font-face{font-family:"Guton";src:url("./fonts/Guton-600.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:"Guton";src:url("./fonts/Guton-SemiBold.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
 
 :root{
   --font-display:"Guton","Manrope",system-ui,sans-serif;
