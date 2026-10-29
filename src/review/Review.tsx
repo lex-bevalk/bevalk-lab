@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { ArrowUpRight, MessageSquarePlus, Trash2, X } from 'lucide-react';
-import { COMMENT_STATUSES, COMMENT_STATUS_LABELS, type CommentStatus } from '../comments/constants';
+import { COMMENT_STATUSES, COMMENT_STATUS_LABELS, type CommentProto, type CommentStatus } from '../comments/constants';
 import { deleteTokenFor, forgetDeleteToken, rememberDeleteToken } from '../comments/deleteTokens';
 import NativeSelect from '../comments/NativeSelect';
 import Replies, { type ReplyItem } from '../comments/Replies';
@@ -13,6 +13,7 @@ interface ReviewComment {
   updated_at: string;
   author: string;
   body: string;
+  proto: CommentProto;
   screen: string;
   tpl: string | null;
   x: number;
@@ -195,7 +196,7 @@ function commentHref(item: ReviewComment): string {
   if (item.flow) params.set('flow', item.flow);
   if (item.plan) params.set('plan', item.plan);
   params.set('c', item.id);
-  const reviewPath = labBridge()?.proto === 'concept' ? '/concept/review' : '/review';
+  const reviewPath = item.proto === 'concept' ? '/concept/review' : '/review';
   return `${reviewPath}?${params.toString()}`;
 }
 
@@ -211,6 +212,7 @@ function popoverPosition(item: ReviewComment, target: ReviewTarget): CSSProperti
 }
 
 export default function Review() {
+  const proto = labBridge()?.proto ?? 'concept';
   const target = useVisibleScreen();
   const toggleRef = useRef<HTMLButtonElement>(null);
   const deleteButtonRef = useRef<HTMLButtonElement>(null);
@@ -248,14 +250,16 @@ export default function Review() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch('/api/comments', { signal: controller.signal })
+    fetch(`/api/comments?${new URLSearchParams({ proto })}`, { signal: controller.signal })
       .then(async response => {
         if (!response.ok) throw new Error('Comments could not be loaded.');
-        return response.json() as Promise<{ role: 'team' | 'owner'; items: ReviewComment[] }>;
+        return response.json() as Promise<{ role: 'team' | 'owner'; items: Array<ReviewComment & { proto?: CommentProto }> }>;
       })
       .then(result => {
         setRole(result.role);
-        setComments(result.items.map(item => ({ ...item, replies: item.replies ?? [] })));
+        setComments(result.items
+          .map(item => ({ ...item, proto: item.proto ?? 'concept', replies: item.replies ?? [] }))
+          .filter(item => item.proto === proto));
       })
       .catch(reason => {
         if (!(reason instanceof DOMException && reason.name === 'AbortError')) setComments([]);
@@ -340,7 +344,7 @@ export default function Review() {
       const response = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ author: cleanName, body: cleanBody, ...pendingPin })
+        body: JSON.stringify({ author: cleanName, body: cleanBody, proto, ...pendingPin })
       });
       if (!response.ok) {
         setError(errorMessage(response.status));

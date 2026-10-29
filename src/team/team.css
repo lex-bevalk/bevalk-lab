@@ -253,7 +253,7 @@ body {
 
 .comments-filters {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(180px, 1.2fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(180px, 1.2fr);
   gap: var(--space-4);
   margin: var(--space-8) 0 var(--space-6);
   padding: var(--space-5);
@@ -263,6 +263,7 @@ body {
 }
 
 .comments-filters label,
+.comments-filter,
 .comments-status-control {
   display: flex;
   flex-direction: column;
@@ -271,6 +272,12 @@ body {
   color: var(--color-foreground);
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
+}
+
+.comments-filter label {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
 }
 
 .comments-filters select,
@@ -326,6 +333,24 @@ body {
 .comments-card__author time {
   color: var(--color-muted-foreground);
   font-size: var(--text-xs);
+}
+
+.comments-proto {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  color: var(--color-primary);
+  background: var(--purple-50);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
+}
+
+.comments-proto--concept {
+  color: var(--neutral-700);
+  background: var(--neutral-100);
 }
 
 .comments-card__state {

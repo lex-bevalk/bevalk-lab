@@ -9,11 +9,13 @@ const baseUrl = (process.env.LAB_URL || 'http://localhost:4173/concept.html')
 const teamHtml = path.resolve(process.env.LAB_DIST_DIR || path.resolve(__dirname, '../../dist'), 'team.html');
 const savedComments = [];
 const createdId = '2c6849e1-7a08-4b81-8b6c-4f50f8b2a729';
+const currentId = 'd3e3c079-73cc-451a-b1d6-b33b90e17dc2';
 const luisId = 'abfc0c63-47d4-4f82-9f69-df0202a44cf6';
 const siblingId = '67b742e1-1ed1-4d45-b71d-5673bf78f019';
 const deleteToken = 'd'.repeat(64);
 let role = 'team';
 let postPayload = null;
+let lastList = { proto: null, items: [] };
 let replySequence = 0;
 const consoleErrors = [];
 
@@ -24,6 +26,7 @@ function commentFixture(overrides = {}) {
     updated_at: '2026-10-27T12:00:00.000Z',
     author: 'Ana',
     body: 'Revisar este punto',
+    proto: 'concept',
     screen: 'Inicio',
     tpl: '421',
     x: 0.5,
@@ -65,7 +68,12 @@ async function assertAxe(page, selector, label) {
   await page.route('**/api/comments*', async route => {
     const request = route.request();
     if (request.method() === 'GET') {
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ role, items: savedComments }) });
+      const url = new URL(request.url());
+      const proto = url.searchParams.get('proto');
+      const screen = url.searchParams.get('screen');
+      const items = savedComments.filter(item => (!proto || item.proto === proto) && (!screen || item.screen === screen));
+      lastList = { proto, items };
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ role, items }) });
       return;
     }
     if (request.method() === 'POST') {
@@ -87,7 +95,13 @@ async function assertAxe(page, selector, label) {
         await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(reply) });
         return;
       }
-      const item = commentFixture({ ...postPayload, author: String(postPayload.author).trim(), body: String(postPayload.body).trim() });
+      const item = commentFixture({
+        ...postPayload,
+        id: postPayload.proto === 'current' ? currentId : createdId,
+        proto: postPayload.proto || 'concept',
+        author: String(postPayload.author).trim(),
+        body: String(postPayload.body).trim()
+      });
       savedComments.unshift(item);
       await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ ...item, delete_token: deleteToken }) });
       return;
@@ -119,7 +133,7 @@ async function assertAxe(page, selector, label) {
     await route.fulfill({ status: 405, contentType: 'application/json', body: JSON.stringify({ error: 'method_not_allowed' }) });
   });
 
-  await page.route('**/comments', async route => {
+  await page.route('**/comments*', async route => {
     if (route.request().resourceType() === 'document') {
       await route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', path: teamHtml });
       return;
@@ -176,10 +190,49 @@ async function assertAxe(page, selector, label) {
     await dialog.getByRole('button', { name: 'Enviar', exact: true }).click();
     await page.getByTestId('review-pin').waitFor({ state: 'visible' });
     assert.ok(postPayload, 'POST /api/comments must be called');
+    assert.equal(postPayload.proto, 'concept', 'Concept review should attach its prototype to new comments');
     assert.ok(postPayload.x >= 0 && postPayload.x <= 1, 'comment x must be within [0, 1]');
     assert.ok(postPayload.y >= 0 && postPayload.y <= 1, 'comment y must be within [0, 1]');
     assert.equal(postPayload.screen, screenLabel, 'POST should use the visible data-screen-label');
     await assertAxe(page, '.review-pins', 'comment pins');
+
+    const currentList = page.waitForResponse(response => response.url().includes('/api/comments?proto=current') && response.request().method() === 'GET');
+    await page.goto(`${baseUrl}/review.html?flow=A01&plan=premium`, { waitUntil: 'load' });
+    await page.locator('.tp-phone').waitFor({ state: 'visible' });
+    await page.waitForFunction(flow => {
+      const lab = window.__lab;
+      return lab?.state?.lab?.cur === flow && lab.world?.()?.plan === 'premium';
+    }, 'A01');
+    await currentList;
+    assert.equal(lastList.proto, 'current');
+    assert.equal(lastList.items.some(item => item.id === createdId), false, 'Current review must not load Concept comments');
+    const currentScreen = page.locator('.tp-phone [data-screen-label]').filter({ visible: true }).first();
+    await currentScreen.waitFor({ state: 'visible' });
+    const currentScreenLabel = await currentScreen.getAttribute('data-screen-label');
+    assert.ok(currentScreenLabel, 'Current flow should expose a screen label');
+    await page.getByRole('button', { name: 'Comentar', exact: true }).click();
+    await page.getByRole('button', { name: 'Cancelar', exact: true }).waitFor({ state: 'visible' });
+    const currentTarget = page.getByTestId('review-target');
+    await currentTarget.waitFor({ state: 'visible' });
+    const currentTargetBox = await currentTarget.boundingBox();
+    assert.ok(currentTargetBox, 'Current screen target should have geometry');
+    await currentTarget.click({ position: { x: currentTargetBox.width * 0.42, y: currentTargetBox.height * 0.36 } });
+    const currentDialog = page.getByRole('dialog', { name: 'Nuevo comentario', exact: true });
+    await currentDialog.waitFor({ state: 'visible' });
+    await currentDialog.getByRole('textbox', { name: 'Tu nombre', exact: true }).fill('Nora');
+    await currentDialog.getByRole('textbox', { name: 'Comentario', exact: true }).fill('Comentario de Current');
+    await currentDialog.getByRole('button', { name: 'Enviar', exact: true }).click();
+    await page.getByRole('button', { name: `Comentario 1 en ${currentScreenLabel}: Nora`, exact: true }).waitFor({ state: 'visible' });
+    assert.equal(postPayload.proto, 'current', 'Current review should attach its prototype to new comments');
+    assert.equal(postPayload.screen, currentScreenLabel);
+
+    const conceptList = page.waitForResponse(response => response.url().includes('/api/comments?proto=concept') && response.request().method() === 'GET');
+    await page.goto(`${baseUrl}/concept-review.html?c=${createdId}`, { waitUntil: 'load' });
+    await page.locator('.tp-phone').waitFor({ state: 'visible' });
+    await conceptList;
+    assert.equal(lastList.proto, 'concept');
+    assert.equal(lastList.items.some(item => item.id === currentId), false, 'Concept review must not load Current comments');
+
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Comentar', exact: true }).waitFor({ state: 'visible' });
 
@@ -223,9 +276,11 @@ async function assertAxe(page, selector, label) {
     await page.keyboard.press('Escape');
     await teamPopover.waitFor({ state: 'detached' });
 
-    savedComments[0].y = 0.95;
-    const mobileReplies = savedComments[0].replies;
-    savedComments[0].replies = Array.from({ length: 10 }, (_, index) => ({
+    const conceptCommentForMobile = savedComments.find(item => item.id === createdId);
+    assert.ok(conceptCommentForMobile, 'the concept comment should remain available for mobile popover coverage');
+    conceptCommentForMobile.y = 0.95;
+    const mobileReplies = conceptCommentForMobile.replies;
+    conceptCommentForMobile.replies = Array.from({ length: 10 }, (_, index) => ({
       id: `mobile-layer-reply-${index}`,
       comment_id: createdId,
       created_at: '2026-10-27T12:05:00.000Z',
@@ -267,7 +322,7 @@ async function assertAxe(page, selector, label) {
     });
     assert.equal(toggleHitTest.centerIntersects, true, 'the toggle center should intersect the mobile popover');
     assert.equal(toggleHitTest.hitIsPopover, true, 'elementFromPoint at the toggle center should return an element inside the popover');
-    savedComments[0].replies = mobileReplies;
+    conceptCommentForMobile.replies = mobileReplies;
     await page.setViewportSize({ width: 1440, height: 1000 });
     await page.keyboard.press('Escape');
     await narrowPopover.waitFor({ state: 'detached' });
@@ -284,11 +339,40 @@ async function assertAxe(page, selector, label) {
 
     await page.goto(`${baseUrl}/comments`, { waitUntil: 'load' });
     await page.getByRole('heading', { name: 'Comentarios', exact: true }).waitFor({ state: 'visible' });
+    await page.getByText('Comentario de Current', { exact: true }).waitFor({ state: 'visible' });
+    assert.equal(await page.getByText('Revisar este punto', { exact: true }).count(), 0, 'the default comments filter should show Current only');
+    assert.equal(await page.locator(`[data-comment-id="${currentId}"] .comments-proto`).textContent(), 'Current version');
+    const protoFilter = page.getByLabel('Prototipo', { exact: true });
+    const screenFilter = page.locator('.comments-filters select').nth(1);
+    const currentScreenOptions = await screenFilter.locator('option').evaluateAll(options => options.map(option => option.value));
+    assert.ok(currentScreenOptions.includes('Escáner'));
+    assert.equal(currentScreenOptions.includes('Ayuda'), false);
+    await screenFilter.selectOption('Escáner');
+    await protoFilter.selectOption('concept');
+    await page.waitForFunction(() => new URLSearchParams(location.search).get('proto') === 'concept');
+    assert.equal(await screenFilter.inputValue(), '', 'screen filters that do not exist in the selected prototype should clear');
+    const conceptScreenOptions = await screenFilter.locator('option').evaluateAll(options => options.map(option => option.value));
+    assert.ok(conceptScreenOptions.includes('Ayuda'));
+    assert.equal(conceptScreenOptions.includes('Escáner'), false);
     await page.getByText('Revisar este punto', { exact: true }).waitFor({ state: 'visible' });
+    assert.equal(await page.getByText('Comentario de Current', { exact: true }).count(), 0, 'Concept filter should hide Current comments');
+    assert.ok((await page.locator(`[data-comment-id="${createdId}"] a[href]`).getAttribute('href')).startsWith('/concept/review?'));
+    await protoFilter.selectOption('all');
+    await page.waitForFunction(() => new URLSearchParams(location.search).get('proto') === 'all');
+    const allScreenOptions = await screenFilter.locator('option').evaluateAll(options => options.map(option => option.value));
+    assert.ok(allScreenOptions.includes('Ayuda') && allScreenOptions.includes('Escáner'));
+    await page.getByText('Comentario de Current', { exact: true }).waitFor({ state: 'visible' });
+    await page.getByText('Revisar este punto', { exact: true }).waitFor({ state: 'visible' });
+    assert.ok((await page.locator(`[data-comment-id="${currentId}"] a[href]`).getAttribute('href')).startsWith('/review?'));
+    await page.addScriptTag({ path: require.resolve('axe-core/axe.min.js') });
+    await assertAxe(page, `[data-comment-id="${currentId}"]`, 'Current prototype comment card');
+    await protoFilter.selectOption('concept');
+    await page.waitForFunction(() => new URLSearchParams(location.search).get('proto') === 'concept');
     await page.getByRole('combobox', { name: 'Estado de Ana', exact: true }).waitFor({ state: 'visible' });
     await page.reload({ waitUntil: 'load' });
     const ownerAnaCard = page.locator(`[data-comment-id="${createdId}"]`);
     const ownerLuisCard = page.locator(`[data-comment-id="${luisId}"]`);
+    await page.waitForTimeout(300);
     await ownerLuisCard.waitFor({ state: 'visible' });
     assert.equal(await ownerAnaCard.getByRole('button', { name: 'Eliminar', exact: true }).count(), 1);
     assert.equal(await ownerLuisCard.getByRole('button', { name: 'Eliminar', exact: true }).count(), 1);

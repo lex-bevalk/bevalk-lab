@@ -1,4 +1,4 @@
-import { LAB_ALL_FLOWS } from '../current/data';
+import type { CommentProto } from '../comments/constants';
 
 export interface Bridge {
   proto: 'concept' | 'current';
@@ -17,6 +17,7 @@ type LabApi = {
   labFlows?: () => Array<{ id: string }>;
   labSelect?: (flow: { id: string }, options?: { plan?: string }) => void;
   labOpen?: (flowId: string) => boolean | void;
+  labAllFlows?: () => Array<{ id: string }>;
   labPlan?: (plan: 'free' | 'premium') => void;
 };
 
@@ -57,12 +58,14 @@ function currentBridge(lab: LabApi | undefined): Bridge {
     },
     select(flowId, plan) {
       if (!lab) return false;
-      if (!LAB_ALL_FLOWS.some(flow => flow.id === flowId)) return false;
-      if (typeof lab.labOpen !== 'function') return false;
-      if (lab.labOpen(flowId) === false) return false;
+      const flows = lab.labAllFlows?.();
+      if (flows && !flows.some(flow => flow.id === flowId)) return false;
+      const open = lab.labOpen;
+      const setPlan = lab.labPlan;
+      if (typeof open !== 'function' || (plan && typeof setPlan !== 'function')) return false;
+      if (open.call(lab, flowId) === false) return false;
       if (plan) {
-        if (typeof lab.labPlan !== 'function') return false;
-        lab.labPlan(plan);
+        setPlan!.call(lab, plan);
       }
       return true;
     }
@@ -71,7 +74,8 @@ function currentBridge(lab: LabApi | undefined): Bridge {
 
 export function labBridge(): Bridge | undefined {
   const lab = (window as unknown as { __lab?: LabApi }).__lab;
-  if (document.documentElement.dataset.proto === 'concept') return conceptBridge(lab);
-  if (document.documentElement.dataset.proto === 'current') return currentBridge(lab);
+  const proto = document.documentElement.dataset.proto as CommentProto | undefined;
+  if (proto === 'concept') return conceptBridge(lab);
+  if (proto === 'current') return currentBridge(lab);
   return undefined;
 }

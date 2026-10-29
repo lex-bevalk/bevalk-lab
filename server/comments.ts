@@ -1,9 +1,18 @@
 import { neon } from '@neondatabase/serverless';
-import { COMMENT_STATUSES, SCREEN_LABELS, type CommentScreen, type CommentStatus } from '../src/comments/constants.js';
+import {
+  ALL_SCREEN_LABELS,
+  COMMENT_STATUSES,
+  PROTOS,
+  SCREEN_LABELS,
+  SCREEN_LABELS_BY_PROTO,
+  type CommentProto,
+  type CommentScreen,
+  type CommentStatus
+} from '../src/comments/constants.js';
 import type { NeonSqlClient } from './neon-rate-limit.js';
 
-export { COMMENT_STATUSES, SCREEN_LABELS };
-export type { CommentScreen, CommentStatus };
+export { ALL_SCREEN_LABELS, COMMENT_STATUSES, PROTOS, SCREEN_LABELS, SCREEN_LABELS_BY_PROTO };
+export type { CommentProto, CommentScreen, CommentStatus };
 
 export interface CommentRecord {
   id: string;
@@ -11,6 +20,7 @@ export interface CommentRecord {
   updated_at: Date | string;
   author: string;
   body: string;
+  proto: CommentProto;
   screen: CommentScreen;
   tpl: string | null;
   x: number;
@@ -27,6 +37,7 @@ export interface CommentItem {
   updated_at: string;
   author: string;
   body: string;
+  proto: CommentProto;
   screen: CommentScreen;
   tpl: string | null;
   x: number;
@@ -54,6 +65,7 @@ export interface ReplyItem {
 }
 
 export interface CommentFilters {
+  proto?: CommentProto;
   screen?: CommentScreen;
   status?: CommentStatus;
   author?: string;
@@ -62,6 +74,7 @@ export interface CommentFilters {
 export interface CommentCreateInput {
   author: string;
   body: string;
+  proto: CommentProto;
   screen: CommentScreen;
   tpl: string | null;
   x: number;
@@ -87,7 +100,12 @@ export interface CommentsStore {
 
 export type Validation<T> = { ok: true; value: T } | { ok: false; field: string };
 
-const screenSet = new Set<string>(SCREEN_LABELS);
+const protoSet = new Set<string>(PROTOS);
+const screenSets: Record<CommentProto, Set<string>> = {
+  concept: new Set<string>(SCREEN_LABELS_BY_PROTO.concept),
+  current: new Set<string>(SCREEN_LABELS_BY_PROTO.current)
+};
+const allScreenSet = new Set<string>(ALL_SCREEN_LABELS);
 const statusSet = new Set<string>(COMMENT_STATUSES);
 const anyControlCharacters = /[\u0000-\u001F\u007F]/;
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -119,7 +137,9 @@ export function validateCommentCreate(value: unknown): Validation<CommentCreateI
   const body = validateBody(value.body);
   if (!body.ok) return body;
 
-  if (typeof value.screen !== 'string' || !screenSet.has(value.screen)) return { ok: false, field: 'screen' };
+  const proto = value.proto === undefined ? 'concept' : value.proto;
+  if (typeof proto !== 'string' || !protoSet.has(proto)) return { ok: false, field: 'proto' };
+  if (typeof value.screen !== 'string' || !screenSets[proto as CommentProto].has(value.screen)) return { ok: false, field: 'screen' };
   if (typeof value.x !== 'number' || !Number.isFinite(value.x) || value.x < 0 || value.x > 1) return { ok: false, field: 'x' };
   if (typeof value.y !== 'number' || !Number.isFinite(value.y) || value.y < 0 || value.y > 1) return { ok: false, field: 'y' };
 
@@ -139,6 +159,7 @@ export function validateCommentCreate(value: unknown): Validation<CommentCreateI
     value: {
       author: author.value,
       body: body.value,
+      proto: proto as CommentProto,
       screen: value.screen as CommentScreen,
       tpl: tpl.value,
       x: value.x,
@@ -178,9 +199,15 @@ export function validateReplyCreate(value: unknown): Validation<ReplyCreateInput
 
 export function validateCommentFilters(params: URLSearchParams): Validation<CommentFilters> {
   const filters: CommentFilters = {};
+  const proto = params.get('proto');
+  if (proto !== null && proto !== '') {
+    if (!protoSet.has(proto)) return { ok: false, field: 'proto' };
+    filters.proto = proto as CommentProto;
+  }
   const screen = params.get('screen');
   if (screen !== null && screen !== '') {
-    if (!screenSet.has(screen)) return { ok: false, field: 'screen' };
+    const allowedScreens = filters.proto ? screenSets[filters.proto] : allScreenSet;
+    if (!allowedScreens.has(screen)) return { ok: false, field: 'screen' };
     filters.screen = screen as CommentScreen;
   }
   const status = params.get('status');
@@ -226,6 +253,7 @@ function toCommentItem(row: CommentRecord): CommentItem {
     updated_at: new Date(row.updated_at).toISOString(),
     author: row.author,
     body: row.body,
+    proto: row.proto,
     screen: row.screen,
     tpl: row.tpl,
     x: Number(row.x),
@@ -260,6 +288,7 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
         updated_at timestamptz not null default now(),
         author text not null,
         body text not null,
+        proto text not null default 'concept',
         screen text not null,
         tpl text,
         x real not null,
@@ -268,6 +297,8 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
         plan text,
         status text not null default 'todo' check (status in ('todo','in_progress','done','wont_do'))
       )`)
+      .then(() => sql`ALTER TABLE comments ADD COLUMN IF NOT EXISTS proto text NOT NULL DEFAULT 'concept'`)
+      .then(() => sql`CREATE INDEX IF NOT EXISTS comments_proto_created_at_idx ON comments (proto, created_at)`)
       .then(() => sql`ALTER TABLE comments ADD COLUMN IF NOT EXISTS delete_token_hash text`)
       .then(() => sql`CREATE TABLE IF NOT EXISTS comment_replies (
         id uuid primary key default gen_random_uuid(),
@@ -308,13 +339,15 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
   return {
     async list(filters): Promise<CommentItem[]> {
       await ensureTable();
+      const proto = filters.proto ?? null;
       const screen = filters.screen ?? null;
       const status = filters.status ?? null;
       const author = filters.author ?? null;
       const rows = await sql`
-        SELECT id, created_at, updated_at, author, body, screen, tpl, x, y, flow, plan, status
+        SELECT id, created_at, updated_at, author, body, proto, screen, tpl, x, y, flow, plan, status
         FROM comments
-        WHERE (${screen}::text IS NULL OR screen = ${screen})
+        WHERE (${proto}::text IS NULL OR proto = ${proto})
+          AND (${screen}::text IS NULL OR screen = ${screen})
           AND (${status}::text IS NULL OR status = ${status})
           AND (${author}::text IS NULL OR author = ${author})
         ORDER BY created_at DESC
@@ -326,9 +359,9 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
     async create(input, deleteTokenHash): Promise<CommentItem> {
       await ensureTable();
       const rows = await sql`
-        INSERT INTO comments (author, body, screen, tpl, x, y, flow, plan, delete_token_hash)
-        VALUES (${input.author}, ${input.body}, ${input.screen}, ${input.tpl}, ${input.x}, ${input.y}, ${input.flow}, ${input.plan}, ${deleteTokenHash})
-        RETURNING id, created_at, updated_at, author, body, screen, tpl, x, y, flow, plan, status, delete_token_hash
+        INSERT INTO comments (author, body, proto, screen, tpl, x, y, flow, plan, delete_token_hash)
+        VALUES (${input.author}, ${input.body}, ${input.proto}, ${input.screen}, ${input.tpl}, ${input.x}, ${input.y}, ${input.flow}, ${input.plan}, ${deleteTokenHash})
+        RETURNING id, created_at, updated_at, author, body, proto, screen, tpl, x, y, flow, plan, status, delete_token_hash
       ` as CommentRecord[];
       if (!rows[0]) throw new Error('Comment insert returned no row.');
       return toCommentItem(rows[0]);
@@ -350,7 +383,7 @@ export function createNeonCommentsStore(databaseUrl: string, sqlClient?: NeonSql
       const rows = await sql`
         UPDATE comments SET status = ${status}, updated_at = now()
         WHERE id = ${id}::uuid
-        RETURNING id, created_at, updated_at, author, body, screen, tpl, x, y, flow, plan, status
+        RETURNING id, created_at, updated_at, author, body, proto, screen, tpl, x, y, flow, plan, status
       ` as CommentRecord[];
       return rows[0] ? (await attachReplies([toCommentItem(rows[0])]))[0] : null;
     },

@@ -37,6 +37,7 @@ describe('review bridge for current', () => {
     const lab = {
       state: { lab: { cur: flowId } },
       world: () => ({ plan: 'basic' }),
+      labAllFlows: () => [{ id: flowId }],
       labOpen,
       labPlan
     };
@@ -51,14 +52,15 @@ describe('review bridge for current', () => {
     expect(bridge?.select('missing')).toBe(false);
   });
 
-  it('validates known flows without an instance list and returns false without __lab', () => {
+  it('tries labOpen without an instance list and returns false without __lab', () => {
     const flowId = LAB_ALL_FLOWS[0].id;
-    const labOpen = vi.fn();
+    const labOpen = vi.fn((id: string) => id === flowId);
     setPrototype('current', { labOpen });
     expect(labBridge()?.select(flowId)).toBe(true);
     expect(labOpen).toHaveBeenCalledExactlyOnceWith(flowId);
 
     expect(labBridge()?.select('missing')).toBe(false);
+    expect(labOpen).toHaveBeenLastCalledWith('missing');
 
     setPrototype('current');
     expect(labBridge()?.select(flowId)).toBe(false);
