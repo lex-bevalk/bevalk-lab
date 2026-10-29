@@ -154,6 +154,8 @@ jobs:
 
       - name: Focus order
         if: steps.changes.outputs.code == 'true'
+        env:
+          FOCUS_IGNORE_CONCEPT_NAV: '1'
         run: npm run focus
 
       - name: Review and comments

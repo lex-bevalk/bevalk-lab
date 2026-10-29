@@ -35,9 +35,7 @@ async function measureNavPlacement(page) {
       ['BeValk Lab', 'Flow Explorer'].includes(element.textContent.trim()));
     const subtitle = [...column.querySelectorAll('span')].find(element =>
       element.textContent.includes(' flujos · ') && element.textContent.includes(' grupos'));
-    const nextControl = column.matches('.lab-a')
-      ? [...column.querySelectorAll('span')].find(element => element.textContent.trim() === 'Modalidad simulada')
-      : column.querySelector('input[type="search"]');
+    const nextControl = column.querySelector('input[type="search"]');
     if (!title || !subtitle || !nextControl) throw new Error('Falta el título, subtítulo o control siguiente en la cabecera.');
     const box = element => {
       const rect = element.getBoundingClientRect();
@@ -60,8 +58,8 @@ async function measureNavPlacement(page) {
     const style = getComputedStyle(selector);
     const visible = style.display !== 'none' && style.visibility !== 'hidden'
       && Number(style.opacity) > 0 && selector.getClientRects().length > 0;
-    const internalScrolls = column.matches('.lab-a') ? Object.fromEntries([
-      ['navigation', column.querySelector('.lab-scroll')],
+    const internalScrolls = Object.fromEntries([
+      ['navigation', column],
       ['center', document.querySelector('.lab-b .lab-scroll')],
       ['phone', document.querySelector('.tp-phone .tp-scroll')]
     ].map(([name, element]) => {
@@ -72,7 +70,7 @@ async function measureNavPlacement(page) {
         scrollHeight: element.scrollHeight,
         clientHeight: element.clientHeight
       }];
-    })) : null;
+    }));
     return {
       visible,
       inColumn: column.contains(selector),
@@ -85,6 +83,73 @@ async function measureNavPlacement(page) {
       flowsChecked: flowItems.length,
       internalScrolls
     };
+  });
+}
+
+async function measureNavParity(page, path) {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${baseUrl}${path}`, { waitUntil: 'load' });
+  await page.evaluate(() => document.fonts.ready);
+  return page.evaluate(() => {
+    const concept = document.documentElement.dataset.proto === 'concept';
+    const column = document.querySelector(concept ? '.lab-a' : 'nav.lab-col');
+    const title = [...column.querySelectorAll('span')].find(element => element.textContent.trim() === 'BeValk Lab');
+    const subtitleText = [...column.querySelectorAll('span')].find(element => element.childElementCount === 0
+      && element.textContent.includes(' flujos · ') && element.textContent.includes(' grupos'));
+    const subtitle = subtitleText?.parentElement;
+    const planLabel = [...column.querySelectorAll('span')].find(element => element.textContent.trim() === 'Modalidad simulada');
+    const planHelp = planLabel?.parentElement.querySelector(':scope > span:last-child');
+    const section = column.querySelector('[role="group"][aria-label="Sección"]');
+    const plan = column.querySelector('[aria-labelledby="lab-mod"]');
+    const rows = [...column.querySelectorAll('.lab-item, .lab-scroll [role="group"] > button')];
+    const row = rows.find(element => element.querySelector(':scope > span:nth-of-type(2)')?.textContent.trim() === 'Crea su cuenta');
+    if (!column || !title || !subtitle || !section || !planLabel || !plan || !planHelp || !row) {
+      throw new Error('Faltan elementos del nav para medir la paridad Current/Concept.');
+    }
+    const label = row.querySelector(':scope > span:nth-of-type(2)');
+    const group = row.parentElement.querySelector(':scope > span');
+    const elements = {
+      icon: column.querySelector(':scope > div:first-of-type > span[aria-hidden="true"]'),
+      title,
+      subtitle,
+      selector: column.querySelector('.proto-switch'),
+      search: column.querySelector('input[type="search"]'),
+      tabs: section,
+      planLabel,
+      toggle: plan,
+      planHelp,
+      group,
+    };
+    const box = (element, fontElement = element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        x: Number(rect.x.toFixed(2)),
+        y: Number(rect.y.toFixed(2)),
+        width: Number(rect.width.toFixed(2)),
+        height: Number(rect.height.toFixed(2)),
+        fontSize: Number.parseFloat(getComputedStyle(fontElement).fontSize)
+      };
+    };
+    const measurements = Object.fromEntries(Object.entries(elements).map(([key, element]) => [key, box(element,
+      key === 'tabs' ? section.querySelector('button')
+        : key === 'toggle' ? plan.querySelector('button')
+          : element)]));
+    const titleText = title.textContent.trim();
+    const searchPlaceholder = column.querySelector('input[type="search"]').getAttribute('placeholder');
+    row.scrollIntoView({ block: 'start' });
+    measurements.row = box(row, label);
+    const labBackground = getComputedStyle(document.querySelector('.lab')).backgroundColor;
+    const cardSelectors = concept ? ['.lab-a', '.lab-b', '.lab-c'] : ['nav.lab-col', 'main.lab-col', 'aside.lab-pv'];
+    const cardNames = ['nav', 'center', 'preview'];
+    const cards = Object.fromEntries(cardSelectors.map((selector, index) => {
+      const style = getComputedStyle(document.querySelector(selector));
+      return [cardNames[index], {
+        background: style.backgroundColor,
+        border: style.borderTopColor,
+        radius: style.borderTopLeftRadius
+      }];
+    }));
+    return { titleText, searchPlaceholder, measurements, labBackground, cards };
   });
 }
 
@@ -201,12 +266,59 @@ async function measureColumns(page, path, width) {
             && Object.values(placement.internalScrolls).every(scroll => scroll
               && ['auto', 'scroll'].includes(scroll.overflowY)
               && scroll.scrollHeight > scroll.clientHeight),
-          `${item.path} at ${width}: navigation, center and phone keep internal scrolling`);
+          `${item.path} at ${width}: the whole navigation, center and phone keep scrolling`);
           assertions += 1;
         }
         assertions += 5;
       }
     }
+
+    const currentNav = await measureNavParity(page, '/');
+    const conceptNav = await measureNavParity(page, '/concept.html');
+    assert.equal(currentNav.titleText, 'BeValk Lab', 'Current title text');
+    assert.equal(conceptNav.titleText, 'BeValk Lab', 'Concept title text');
+    assert.equal(currentNav.searchPlaceholder, 'Buscar en todos los flujos', 'Current search placeholder');
+    assert.equal(conceptNav.searchPlaceholder, 'Buscar en todos los flujos', 'Concept search placeholder');
+    assert.equal(currentNav.labBackground, conceptNav.labBackground, '.lab background');
+    assert.deepEqual(conceptNav.cards, currentNav.cards, 'navigation, center and preview card styles');
+    for (const key of ['icon', 'title', 'subtitle', 'selector', 'search', 'tabs', 'planLabel', 'toggle', 'planHelp', 'group', 'row']) {
+      for (const property of ['x', 'y', 'width', 'height', 'fontSize']) {
+        const delta = conceptNav.measurements[key][property] - currentNav.measurements[key][property];
+        assert.ok(Math.abs(delta) <= 1,
+          `${key}.${property}: Current ${currentNav.measurements[key][property]}, Concept ${conceptNav.measurements[key][property]}`);
+        assertions += 1;
+      }
+    }
+    assertions += 6;
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${baseUrl}/concept.html`, { waitUntil: 'load' });
+    const section = page.locator('.lab-a [role="group"][aria-label="Sección"]');
+    const appTab = section.getByRole('button', { name: /^App/ });
+    const familyTab = section.getByRole('button', { name: /^Mi Familia/ });
+    const groupLabels = () => page.locator('.lab-a .lab-scroll [role="group"]')
+      .evaluateAll(groups => groups.map(group => group.getAttribute('aria-label')));
+    await appTab.waitFor({ state: 'visible' });
+    assert.equal(await appTab.getAttribute('aria-pressed'), 'true', 'Concept starts on App');
+    let labels = await groupLabels();
+    assert.ok(labels.length > 0 && labels.every(label => !label.startsWith('Mi Familia')),
+      `App excludes family flows: ${labels.join(', ')}`);
+    await familyTab.click();
+    assert.equal(await familyTab.getAttribute('aria-pressed'), 'true', 'Mi Familia tab selects');
+    labels = await groupLabels();
+    assert.ok(labels.length > 0 && labels.every(label => label.startsWith('Mi Familia')),
+      `Mi Familia excludes app flows: ${labels.join(', ')}`);
+    const search = page.getByRole('searchbox', { name: 'Buscar flujos' });
+    await search.fill('Bienvenida');
+    await page.locator('.lab-a .lab-scroll button').filter({ hasText: 'Bienvenida' }).first().waitFor({ state: 'visible' });
+    labels = await groupLabels();
+    assert.ok(labels.some(label => !label.startsWith('Mi Familia')), 'search finds App flows while Mi Familia is selected');
+    await appTab.click();
+    await search.fill('Contrato el plan familiar');
+    await page.locator('.lab-a .lab-scroll button').filter({ hasText: 'Contrato el plan familiar' }).first().waitFor({ state: 'visible' });
+    labels = await groupLabels();
+    assert.ok(labels.some(label => label.startsWith('Mi Familia')), 'search finds Mi Familia flows while App is selected');
+    assertions += 7;
 
     console.log(`PROTO SWITCH PASS · ${pages.length} páginas · ${viewports.length} anchos · ${assertions} comprobaciones · 0 violaciones axe`);
     console.log('PROTO SWITCH LAYOUT · x / width (px), diferencias Concept − Current; tolerancia ±1 px');
@@ -215,6 +327,14 @@ async function measureColumns(page, path, width) {
     for (const row of layoutRows) {
       console.log(`| ${row.width}×900 | ${row.key} | ${row.current.x} / ${row.current.width} | ${row.concept.x} / ${row.concept.width} | ${row.delta.x} / ${row.delta.width} |`);
     }
+    console.log('PROTO SWITCH NAV · Current/Concept (x / y / width / height / font-size px)');
+    console.log('| Elemento | Current | Concept |');
+    console.log('|---|---:|---:|');
+    for (const key of ['icon', 'title', 'subtitle', 'selector', 'search', 'tabs', 'planLabel', 'toggle', 'planHelp', 'group', 'row']) {
+      const format = value => `${value.x} / ${value.y} / ${value.width} / ${value.height} / ${value.fontSize}`;
+      console.log(`| ${key} | ${format(currentNav.measurements[key])} | ${format(conceptNav.measurements[key])} |`);
+    }
+    console.log(`PROTO SWITCH NAV BACKGROUND · ${currentNav.labBackground} / ${conceptNav.labBackground}`);
   } finally {
     await browser.close();
   }

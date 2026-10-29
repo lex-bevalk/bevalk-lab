@@ -38,10 +38,13 @@
   .tp-side::-webkit-scrollbar{width:6px}
   .tp-side::-webkit-scrollbar-thumb{background:var(--color-ring);border-radius:3px}
   /* Geometría de Current, design/current/current.html. */
-  .lab{height:100vh;height:100dvh;min-height:600px;box-sizing:border-box;display:grid;grid-template-columns:300px minmax(0,1fr) 470px;grid-template-rows:minmax(0,1fr);gap:16px;padding:16px;background:var(--neutral-100);font-family:var(--font-sans);color:var(--neutral-900)}
+  .lab{height:100vh;height:100dvh;min-height:600px;box-sizing:border-box;display:grid;grid-template-columns:300px minmax(0,1fr) 470px;grid-template-rows:minmax(0,1fr);gap:16px;padding:16px;background:#F4F2F8;font-family:var(--font-sans);color:var(--neutral-900)}
   .lab-tabs{display:none}
-  .lab-a,.lab-b,.lab-c{min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--white);border:1px solid var(--neutral-200);border-radius:16px;overflow:hidden}
-  .lab-c{background:var(--neutral-50)}
+  .lab-a,.lab-b,.lab-c{min-width:0;min-height:0;display:flex;flex-direction:column;background:#FFFFFF;border:1px solid #E3DFEC;border-radius:16px;overflow:hidden}
+  .lab-a{overflow:auto;padding:16px 12px;gap:12px;scrollbar-width:thin}
+  .lab-a > *{flex-shrink:0}
+  .lab-a .lab-scroll{flex:0 0 auto;min-height:auto;overflow:visible;padding:0}
+  .lab-c{background:var(--white)}
   .lab-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--neutral-300) transparent}
   .lab-scroll::-webkit-scrollbar{width:8px;height:8px}
   .lab-scroll::-webkit-scrollbar-thumb{background:var(--neutral-300);border-radius:4px}
@@ -87,38 +90,45 @@
 
 <!-- ================= A · Flow Navigation ================= -->
 <aside class="lab-a" aria-label="Flujos del prototipo">
-  <div style="flex:0 0 auto;padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--neutral-200)">
-    <div style="display:flex;align-items:center;gap:10px">
-      <span aria-hidden="true" style="flex:0 0 auto;width:32px;height:32px;border-radius:9px;background:var(--color-primary);color:#FFFFFF;display:grid;place-content:center"><i data-icon="shield-check" data-size="18"></i></span>
+  <div style="display:flex;align-items:center;gap:10px;padding:0 4px">
+      <span aria-hidden="true" style="flex:0 0 auto;width:36px;height:36px;border-radius:10px;background:var(--color-primary);color:#FFFFFF;display:grid;place-content:center"><i data-icon="users-round" data-size="20"></i></span>
       <span style="flex:1;min-width:0;display:flex;flex-direction:column">
-        <span style="font:600 1.0625rem/1.25rem var(--font-display);color:var(--color-primary)">Flow Explorer</span>
-        <span style="font:500 0.75rem/1rem var(--font-sans);color:var(--neutral-600)">{{ lab.nav.count }}</span>
+        <span style="font:600 1.0625rem/1.25rem var(--font-display);color:#4900AC">BeValk Lab</span>
+        <span style="font:500 0.8125rem/1.125rem var(--font-sans);color:#4B4658">{{ lab.nav.count }}</span>
       </span>
-      <button type="button" onClick="{{ lab.goHome }}" aria-label="Volver a la portada del Lab" style="flex:0 0 auto;width:36px;height:36px;border:0;border-radius:8px;background:transparent;cursor:pointer;color:var(--neutral-700);display:grid;place-content:center" style-hover="background:var(--neutral-100)"><i data-icon="layout-grid" data-size="18"></i></button>
-    </div>
+      <button type="button" onClick="{{ lab.goHome }}" aria-label="Volver a la portada del Lab" style="flex:0 0 auto;width:40px;height:40px;border:0;border-radius:8px;background:transparent;cursor:pointer;color:#4B4658;display:grid;place-content:center" style-hover="background:var(--neutral-100)"><i data-icon="layout-grid" data-size="18"></i></button>
+  </div>
 
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <span id="lab-plan-label" style="font:600 0.6875rem/1rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--neutral-600)">Modalidad simulada</span>
-      <div role="radiogroup" aria-labelledby="lab-plan-label" style="display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:2px;padding:3px;background:var(--neutral-100);border:1px solid var(--neutral-200);border-radius:10px">
+  <label style="display:flex;align-items:center;gap:8px;border:1px solid #E3DFEC;border-radius:10px;padding:0 10px;min-height:44px;background:#FFFFFF">
+    <i data-icon="search" data-size="16" style="color:#4B4658;flex:0 0 auto"></i>
+    <input type="search" value="{{ lab.nav.q }}" onChange="{{ lab.nav.setQ }}" placeholder="Buscar en todos los flujos" aria-label="Buscar flujos" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font:400 0.9375rem/1.25rem var(--font-sans);color:#16121F">
+    <sc-if value="{{ lab.nav.hasQ }}" hint-placeholder-val="{{ false }}">
+      <button type="button" onClick="{{ lab.nav.clearQ }}" aria-label="Borrar búsqueda" style="flex:0 0 auto;width:28px;height:28px;border:0;border-radius:6px;background:transparent;cursor:pointer;color:#4B4658;display:grid;place-content:center"><i data-icon="x" data-size="14"></i></button>
+    </sc-if>
+  </label>
+
+  <div role="group" aria-label="Sección" style="display:flex;gap:4px;background:#F4F2F8;border-radius:12px;padding:4px">
+    <sc-for list="{{ lab.nav.secs }}" as="x" hint-placeholder-count="2">
+      <button type="button" aria-pressed="{{ x.on }}" onClick="{{ x.pick }}" style="flex:1 1 auto;min-height:48px;padding:4px 8px;border:0;border-radius:9px;background:{{ x.bg }};box-shadow:{{ x.shadow }};color:{{ x.fg }};cursor:pointer;font:600 0.8125rem/1rem var(--font-sans);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;white-space:nowrap">{{ x.t }}<span style="font:600 0.6875rem/1rem var(--font-mono);opacity:.8">{{ x.n }}</span></button>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:6px">
+      <span id="lab-mod" style="padding:0 4px;font:600 0.6875rem/1rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:#4B4658">Modalidad simulada</span>
+      <div role="group" aria-labelledby="lab-mod" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:#F4F2F8;border:1px solid #E3DFEC;border-radius:12px;padding:4px">
         <sc-for list="{{ lab.nav.plans }}" as="p" hint-placeholder-count="2">
-          <button type="button" role="radio" aria-checked="{{ p.on }}" aria-disabled="{{ p.disabled }}" onClick="{{ p.pick }}" title="{{ p.title }}" style="min-height:36px;border:1px solid {{ p.bd }};border-radius:8px;cursor:{{ p.cursor }};background:{{ p.bg }};color:{{ p.fg }};box-shadow:{{ p.sh }};font:600 0.8125rem/1rem var(--font-sans);display:flex;align-items:center;justify-content:center;gap:6px;opacity:{{ p.op }};transition:background .15s ease-out"><i data-icon="{{ p.icon }}" data-size="14" aria-hidden="true"></i>{{ p.label }}</button>
+          <button type="button" role="radio" aria-checked="{{ p.on }}" aria-disabled="{{ p.disabled }}" onClick="{{ p.pick }}" title="{{ p.title }}" style="min-height:40px;border:1px solid {{ p.bd }};border-radius:9px;cursor:{{ p.cursor }};background:{{ p.bg }};color:{{ p.fg }};box-shadow:{{ p.sh }};font:600 0.875rem/1.125rem var(--font-sans);display:flex;align-items:center;justify-content:center;gap:6px;opacity:{{ p.op }};transition:background .15s ease-out"><i data-icon="{{ p.icon }}" data-size="15" aria-hidden="true"></i>{{ p.label }}</button>
         </sc-for>
       </div>
       <sc-if value="{{ lab.nav.hasPinNote }}" hint-placeholder-val="{{ false }}">
         <span role="note" style="display:flex;gap:6px;align-items:center;font:400 0.75rem/1rem var(--font-sans);color:var(--neutral-700);text-wrap:pretty"><i data-icon="lock" data-size="12" aria-hidden="true" style="flex:0 0 auto;"></i><span>{{ lab.nav.pinNote }}</span></span>
       </sc-if>
-    </div>
-
-    <label style="display:flex;align-items:center;gap:8px;min-height:38px;padding:0 10px;border:1px solid var(--neutral-200);border-radius:10px;background:var(--neutral-50);color:var(--neutral-600)">
-      <i data-icon="search" data-size="16" aria-hidden="true"></i>
-      <input type="search" value="{{ lab.nav.q }}" onChange="{{ lab.nav.setQ }}" placeholder="Buscar flujo, grupo o función" aria-label="Buscar flujos" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font:400 0.875rem/1.25rem var(--font-sans);color:var(--neutral-900)">
-      <sc-if value="{{ lab.nav.hasQ }}" hint-placeholder-val="{{ false }}">
-        <button type="button" onClick="{{ lab.nav.clearQ }}" aria-label="Borrar búsqueda" style="flex:0 0 auto;width:28px;height:28px;border:0;border-radius:6px;background:transparent;cursor:pointer;color:var(--neutral-600);display:grid;place-content:center"><i data-icon="x" data-size="14"></i></button>
+      <sc-if value="{{ !lab.nav.hasPinNote }}" hint-placeholder-val="{{ true }}">
+        <span role="note" style="padding:0 4px;font:400 0.75rem/1rem var(--font-sans);color:#4B4658;text-wrap:pretty">{{ lab.nav.planHelp }}</span>
       </sc-if>
-    </label>
   </div>
 
-  <div class="lab-scroll" style="padding:4px 8px 16px">
+  <div class="lab-scroll">
     <sc-if value="{{ lab.nav.empty }}" hint-placeholder-val="{{ false }}">
       <div role="status" style="margin:24px 8px;display:flex;flex-direction:column;gap:8px;align-items:flex-start">
         <span style="font:600 0.875rem/1.25rem var(--font-sans);color:var(--neutral-900)">Ningún flujo coincide con «{{ lab.nav.q }}»</span>
@@ -127,12 +137,12 @@
       </div>
     </sc-if>
     <sc-for list="{{ lab.nav.groups }}" as="g" hint-placeholder-count="8">
-      <div role="group" aria-label="{{ g.label }}" style="display:flex;flex-direction:column;gap:1px;padding-top:12px">
-        <span aria-hidden="true" style="padding:0 8px 4px;display:flex;align-items:center;justify-content:space-between;gap:8px;font:600 0.6875rem/1rem var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--neutral-600)"><span>{{ g.label }}</span><span>{{ g.n }}</span></span>
+      <div role="group" aria-label="{{ g.label }}" style="display:flex;flex-direction:column;gap:2px">
+        <span aria-hidden="true" style="display:flex;justify-content:space-between;padding:8px 6px 4px;font:600 0.6875rem/1rem var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:#4B4658"><span>{{ g.label }}</span><span>{{ g.n }}</span></span>
         <sc-for list="{{ g.items }}" as="r" hint-placeholder-count="3">
-          <button type="button" onClick="{{ r.select }}" aria-current="{{ r.current }}" aria-label="{{ r.aria }}" style="text-align:left;cursor:pointer;border:0;border-radius:8px;padding:6px 8px;min-height:40px;display:flex;align-items:center;gap:10px;background:{{ r.bg }};transition:background .12s ease-out" style-hover="background:{{ r.hover }}">
-            <span aria-hidden="true" style="flex:0 0 auto;min-width:26px;height:22px;padding:0 4px;box-sizing:border-box;border-radius:6px;background:{{ r.numBg }};color:{{ r.numFg }};display:grid;place-content:center;font:600 0.6875rem/1 var(--font-mono)">{{ r.n }}</span>
-            <span style="flex:1;min-width:0;font:{{ r.font }};color:{{ r.fg }};text-wrap:pretty">{{ r.label }}</span>
+          <button type="button" onClick="{{ r.select }}" aria-current="{{ r.current }}" aria-label="{{ r.aria }}" style="text-align:left;cursor:pointer;border:1px solid transparent;border-radius:10px;background:{{ r.bg }};padding:8px 6px;min-height:44px;display:flex;align-items:center;gap:8px;transition:background .12s ease-out" style-hover="background:{{ r.hover }}">
+            <span aria-hidden="true" style="flex:0 0 auto;min-width:34px;text-align:center;border-radius:6px;background:{{ r.numBg }};padding:2px 4px;font:600 0.75rem/1.125rem var(--font-mono);color:{{ r.numFg }}">{{ r.n }}</span>
+            <span style="flex:1;min-width:0;font:500 0.875rem/1.25rem var(--font-sans);color:{{ r.fg }};text-wrap:pretty">{{ r.label }}</span>
             <sc-if value="{{ r.hasPin }}" hint-placeholder-val="{{ false }}">
               <span aria-hidden="true" title="{{ r.pinTitle }}" style="flex:0 0 auto;padding:1px 5px;border-radius:5px;border:1px solid var(--neutral-300);font:600 0.625rem/0.875rem var(--font-mono);color:var(--neutral-700)">{{ r.pin }}</span>
             </sc-if>

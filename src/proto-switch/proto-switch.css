@@ -1,4 +1,49 @@
 .proto-switch {
+  view-transition-name: proto-switch;
+}
+
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(proto-switch),
+::view-transition-new(proto-switch) {
+  animation-duration: 160ms;
+  animation-timing-function: ease-out;
+}
+
+::view-transition-old(root),
+::view-transition-old(proto-switch) {
+  animation-name: bevalk-view-fade-out;
+}
+
+::view-transition-new(root),
+::view-transition-new(proto-switch) {
+  animation-name: bevalk-view-fade-in;
+}
+
+@keyframes bevalk-view-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes bevalk-view-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  ::view-transition-old(proto-switch),
+  ::view-transition-new(proto-switch) {
+    animation: none !important;
+  }
+}
+
+.proto-switch {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   box-sizing: border-box;

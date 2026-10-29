@@ -262,3 +262,11 @@ Rama `feat/mi-familia-flujos`. Spec Codex archivada: `tasks/archive/codex-f12.md
   con la primera petición a `/api/comments`. Lo valida el usuario.
 
 - Deriva en Concept: regenerar desde `design/familia/Main.dc.html` pisa contenido de v1.6.0 (inicio, mi-familia, perfil, perfil-flujo, analizador, live-preview). No ejecutar `convert-template` hasta reconciliar la plantilla.
+
+
+## Resultado G7 (29 oct 2026) · COMPLETADA
+- Nav Concept alineada con Current; medidas comparadas en `e2e:proto-switch` con diferencias 0 px a 1440×900. Pestañas App/Mi Familia filtran 21/36 flujos; búsqueda global encuentra ambas secciones.
+- `--only=navigation,css` quedó idempotente y solo tocó sus salidas; comparación normalizada de 30 archivos frente a `main`: 0 diferencias en pantallas v1.6.0, `live-preview.tsx` y `drawer.tsx`.
+- Cambio entre prototipos: view transition de 160 ms con `prefers-reduced-motion`, reglas prerender moderadas en las cuatro entradas; testea destinos y passwall con cookie `SameSite=Lax`. La inspección de Review confirma solo GET automático.
+- Gates: tsc, build sin avisos, 207/207 unitarios, check-login-assets, check-middleware-esm, Current parity 149/149, geometry 30/30, family-layout 36/36, baseline 43/43, invariants 17/17, sweep 0 errores, a11y sin violaciones, focus Current idéntico y Concept conserva la secuencia compartida con 25 objetivos adicionales, select 5/5, review y proto-switch (161 checks) verdes.
+- Sin commit ni push.
