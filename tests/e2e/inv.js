@@ -3,7 +3,7 @@ const GETC = `const getC = () => { if (window.__lab) return window.__lab; const 
 (async () => {
   const b = await chromium.launch({ ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}), headless: true }); const p = await b.newPage({ viewport: { width: 1680, height: 916 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
-  await p.goto((process.env.LAB_URL || 'http://localhost:4173/')); await p.waitForTimeout(2200);
+  await p.goto((process.env.LAB_URL || 'http://localhost:4173/concept.html')); await p.waitForTimeout(2200);
   const ev = s => p.evaluate(`(() => { ${GETC} const c = getC(); ${s} })()`);
   const sel = async id => { await p.locator('.lab-a button[aria-current]').nth(await ev(`return c.labFlows().findIndex(x => x.id === ${JSON.stringify(id)})`)).click(); await p.waitForTimeout(450); };
   const planUI = () => p.evaluate(() => document.querySelector('.lab-a [role=radio][aria-checked=true]').textContent.trim());

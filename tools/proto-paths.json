@@ -1,0 +1,26 @@
+{
+  "concept": [
+    "concept.html",
+    "concept-review.html",
+    "src/Host.tsx",
+    "src/main.tsx",
+    "src/props.ts",
+    "src/vite-env.d.ts",
+    "src/logic/**",
+    "src/data/**",
+    "src/ui/**",
+    "src/styles/**",
+    "design/familia/**",
+    "public/assets/*"
+  ],
+  "current": [
+    "index.html",
+    "review.html",
+    "src/current/**",
+    "design/current/**",
+    "public/assets/current/**",
+    "tools/current/**",
+    "tests/unit/current-*",
+    "tests/e2e/current/**"
+  ]
+}

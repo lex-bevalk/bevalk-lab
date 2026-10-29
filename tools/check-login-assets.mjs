@@ -43,7 +43,8 @@ async function assertAllowedResource(reference, source) {
 
 async function main() {
   const loginHtml = await readFile(path.join(buildDirectory, 'login.html'), 'utf8');
-  const indexHtml = await readFile(path.join(buildDirectory, 'index.html'), 'utf8');
+  const appHtmlFiles = ['index.html', 'concept.html'];
+  const appHtml = await Promise.all(appHtmlFiles.map(async file => [file, await readFile(path.join(buildDirectory, file), 'utf8')]));
   if (/modulepreload-polyfill/i.test(loginHtml)) {
     throw new Error('login.html references the Vite modulepreload polyfill.');
   }
@@ -70,14 +71,16 @@ async function main() {
     }
   }
 
-  for (const reference of references(indexHtml, ['src', 'href'])) {
-    const pathname = localPath(reference);
-    if (pathname && pathname.endsWith('.js') && allowedPath(pathname)) {
-      throw new Error(`index.html unexpectedly references a public login JavaScript asset: ${pathname}`);
+  for (const [file, markup] of appHtml) {
+    for (const reference of references(markup, ['src', 'href'])) {
+      const pathname = localPath(reference);
+      if (pathname && pathname.endsWith('.js') && allowedPath(pathname)) {
+        throw new Error(`${file} unexpectedly references a public login JavaScript asset: ${pathname}`);
+      }
     }
   }
 
-  console.log(`OK: checked ${loginReferences.length} login HTML resources, ${stylesheetPaths.length} stylesheet(s), and index.html JavaScript isolation.`);
+  console.log(`OK: checked ${loginReferences.length} login HTML resources, ${stylesheetPaths.length} stylesheet(s), and ${appHtmlFiles.join(' + ')} JavaScript isolation.`);
 }
 
 main().catch(error => {

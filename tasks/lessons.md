@@ -19,3 +19,8 @@
 - Un componente con estado propio (borrador, `<details>` abierto) dentro de un popover que cambia de comentario necesita `key` por id, o arrastra el borrador al siguiente y lo envía al comentario equivocado.
 - Una tarea de Codex que queda "running" bloquea `--resume-last` de cualquier tarea nueva: lanzar con `--fresh` y dar el contexto completo en el prompt.
 - La comparación píxel contra `handoff` valía para el porte; con `src/` como fuente, compara rama contra base y solo cuando cambia la UI.
+- Los extractores y conversores deben ser idempotentes: ejecútalos dos veces y confirma que la segunda pasada no cambia archivos generados (`npm run extract:current`, `npm run convert:current` y los comandos de Concept).
+- La independencia de prototipos se verifica con `npm test` (incluye `proto-isolation`) y `npm run guard:proto -- current|concept`; revisar imports a ojo no basta.
+- La paridad de navegador se corre contra `vite preview`. Si 4173 está ocupado, usa otro puerto y ajusta `LAB_URL`; para Current fija también `REF_URL` y `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` al Chrome local.
+- Vite deduplica las fuentes Guton idénticas: Current debe usar el nombre compartido `Guton-SemiBold.woff2`. Comprueba `npm run build && npm run check-login-assets` y `npm run e2e:current:parity`.
+- Un agente que edita documentos de historial puede reescribirlos: revisar `git diff --stat` de `tasks/lessons.md` y `tasks/todo.md` antes del commit (solo deben crecer).

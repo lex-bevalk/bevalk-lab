@@ -25,7 +25,7 @@ const triggerSelectors = {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   try {
-    await page.goto(process.env.LAB_URL || 'http://localhost:4173/', { waitUntil: 'load' });
+    await page.goto(process.env.LAB_URL || 'http://localhost:4173/concept.html', { waitUntil: 'load' });
     await page.waitForFunction(() => window.__lab);
     await page.addScriptTag({ content: fs.readFileSync(require.resolve('axe-core/axe.min.js'), 'utf8') });
     const evaluateLogic = expression => page.evaluate(`(() => { ${GETC} const c = getC(); if (!c) throw new Error('No se encontró la lógica del Lab'); ${expression} })()`);

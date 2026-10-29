@@ -4,6 +4,16 @@ Cambios relevantes del BeValk Product Experience Lab. Formato basado en [Keep a 
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-10-29
+
+### Changed
+- Current version is the default prototype at `/`; Concept is available at `/concept`.
+- `/comments` shows Current version comments by default.
+
+### Added
+- A prototype selector for Current version and Concept.
+- Comments are separated by prototype, with a guard that limits a change to one prototype.
+
 ## [1.6.0] - 2026-10-28
 
 ### Added

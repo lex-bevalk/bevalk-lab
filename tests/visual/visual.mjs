@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 
-const labUrl = process.env.LAB_URL || 'http://localhost:4173/';
+const labUrl = process.env.LAB_URL || 'http://localhost:4173/concept.html';
 function run(args) {
   const result = spawnSync(process.execPath, args, { stdio: 'inherit' });
   if (result.error) throw result.error;

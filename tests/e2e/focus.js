@@ -3,7 +3,7 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 
 const refUrl = process.env.REF_URL || 'http://127.0.0.1:8765/project/Main.dc.html';
-const labUrl = process.env.LAB_URL || 'http://localhost:4173/';
+const labUrl = process.env.LAB_URL || 'http://localhost:4173/concept.html';
 const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
   ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH }
   : {};
@@ -18,6 +18,7 @@ const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
     const count = await page.evaluate(() => {
       const selector = 'a[href], area[href], button, input, select, textarea, iframe, object, embed, [contenteditable="true"], summary, [tabindex]';
       return [...document.querySelectorAll(selector)].filter(element => {
+        if (element.closest('#proto-root')) return false;
         if (element.tabIndex < 0) return false;
         const style = getComputedStyle(element);
         return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
@@ -25,11 +26,14 @@ const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
     });
     if (count === 0) throw new Error(`No se encontraron elementos enfocables en ${url}`);
     const sequence = [];
-    for (let index = 0; index < count + 2; index += 1) {
+    let attempts = 0;
+    while (sequence.length < count + 2 && attempts < (count + 2) * 2) {
+      attempts += 1;
       await page.keyboard.press('Tab');
-      sequence.push(await page.evaluate(() => {
+      const item = await page.evaluate(() => {
         const element = document.activeElement;
         if (!element || element === document.body) return { tag: 'BODY', label: '' };
+        if (element.closest('#proto-root')) return null;
         const tag = element.tagName.toLowerCase();
         const label = element.getAttribute('aria-label')
           || element.getAttribute('title')
@@ -44,8 +48,11 @@ const browserOptions = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
             ? 'Mi Familia · destacado'
             : '';
         return { tag, label, navGroup };
-      }));
+      });
+      // The reference has no prototype switch, so omit its focus targets.
+      if (item) sequence.push(item);
     }
+    if (sequence.length < count + 2) throw new Error(`No se completó la secuencia de tabulación en ${url}`);
     await page.close();
     const normalized = sequence.filter(item => !(item.navGroup || '').startsWith('Mi Familia ·'));
     return { url, candidateCount: count, steps: sequence.length, sequence, normalized };

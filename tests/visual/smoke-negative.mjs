@@ -41,8 +41,8 @@ try {
   }
   if (!patched) throw new Error('No se encontró --color-primary para aplicar el control negativo.');
 
-  const baselineUrl = await serve(join(root, 'dist'));
-  const currentUrl = await serve(tempDist);
+  const baselineUrl = `${await serve(join(root, 'dist'))}concept.html`;
+  const currentUrl = `${await serve(tempDist)}concept.html`;
   const diffDir = join(root, 'tests/visual/smoke-diff');
   await rm(diffDir, { recursive: true, force: true });
   const child = spawn(process.execPath, ['tests/visual/smoke.mjs'], {

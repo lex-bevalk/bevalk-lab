@@ -70,6 +70,7 @@ describe('passwall session', () => {
 describe('passwall redirects and public resources', () => {
   it('accepts only safe local next paths', () => {
     expect(safeNextPath('/flows?plan=premium')).toBe('/flows?plan=premium');
+    expect(safeNextPath('/concept/review?flow=x')).toBe('/concept/review?flow=x');
     expect(safeNextPath('//evil.example')).toBe('/');
     expect(safeNextPath('https://evil.example')).toBe('/');
     expect(safeNextPath('')).toBe('/');
@@ -90,6 +91,9 @@ describe('passwall redirects and public resources', () => {
     expect(isPublicLoginRequest('GET', '/api/x')).toBe(false);
     expect(isPublicLoginRequest('GET', '/assets/react-vendor-Abc123.js')).toBe(false);
     expect(classifyRequest('GET', '/', false)).toBe('login-redirect');
+    for (const pathname of ['/concept', '/concept/review', '/concept.html', '/concept-review.html', '/review.html']) {
+      expect(classifyRequest('GET', pathname, false), pathname).toBe('login-redirect');
+    }
     expect(classifyRequest('GET', '/assets/index-Abc123.js', false)).toBe('login-redirect');
     expect(classifyRequest('GET', '/api/x', false)).toBe('unauthorized-api');
     expect(classifyRequest('GET', '/', true)).toBe('next');

@@ -6,15 +6,17 @@ export default defineConfig({
   plugins: [react()],
   build: {
     modulePreload: { polyfill: false },
-    // Prototipo de una página con carga eager: permitir el chunk mayor resultante.
-    chunkSizeWarningLimit: 1201,
+    // Chunk mayor medido en las entradas Concept/Current: 1274.10 kB.
+    chunkSizeWarningLimit: 1275,
     rollupOptions: {
       external: id => id.includes('app-background.png'),
       input: {
         index: resolve(process.cwd(), 'index.html'),
+        concept: resolve(process.cwd(), 'concept.html'),
+        conceptReview: resolve(process.cwd(), 'concept-review.html'),
+        review: resolve(process.cwd(), 'review.html'),
         login: resolve(process.cwd(), 'login.html'),
-        team: resolve(process.cwd(), 'team.html'),
-        review: resolve(process.cwd(), 'review.html')
+        team: resolve(process.cwd(), 'team.html')
       },
       output: {
         manualChunks: {

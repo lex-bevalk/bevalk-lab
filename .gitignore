@@ -14,7 +14,6 @@ tests/visual/own/current/
 tests/visual/own/diff/
 tests/visual/smoke-diff/
 tests/e2e/results/
-tools/area-review-results.json
 
 .vercel
 .env*

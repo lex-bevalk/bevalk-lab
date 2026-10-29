@@ -8,7 +8,7 @@ const GETC = `const getC = () => { if (window.__lab) return window.__lab; const 
   const page = await browser.newPage({ viewport:{width:1680,height:916} });
   const errors=[];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto(process.env.LAB_URL || 'http://localhost:4173/', { waitUntil:'load' });
+  await page.goto(process.env.LAB_URL || 'http://localhost:4173/concept.html', { waitUntil:'load' });
   await page.waitForFunction(() => window.__lab);
   const failures=[];
   const checks={ flows:0, homeBlocks:0, closeButtons:0, endingAndFamilyBlocks:0 };

@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 240
     env:
-      LAB_URL: http://localhost:4173/
+      LAB_URL: http://localhost:4173/concept.html
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
               if [[ -n "$files" ]] && ! printf '%s\n' "$files" | grep -Ev '^(tasks/|.*\.md$)' >/dev/null; then
                 code=false
               fi
-              if printf '%s\n' "$files" | grep -Eq '^(src/ui/|src/styles/|src/logic/|src/data/|design/|index\.html$|vite\.config\.ts$|package-lock\.json$|tests/visual/)'; then
+              if printf '%s\n' "$files" | grep -Eq '^(src/ui/|src/styles/|src/logic/|src/data/|src/current/|src/proto-switch/|design/|concept\.html$|concept-review\.html$|index\.html$|review\.html$|vite\.config\.ts$|package-lock\.json$|tests/visual/)'; then
                 ui=true
               fi
             else
@@ -62,11 +62,19 @@ jobs:
           echo "ui=$ui" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js 24
-        if: steps.changes.outputs.code == 'true'
+        if: steps.changes.outputs.code == 'true' || startsWith(github.head_ref, 'current/') || contains(github.event.pull_request.labels.*.name, 'proto:current') || startsWith(github.head_ref, 'concept/') || contains(github.event.pull_request.labels.*.name, 'proto:concept')
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
+
+      - name: Prototype guard · Current
+        if: startsWith(github.head_ref, 'current/') || contains(github.event.pull_request.labels.*.name, 'proto:current')
+        run: npm run guard:proto -- current --base "origin/${{ github.base_ref }}"
+
+      - name: Prototype guard · Concept
+        if: startsWith(github.head_ref, 'concept/') || contains(github.event.pull_request.labels.*.name, 'proto:concept')
+        run: npm run guard:proto -- concept --base "origin/${{ github.base_ref }}"
 
       - name: Install dependencies
         if: steps.changes.outputs.code == 'true'
@@ -101,6 +109,8 @@ jobs:
           mkdir -p tests/e2e/results
           node tools/serve-reference.cjs 8765 > tests/e2e/results/reference-server.log 2>&1 &
           echo $! > /tmp/bevalk-reference.pid
+          node tools/serve-reference.cjs 8766 design/current/current.html > tests/e2e/results/current-reference-server.log 2>&1 &
+          echo $! > /tmp/bevalk-current-reference.pid
 
           wait_for_url() {
             local url="$1"
@@ -118,8 +128,9 @@ jobs:
             return 1
           }
 
-          wait_for_url "http://localhost:4173/" "Vite preview"
+          wait_for_url "http://localhost:4173/concept.html" "Vite preview"
           wait_for_url "http://localhost:8765/project/Main.dc.html" "Reference server"
+          wait_for_url "http://localhost:8766/project/Main.dc.html" "Current reference server"
 
       - name: E2E
         if: steps.changes.outputs.code == 'true'
@@ -149,6 +160,38 @@ jobs:
         if: steps.changes.outputs.code == 'true'
         run: npm run e2e:review
 
+      - name: Prototype switch
+        if: steps.changes.outputs.code == 'true'
+        run: npm run e2e:proto-switch
+
+      - name: Current template parity
+        if: steps.changes.outputs.code == 'true'
+        env:
+          LAB_URL: http://localhost:4173/
+          REF_URL: http://localhost:8766/project/Main.dc.html
+        run: npm run e2e:current:parity
+
+      - name: Current geometry
+        if: steps.changes.outputs.code == 'true'
+        env:
+          LAB_URL: http://localhost:4173/
+          REF_URL: http://localhost:8766/project/Main.dc.html
+        run: npm run e2e:current:geometry
+
+      - name: Current accessibility
+        if: steps.changes.outputs.code == 'true'
+        env:
+          LAB_URL: http://localhost:4173/
+          REF_URL: http://localhost:8766/project/Main.dc.html
+        run: npm run e2e:current:a11y
+
+      - name: Current focus order
+        if: steps.changes.outputs.code == 'true'
+        env:
+          REF_URL: http://localhost:8766/project/Main.dc.html
+          LAB_URL: http://localhost:4173/
+        run: npm run focus
+
       - name: Select dropdowns
         if: steps.changes.outputs.code == 'true'
         run: npm run e2e:select
@@ -159,7 +202,7 @@ jobs:
         continue-on-error: ${{ contains(github.event.pull_request.labels.*.name, 'cambio-visual') }}
         env:
           BASE_REF: ${{ github.base_ref }}
-          LAB_URL: http://localhost:4173/
+          LAB_URL: http://localhost:4173/concept.html
         run: npm run visual:smoke
 
       - name: Upload visual smoke diffs

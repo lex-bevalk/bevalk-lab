@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SCREEN_LABELS, type CommentStatus } from '../../src/comments/constants';
+import { ALL_SCREEN_LABELS, SCREEN_LABELS, SCREEN_LABELS_BY_PROTO, type CommentStatus } from '../../src/comments/constants';
 import { createCommentsApi, COMMENT_WRITE_LIMIT, COMMENT_WRITE_WINDOW_MS } from '../../api/comments';
 import {
   createNeonCommentsStore,
@@ -66,6 +66,7 @@ function testCommentRow(overrides: Partial<CommentRecord> = {}): CommentRecord {
     updated_at: new Date(NOW),
     author: 'Ana',
     body: 'Revisar este punto',
+    proto: 'concept',
     screen: 'Inicio',
     tpl: '421',
     x: 0.5,
@@ -103,7 +104,11 @@ function sqlHarness(options: { commentRows?: CommentRecord[]; replyRows?: ReplyR
       const ids = values[0] as string[];
       return (options.replyRows ?? []).filter(reply => ids.includes(reply.comment_id));
     }
-    if (query.includes('INSERT INTO comments')) return [testCommentRow({ delete_token_hash: String(values[8]) })];
+    if (query.includes('INSERT INTO comments')) return [testCommentRow({
+      proto: String(values[2]) as CommentRecord['proto'],
+      screen: String(values[3]) as CommentRecord['screen'],
+      delete_token_hash: String(values[9])
+    })];
     if (query.includes('UPDATE comments')) {
       if (values[1] === MISSING_ID) return [];
       return [testCommentRow({ status: values[0] as CommentStatus, updated_at: new Date(NOW + 1000) })];
@@ -170,6 +175,7 @@ describe('comment validation', () => {
       value: {
         author: 'A'.repeat(60),
         body: `${'a'.repeat(1000)}\n${'a'.repeat(999)}`,
+        proto: 'concept',
         screen: 'Inicio',
         tpl: '421',
         x: 0,
@@ -197,6 +203,8 @@ describe('comment validation', () => {
     [{ ...VALID_INPUT, y: Number.POSITIVE_INFINITY }, 'y'],
     [{ ...VALID_INPUT, y: -0.1 }, 'y'],
     [{ ...VALID_INPUT, screen: 'Otra pantalla' }, 'screen'],
+    [{ ...VALID_INPUT, proto: 'other' }, 'proto'],
+    [{ ...VALID_INPUT, proto: 'current', screen: 'Ayuda' }, 'screen'],
     [{ ...VALID_INPUT, status: 'closed' }, 'status'],
     [{ ...VALID_INPUT, plan: 'enterprise' }, 'plan']
   ])('rejects invalid field %s', (input, field) => {
@@ -220,6 +228,14 @@ describe('comment validation', () => {
     expect([...SCREEN_LABELS].sort()).toEqual(generated);
   });
 
+  it('keeps the current screen whitelist aligned with generated data-screen-label values', () => {
+    const generated = generatedScreenLabels(join(process.cwd(), 'src/current/ui/generated'));
+    expect(generated).toHaveLength(29);
+    expect([...SCREEN_LABELS_BY_PROTO.current].sort()).toEqual(generated);
+    expect(ALL_SCREEN_LABELS).toContain('Escáner');
+    expect(ALL_SCREEN_LABELS).toContain('Ayuda');
+  });
+
   it('validates status and optional list filters', () => {
     expect(validateCommentStatus('done')).toEqual({ ok: true, value: 'done' });
     expect(validateCommentStatus('waiting')).toEqual({ ok: false, field: 'status' });
@@ -227,6 +243,16 @@ describe('comment validation', () => {
       ok: true,
       value: { screen: 'Inicio', status: 'todo', author: 'Ana' }
     });
+    expect(validateCommentFilters(new URLSearchParams('proto=current&screen=Escáner'))).toEqual({
+      ok: true,
+      value: { proto: 'current', screen: 'Escáner' }
+    });
+    expect(validateCommentFilters(new URLSearchParams('screen=Escáner'))).toEqual({
+      ok: true,
+      value: { screen: 'Escáner' }
+    });
+    expect(validateCommentFilters(new URLSearchParams('proto=unknown'))).toEqual({ ok: false, field: 'proto' });
+    expect(validateCommentFilters(new URLSearchParams('proto=concept&screen=Escáner'))).toEqual({ ok: false, field: 'screen' });
     expect(validateCommentFilters(new URLSearchParams('screen=unknown'))).toEqual({ ok: false, field: 'screen' });
   });
 
@@ -287,11 +313,14 @@ describe('comments API authorization and writes', () => {
     const body = await response.json() as Record<string, unknown>;
     expect(response.status).toBe(201);
     expect(body.delete_token).toMatch(/^[0-9a-f]{64}$/);
+    expect(body.proto).toBe('concept');
     expect(body).not.toHaveProperty('delete_token_hash');
     const insert = calls.find(call => call.query.includes('INSERT INTO comments'));
     expect(insert).toBeDefined();
     expect(insert?.query).toContain('delete_token_hash');
-    expect(insert?.values[8]).toMatch(/^[0-9a-f]{64}$/);
+    expect(insert?.values[2]).toBe('concept');
+    expect(insert?.values[9]).toMatch(/^[0-9a-f]{64}$/);
+    expect(calls.some(call => call.query.includes("ALTER TABLE comments ADD COLUMN IF NOT EXISTS proto text NOT NULL DEFAULT 'concept'"))).toBe(true);
     expect(calls.some(call => call.query.includes('ALTER TABLE comments ADD COLUMN IF NOT EXISTS delete_token_hash'))).toBe(true);
   });
 
@@ -307,6 +336,27 @@ describe('comments API authorization and writes', () => {
     expect(await response.json()).toMatchObject({ id: testCommentRow().id, author: 'Ana', status: 'todo' });
     expect(calls.some(call => call.query.includes('INSERT INTO comments'))).toBe(true);
     expect(response.headers.get('cache-control')).toBe('no-store');
+  });
+
+  it('rejects an invalid prototype with HTTP 400 and accepts Current screen labels', async () => {
+    const { api, cookie } = createHarnessApi();
+    const invalidProto = await api.POST(request('POST', {
+      cookie: await cookie,
+      json: { ...VALID_INPUT, proto: 'other' },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(invalidProto.status).toBe(400);
+    expect(await invalidProto.json()).toEqual({ error: 'invalid', field: 'proto' });
+
+    const current = await api.POST(request('POST', {
+      cookie: await cookie,
+      json: { ...VALID_INPUT, proto: 'current', screen: 'Escáner' },
+      contentType: 'application/json',
+      origin: 'https://bevalk.test'
+    }));
+    expect(current.status).toBe(201);
+    expect(await current.json()).toMatchObject({ proto: 'current', screen: 'Escáner' });
   });
 
   it.each(['team', 'owner'] as const)('allows %s to create a reply without returning a delete token', async role => {
@@ -507,6 +557,31 @@ describe('comments API SQL', () => {
     expect(table?.query).toContain('references comments(id) on delete cascade');
     expect(calls.findIndex(call => call.query.includes('ALTER TABLE comments'))).toBeLessThan(calls.findIndex(call => call.query.includes('CREATE TABLE IF NOT EXISTS comment_replies')));
     expect(index?.query).toContain('ON comment_replies (comment_id, created_at)');
+  });
+
+  it('migrates proto before indexing and returns a requested proto filter', async () => {
+    const current = testCommentRow({ proto: 'current', screen: 'Escáner' });
+    const { api, cookie, calls } = createHarnessApi({ commentRows: [current] });
+    const response = await api.GET(request('GET', { cookie: await cookie, url: `${BASE_URL}?proto=current` }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ items: [{ proto: 'current', screen: 'Escáner' }] });
+    const alter = calls.findIndex(call => call.query.includes("ALTER TABLE comments ADD COLUMN IF NOT EXISTS proto text NOT NULL DEFAULT 'concept'"));
+    const index = calls.findIndex(call => call.query.includes('comments_proto_created_at_idx'));
+    const select = calls.find(call => call.query.includes('SELECT id, created_at'));
+    expect(alter).toBeGreaterThanOrEqual(0);
+    expect(index).toBeGreaterThan(alter);
+    expect(select?.query).toContain('proto = ?');
+    expect(select?.values).toContain('current');
+  });
+
+  it('returns HTTP 400 for an invalid prototype query and accepts union screen filters', async () => {
+    const { api, cookie } = createHarnessApi();
+    const invalidProto = await api.GET(request('GET', { cookie: await cookie, url: `${BASE_URL}?proto=other` }));
+    expect(invalidProto.status).toBe(400);
+    expect(await invalidProto.json()).toEqual({ error: 'invalid', field: 'proto' });
+
+    const unionScreen = await api.GET(request('GET', { cookie: await cookie, url: `${BASE_URL}?screen=Escáner` }));
+    expect(unionScreen.status).toBe(200);
   });
 
   it('lists with parameterized optional filters and a 500-item limit', async () => {

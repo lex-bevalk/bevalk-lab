@@ -1,0 +1,836 @@
+@font-face{font-family:'Manrope';font-style:normal;font-weight:400;font-display:swap;src:url(./fonts/Manrope-400.woff2) format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:500;font-display:swap;src:url(./fonts/Manrope-500.woff2) format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:600;font-display:swap;src:url(./fonts/Manrope-600.woff2) format('woff2')}
+@font-face{font-family:'Manrope';font-style:normal;font-weight:700;font-display:swap;src:url(./fonts/Manrope-700.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-style:normal;font-weight:400;font-display:swap;src:url(./fonts/Geist-Mono-400.woff2) format('woff2')}
+@font-face{font-family:'Geist Mono';font-style:normal;font-weight:500;font-display:swap;src:url(./fonts/Geist-Mono-500.woff2) format('woff2')}
+/* Manrope + Geist Mono ship from Google Fonts. Guton is a commercial display face, supplied
+   by the brand owner and vendored in assets/fonts/. Fallback stays Manrope per design.md §2. */
+
+@font-face{font-family:"Guton";src:url("./fonts/Guton-SemiBold.woff2") format("woff2");font-weight:600;font-style:normal;font-display:swap}
+
+:root{
+  --font-display:"Guton","Manrope",system-ui,sans-serif;
+  --font-sans:"Manrope",system-ui,-apple-system,sans-serif;
+  --font-mono:"Geist Mono",ui-monospace,monospace;
+}
+
+/* Collection 1 — TailwindCSS primitives. Never consumed directly by components (design.md §1). */
+:root{
+  --purple-50:#F2EFFF;
+  --purple-100:#DDD5FF;
+  --purple-200:#BEADFF;
+  --purple-300:#A488FF;
+  --purple-400:#8D62FF;
+  --purple-500:#7933FF;
+  --purple-600:#6300E2;
+  --purple-700:#4900AC;
+  --purple-800:#32007A;
+  --purple-900:#220058;
+  --purple-950:#170040;
+  --neutral-50:#FAFAFA;
+  --neutral-100:#F5F5F5;
+  --neutral-200:#E5E5E5;
+  --neutral-300:#D4D4D4;
+  --neutral-400:#A3A3A3;
+  --neutral-500:#737373;
+  --neutral-600:#525252;
+  --neutral-700:#404040;
+  --neutral-800:#262626;
+  --neutral-900:#171717;
+  --neutral-950:#0A0A0A;
+  --red-50:#FEF2F2;
+  --red-100:#FEE2E2;
+  --red-200:#FECACA;
+  --red-300:#FCA5A5;
+  --red-400:#F87171;
+  --red-500:#EF4444;
+  --red-600:#DC2626;
+  --red-700:#B91C1C;
+  --red-800:#991B1B;
+  --red-900:#7F1D1D;
+  --red-950:#450A0A;
+  --orange-50:#FFF7ED;
+  --orange-100:#FFEDD5;
+  --orange-200:#FED7AA;
+  --orange-300:#FDBA74;
+  --orange-400:#FB923C;
+  --orange-500:#F97316;
+  --orange-600:#EA580C;
+  --orange-700:#C2410C;
+  --orange-800:#9A3412;
+  --orange-900:#7C2D12;
+  --orange-950:#431407;
+  --yellow-50:#FEFCE8;
+  --yellow-100:#FEF9C3;
+  --yellow-200:#FEF08A;
+  --yellow-300:#FDE047;
+  --yellow-400:#FACC15;
+  --yellow-500:#EAB308;
+  --yellow-600:#CA8A04;
+  --yellow-700:#A16207;
+  --yellow-800:#854D0E;
+  --yellow-900:#713F12;
+  --yellow-950:#422006;
+  --green-50:#F0FDF4;
+  --green-100:#DCFCE7;
+  --green-200:#BBF7D0;
+  --green-300:#86EFAC;
+  --green-400:#4ADE80;
+  --green-500:#22C55E;
+  --green-600:#16A34A;
+  --green-700:#15803D;
+  --green-800:#166534;
+  --green-900:#14532D;
+  --green-950:#052E16;
+  --blue-50:#EFF6FF;
+  --blue-100:#DBEAFE;
+  --blue-200:#BFDBFE;
+  --blue-300:#93C5FD;
+  --blue-400:#60A5FA;
+  --blue-500:#3B82F6;
+  --blue-600:#2563EB;
+  --blue-700:#1D4ED8;
+  --blue-800:#1E40AF;
+  --blue-900:#1E3A8A;
+  --blue-950:#172554;
+  --black:#000000;
+  --white:#FFFFFF;
+  --transparent:#FFFFFF00;
+}
+
+/* Collections 2+3 — semantic roles, resolved per theme. design.md §1.2 / §1.3 */
+:root{
+  color-scheme:light;
+  --color-background:#FFFFFF;          --color-foreground:#4900AC;
+  --color-primary:#4900AC;             --color-primary-foreground:#FAFAFA;
+  --color-secondary:#DDD5FF;           --color-secondary-foreground:#4900AC;
+  --color-accent:#F2EFFF;              --color-accent-foreground:#171717;
+  --color-muted:#DDD5FF;               --color-muted-foreground:#404040;
+  --color-border:#BEADFF;              --color-input:#BEADFF;
+  --color-ring:#8D62FF;                --color-ring-halo:#4900AC66;
+  --color-ring-offset:#FFFFFF;
+  --color-destructive:#DC2626;         --color-destructive-foreground:#FEF2F2;
+  --color-destructive-halo:#DC262633;
+  --color-positive:#15803D;            --color-neutral-status:#EAB308;
+  --color-card:#FFFFFF;                --color-card-foreground:#0A0A0A;
+  --color-popover:#FFFFFF;             --color-popover-foreground:#0A0A0A;
+  --color-chart-1:#6300E2; --color-chart-2:#2563EB; --color-chart-3:#16A34A;
+  --color-chart-4:#F97316; --color-chart-5:#220058;
+  --color-sidebar:#FAFAFA;             --color-sidebar-foreground:#0A0A0A;
+  --color-sidebar-primary:#171717;     --color-sidebar-primary-foreground:#FAFAFA;
+  --color-sidebar-accent:#F5F5F5;      --color-sidebar-accent-foreground:#171717;
+  --color-sidebar-border:#E5E5E5;      --color-sidebar-ring:#A3A3A3;
+  --color-surface-hover:#F2EFFF;
+  --color-text-body:#404040;
+  --color-text-filled:#4900AC;
+  /* alpha veils (design.md §1.4) — light = white */
+  --alpha-5:#FFFFFFF2;  --alpha-10:#FFFFFFE5; --alpha-20:#FFFFFFCC; --alpha-30:#FFFFFFB2;
+  --alpha-40:#FFFFFF99; --alpha-50:#FFFFFF80; --alpha-60:#FFFFFF66; --alpha-70:#FFFFFF4D;
+  --alpha-80:#FFFFFF33; --alpha-90:#FFFFFF1A;
+  /* custom/* — tailwind dark: equivalents (design.md §1.5) */
+  --custom-input-bg:var(--color-background);
+  --custom-accent-hover:var(--color-accent);
+  --custom-input-border:var(--color-input);
+  --custom-outline:#4900AC66;
+  --custom-destructive-soft:#DC262633;
+  --custom-verified:#3B82F6;
+  --custom-positive-10:#16A34A1A; --custom-positive-20:#16A34A33; --custom-positive-40:#16A34A66;
+  /* on-fill foregrounds — text/glyphs sitting on a solid, theme-invariant fill */
+  --color-on-fill:#FFFFFF;              /* white glyphs on primary/destructive/verified fills */
+  --color-on-neutral-status:#171717;    /* §13.2 neutral badge */
+  /* white overlays — the hover recipe for solid fills (law 0.4) */
+  --overlay-white-10:#FFFFFF1A;
+  --overlay-white-20:#FFFFFF33;
+  --overlay-white-60:#FFFFFF99;         /* skeleton shimmer */
+  --color-scrim:#000000;                /* dialog / drawer scrim, 80% opacity */
+  --color-link:#4900AC; --color-link-hover:#6300E2;
+}
+[data-theme="dark"]{
+  color-scheme:dark;
+  --color-background:#0A0A0A;          --color-foreground:#A488FF;
+  --color-primary:#4900AC;             --color-primary-foreground:#FAFAFA;
+  --color-secondary:#DDD5FF;           --color-secondary-foreground:#4900AC;
+  --color-accent:#404040;              --color-accent-foreground:#FAFAFA;
+  --color-muted:#262626;               --color-muted-foreground:#A3A3A3;
+  --color-border:#FFFFFF1A;            --color-input:#BEADFF;
+  --color-ring:#737373;                --color-ring-halo:#A488FF66;
+  --color-ring-offset:#0A0A0A;
+  --color-destructive:#DC2626;         --color-destructive-foreground:#FAFAFA;
+  --color-destructive-halo:#DC262633;
+  --color-positive:#15803D;            --color-neutral-status:#EAB308;
+  --color-card:#171717;                --color-card-foreground:#FAFAFA;
+  --color-popover:#262626;             --color-popover-foreground:#FAFAFA;
+  --color-chart-1:#8D62FF; --color-chart-2:#60A5FA; --color-chart-3:#4ADE80;
+  --color-chart-4:#FB923C; --color-chart-5:#BEADFF;
+  --color-sidebar:#171717;             --color-sidebar-foreground:#FAFAFA;
+  --color-sidebar-primary:#1D4ED8;     --color-sidebar-primary-foreground:#FAFAFA;
+  --color-sidebar-accent:#262626;      --color-sidebar-accent-foreground:#FAFAFA;
+  --color-sidebar-border:#FFFFFF1A;    --color-sidebar-ring:#525252;
+  --color-surface-hover:#FFFFFF13;
+  --color-text-body:#A3A3A3;
+  --color-text-filled:#A488FF;
+  --alpha-5:#0A0A0AF2;  --alpha-10:#0A0A0AE5; --alpha-20:#0A0A0ACC; --alpha-30:#0A0A0AB2;
+  --alpha-40:#0A0A0A99; --alpha-50:#0A0A0A80; --alpha-60:#0A0A0A66; --alpha-70:#0A0A0A4D;
+  --alpha-80:#0A0A0A33; --alpha-90:#0A0A0A1A;
+  --custom-input-bg:#FFFFFF0B;
+  --custom-accent-hover:#FFFFFF13;
+  --custom-input-border:#FFFFFF1F;
+  --custom-outline:#A488FF66;
+  --custom-destructive-soft:#F8717166;
+  --custom-verified:#2563EB;
+  --color-on-fill:#FFFFFF;
+  --color-on-neutral-status:#171717;
+  --overlay-white-10:#FFFFFF1A;
+  --overlay-white-20:#FFFFFF33;
+  --overlay-white-60:#FFFFFF99;
+  --color-scrim:#000000;
+  --color-link:#A488FF; --color-link-hover:#BEADFF;
+}
+
+/* Brand gradients — derived from assets/brand/cover.png, built only from the purple scale
+   plus neutral.950. Six ramps, no new colour values.
+
+   SCOPE, and it is narrow. design.md §0 bans decorative gradients in product UI: no gradient
+   on a control, a card, a table, a badge or any chrome. These exist for BRAND surfaces only —
+   covers, title slides, auth backdrops, marketing hero sections, empty-state art, app splash.
+   Product UI stays flat, exactly as the rest of the system prescribes.
+   Text on a gradient must clear 4.5:1 against its DARKEST stop, not its average. */
+:root{
+  /* The cover field: near-black bleeding into deep purple. Default brand backdrop. */
+  --gradient-midnight:linear-gradient(135deg,#0A0A0A 0%,#170040 55%,#220058 100%); /* @kind other */
+
+  /* The cover's signature: one soft violet glow off-centre over the midnight field.
+     This is the only "glow" the system allows, and only as a background. */
+  --gradient-glow:radial-gradient(ellipse 70% 60% at 65% 45%,#4900AC 0%,#220058 45%,#0A0A0A 100%); /* @kind other */
+
+  /* Saturated brand ramp for full-bleed panels and title slides. */
+  --gradient-brand:linear-gradient(135deg,#4900AC 0%,#6300E2 60%,#7933FF 100%); /* @kind other */
+
+  /* Bright accent ramp — small areas: icon frames on dark, chart highlights, progress art. */
+  --gradient-aurora:linear-gradient(135deg,#6300E2 0%,#8D62FF 55%,#A488FF 100%); /* @kind other */
+
+  /* Light wash. The only gradient permitted on a light page: section backgrounds behind flat cards. */
+  --gradient-veil:linear-gradient(180deg,#F2EFFF 0%,#FFFFFF 100%); /* @kind other */
+
+  /* The rule under the cover wordmark. Use as a 1-2px divider, never as a fill. */
+  --gradient-hairline:linear-gradient(90deg,#8D62FF00 0%,#8D62FF 50%,#8D62FF00 100%); /* @kind other */
+}
+
+/* design.md §2 — type scale, weights, heading roles.
+   Sizes are rem, not px: 1rem = the user's root size, so the whole system honours iOS Dynamic Type
+   and the Android font scale. The px values from design.md are preserved at the default 16px root
+   (0.875rem = 14px, 1rem = 16px, 1.5rem = 24px …). Never reintroduce a px font-size. */
+:root{
+  --text-xs:0.75rem;   --leading-xs:1rem;
+  --text-sm:0.875rem;   --leading-sm:1.25rem;
+  --text-base:1rem; --leading-base:1.5rem;
+  --text-lg:1.125rem;   --leading-lg:1.75rem;
+  --text-xl:1.25rem;   --leading-xl:1.75rem;
+  --text-2xl:1.5rem;  --leading-2xl:2rem;
+  --text-3xl:1.875rem;  --leading-3xl:2.25rem;
+  --text-4xl:2.25rem;  --leading-4xl:2.5rem;
+  --text-5xl:3rem;  --leading-5xl:3rem;
+  --text-6xl:3.75rem;  --leading-6xl:3.75rem;
+  --text-7xl:4.5rem;  --leading-7xl:4.5rem;
+  --text-8xl:6rem;  --leading-8xl:6rem;
+  --text-9xl:8rem; --leading-9xl:8rem;
+  --font-normal:400; --font-medium:500; --font-semibold:600; --font-bold:700;
+  --letter-spacing:0;
+  /* headings — Desktop mode (collection 4) */
+  --heading-xs-family:var(--font-display); --heading-xs-size:1.25rem; --heading-xs-leading:1.75rem; --heading-xs-weight:600;
+  --heading-sm-family:var(--font-display); --heading-sm-size:1.5rem; --heading-sm-leading:2rem; --heading-sm-weight:600;
+  --heading-md-family:var(--font-display); --heading-md-size:1.875rem; --heading-md-leading:2.25rem; --heading-md-weight:600;
+  --heading-lg-family:var(--font-display); --heading-lg-size:2.25rem; --heading-lg-leading:2.5rem; --heading-lg-weight:600;
+  --heading-xl-family:var(--font-display); --heading-xl-size:3rem; --heading-xl-leading:3rem; --heading-xl-weight:600;
+}
+/* Mobile mode: display face disappears, sans bold, large sizes collapse to 30/36 */
+@media (max-width:767px){
+  :root{
+    --heading-xs-family:var(--font-sans); --heading-xs-weight:600;
+    --heading-sm-family:var(--font-sans); --heading-sm-weight:700;
+    --heading-md-family:var(--font-sans); --heading-md-weight:700;
+    --heading-lg-family:var(--font-sans); --heading-lg-weight:700; --heading-lg-size:1.875rem; --heading-lg-leading:2.25rem;
+    --heading-xl-family:var(--font-sans); --heading-xl-weight:700; --heading-xl-size:1.875rem; --heading-xl-leading:2.25rem;
+  }
+}
+
+/* design.md §3.1 — 4px base unit. width/height share the scale. */
+:root{
+  --space-0:0px;
+  --space-px:1px;
+  --space-0-5:2px;
+  --space-1:4px;
+  --space-1-5:6px;
+  --space-2:8px;
+  --space-2-5:10px;
+  --space-3:12px;
+  --space-3-5:14px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-7:28px;
+  --space-8:32px;
+  --space-9:36px;
+  --space-10:40px;
+  --space-11:44px;
+  --space-12:48px;
+  --space-14:56px;
+  --space-16:64px;
+  --space-20:80px;
+  --space-24:96px;
+  --space-28:112px;
+  --space-32:128px;
+  --space-36:144px;
+  --space-40:160px;
+  --space-44:176px;
+  --space-48:192px;
+  --space-52:208px;
+  --space-56:224px;
+  --space-60:240px;
+  --space-64:256px;
+  --space-72:288px;
+  --space-80:320px;
+  --space-96:384px;
+  /* section rhythm (collection 4, Desktop) */
+  --container-padding-x:32px;
+  --section-padding-y:96px;
+}
+@media (max-width:767px){:root{--container-padding-x:24px;--section-padding-y:64px}}
+
+/* design.md §3.2 — two token scales plus role aliases (law 0.7) */
+:root{
+  --radius-xs:2px; --radius-sm:6px; --radius-md:8px; --radius-lg:10px;
+  --radius-xl:14px; --radius-2xl:16px; --radius-3xl:24px; --radius-4xl:32px;
+  --radius-none:0px; --radius-full:9999px;
+  /* role aliases — the only radii components may use */
+  --radius-control:6px;   /* buttons, inputs, menu items, day cells fall to 8 */
+  --radius-menu:8px;      /* selects, menus, badges, textarea */
+  --radius-card:10px;     /* cards, boxes, calendar */
+  --radius-icon-frame:14px;
+  --radius-pill:9999px;   /* pills, avatars, switch, badge-number */
+  /* border widths (quirk preserved: border-7 = 6) */
+  --border-0:0px; --border-1:1px; --border-2:2px; --border-3:3px;
+  --border-4:4px; --border-5:5px; --border-6:6px; --border-7:6px; --border-8:8px;
+}
+
+/* design.md §4 — 34 effect styles */
+:root{
+  --shadow-2xs:0 1px 0 0 #0000000D;
+  --shadow-xs:0 1px 2px 0 #0000000D;
+  --shadow-sm:0 1px 2px -1px #0000001A, 0 1px 3px 0 #0000001A;
+  --shadow-md:0 2px 4px -2px #0000001A, 0 4px 6px -1px #0000001A;
+  --shadow-lg:0 4px 6px -4px #0000001A, 0 10px 15px -3px #0000001A;
+  --shadow-xl:0 8px 10px -6px #0000001A, 0 20px 25px -5px #0000001A;
+  --shadow-2xl:0 25px 50px -12px #00000040;
+  --inset-shadow-2xs:inset 0 1px 0 0 #0000000D;
+  --inset-shadow-xs:inset 0 1px 1px 0 #0000000D;
+  --inset-shadow-sm:inset 0 2px 4px 0 #0000000D;
+  --drop-shadow-xs:drop-shadow(0 1px 1px #0000000D);
+  --drop-shadow-sm:drop-shadow(0 1px 2px #00000026);
+  --drop-shadow-md:drop-shadow(0 3px 3px #0000001F);
+  --drop-shadow-lg:drop-shadow(0 4px 4px #00000026);
+  --drop-shadow-xl:drop-shadow(0 9px 7px #0000001A);
+  --drop-shadow-2xl:drop-shadow(0 25px 25px #00000026);
+  --blur-xs:4px; --blur-sm:8px; --blur-md:12px; --blur-lg:16px;
+  --blur-xl:24px; --blur-2xl:40px; --blur-3xl:64px;
+  --focus-ring:0 0 0 3px var(--color-ring-halo);
+  --focus-ring-destructive:0 0 0 3px var(--color-destructive-halo);
+}
+[data-theme="dark"]{
+  --shadow-xs:0 1px 2px 0 #0000004D;
+  --shadow-sm:0 1px 3px 0 #00000066;
+  --shadow-md:0 4px 6px -1px #00000059;
+  --shadow-lg:0 10px 15px -3px #00000066;
+  --shadow-xl:0 20px 25px -5px #00000073;
+}
+
+/* design.md §7 */
+:root{
+  --duration-instant:0ms; /* @kind other */ --duration-fast:100ms; /* @kind other */ --duration-normal:200ms; /* @kind other */
+  --duration-slow:300ms; /* @kind other */  --duration-slower:500ms; /* @kind other */
+  --ease-linear:linear; /* @kind other */
+  --ease-in:cubic-bezier(0.4,0,1,1); /* @kind other */
+  --ease-out:cubic-bezier(0,0,0.2,1); /* @kind other */
+  --ease-in-out:cubic-bezier(0.4,0,0.2,1); /* @kind other */
+  --ease-spring:cubic-bezier(0.16,1,0.3,1); /* @kind other */
+  --ease-bounce:cubic-bezier(0.34,1.56,0.64,1); /* @kind other */
+  /* interaction constants (design.md §8) */
+  --state-disabled-opacity:0.5; /* @kind other */
+  --state-pressed-opacity:0.6; /* @kind other */
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+/* design.md §3.4, §5, §6 */
+:root{
+  --container-3xs:256px; --container-2xs:288px; --container-xs:320px; --container-sm:384px;
+  --container-md:448px;  --container-lg:512px;  --container-xl:576px;  --container-2xl:672px;
+  --container-3xl:768px; --container-4xl:896px; --container-5xl:1024px; --container-6xl:1152px;
+  --container-7xl:1280px;
+  --breakpoint-sm:640px; /* @kind spacing */ --breakpoint-md:768px; /* @kind spacing */ --breakpoint-lg:1024px; /* @kind spacing */
+  --breakpoint-xl:1280px; /* @kind spacing */ --breakpoint-2xl:1536px; /* @kind spacing */
+  --z-base:0; /* @kind other */ --z-sticky:10; /* @kind other */ --z-dropdown:30; /* @kind other */ --z-overlay:40; /* @kind other */ --z-toast:60; /* @kind other */
+  --control-h-sm:32px; --control-h:36px; --control-h-lg:40px;
+  --control-h-xs:24px; --control-h-group-sm:28px;
+  --touch-target:44px;
+  --row-h-comfortable:48px; --row-h-compact:36px;
+}
+
+/* Touch targets — design.md §5: minimum 44x44 with >=8px between neighbours.
+   Several primitives are deliberately smaller than 44 (Button sm 32, icon-sm 32, Pagination 36,
+   Toggle 36, calendar day 32). design.md itself notes icon-sm fails the AA touch target.
+   Rather than resize them and break the desktop density, the hit area is expanded on coarse
+   pointers only, so the visual is unchanged and the target clears 44 on a phone.
+
+   Before adding a selector here, check that its ::after carries no visible content. */
+@media (pointer:coarse){
+  .odin-btn--sm,.odin-btn--icon-sm,.odin-btn--icon,.odin-igbtn,
+  .odin-page,.odin-toggle,.odin-tab,
+  .odin-cal__day,.odin-cal__nav,.odin-cal__preset,
+  .odin-menu__item,.odin-command__item,.odin-sidebar__item{position:relative}
+  .odin-btn--sm::after,.odin-btn--icon-sm::after,.odin-btn--icon::after,.odin-igbtn::after,
+  .odin-page::after,.odin-toggle::after,.odin-tab::after,
+  .odin-cal__day::after,.odin-cal__nav::after,.odin-cal__preset::after,
+  .odin-menu__item::after,.odin-command__item::after,.odin-sidebar__item::after{
+    content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:100%;height:100%;min-width:44px;min-height:44px;pointer-events:auto}
+  /* Checkbox, radio and switch are DELIBERATELY absent above: each draws its glyph with ::after
+     (the tick, the dot, the thumb), so that pseudo-element is not available for hit-area duty —
+     giving it a 44px minimum would inflate the glyph itself. They expand through their label row
+     instead, which is the correct target anyway: the label toggles the control. */
+  .odin-check-row,.odin-check-box,.odin-switch-box{min-height:44px}
+}
+
+/* Safe areas — any element pinned to a viewport edge must clear the notch and the home indicator. */
+.odin-safe-bottom{padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.odin-safe-top{padding-top:calc(0px + env(safe-area-inset-top))}
+.odin-safe-x{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+
+/* Brand marks. Four lockups, each in brand purple (#4900AC) and a light version for dark
+   or purple surfaces. Pair them with the two swap classes below and the correct one shows
+   in each theme — never recolour a mark inline. design.md §0. */
+.odin-logo-lit{display:none}
+[data-theme="dark"] .odin-logo-dim{display:none}
+[data-theme="dark"] .odin-logo-lit{display:block}
+
+/* App backdrop. The BeValk app carries this behind every screen: a near-white lavender field
+   with a centred shield watermark, circuit traces at the corners and one purple arc top-right.
+   804x1748, portrait, authored for mobile — anchored top-centre and cover-scaled so the shield
+   stays behind the content column at any height.
+
+   It sits BEHIND the UI and never competes with it: cards stay opaque, text never lands directly
+   on the artwork. There is no dark counterpart in the sources, so under [data-theme="dark"] the
+   image is dropped and the flat --color-background takes over rather than being tinted or
+   inverted. Supply a dark plate and wire it here. */
+.odin-app-bg{
+  background-color:var(--color-background);
+  background-image:none;
+  background-size:cover;
+  background-position:top center;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+}
+[data-theme="dark"] .odin-app-bg{background-image:none}
+
+/* design.md §15.1 — element defaults. Components carry their own styling. */
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--color-background);color:var(--color-text-body);font:400 16px/1.5 var(--font-sans);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;margin:0;color:var(--color-foreground)}
+h1{font-size:var(--heading-xl-size);line-height:var(--heading-xl-leading);font-family:var(--heading-xl-family);font-weight:var(--heading-xl-weight)}
+h2{font-size:var(--heading-lg-size);line-height:var(--heading-lg-leading);font-family:var(--heading-lg-family);font-weight:var(--heading-lg-weight)}
+h3{font-size:var(--heading-md-size);line-height:var(--heading-md-leading);font-family:var(--heading-md-family);font-weight:var(--heading-md-weight)}
+h4{font-size:var(--heading-sm-size);line-height:var(--heading-sm-leading);font-family:var(--heading-sm-family);font-weight:var(--heading-sm-weight)}
+a{color:var(--color-link);text-decoration:underline;text-underline-offset:2px}
+a:hover{color:var(--color-link-hover);text-decoration:underline}
+button,input,select,textarea{font:inherit;color:inherit}
+img,svg{display:block;max-width:100%}
+:where(a,button,input,select,textarea,[tabindex]):focus-visible{outline:none;border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+
+/* Odin form controls. Values 1:1 from design.md §13.1–13.12. */
+
+/* ---- Button §13.1 ---- */
+.odin-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:var(--radius-control);font-family:var(--font-sans);font-weight:var(--font-medium);font-size:0.875rem;line-height:20px;cursor:pointer;text-decoration:none;white-space:nowrap;background:transparent;transition:background-color var(--duration-normal) var(--ease-out),box-shadow var(--duration-normal) var(--ease-out),opacity var(--duration-fast) var(--ease-out);position:relative;background-image:none}
+.odin-btn:focus-visible{outline:none;border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-btn:active:not(:disabled){opacity:var(--state-pressed-opacity)}
+.odin-btn:disabled,.odin-btn[aria-disabled="true"]{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-btn[data-loading="true"]{opacity:var(--state-disabled-opacity);pointer-events:none}
+.odin-btn--default{height:36px;padding:8px 16px}
+.odin-btn--sm{height:32px;padding:8px 12px;font-size:0.75rem;line-height:16px}
+.odin-btn--lg{height:40px;padding:8px 24px}
+.odin-btn--icon{height:36px;width:36px;padding:0}
+.odin-btn--icon-sm{height:32px;width:32px;padding:0}
+.odin-btn--icon-lg{height:40px;width:40px;padding:0}
+.odin-btn--primary{background-color:var(--color-primary);color:var(--color-primary-foreground)}
+.odin-btn--primary:hover:not(:disabled){background-image:linear-gradient(var(--overlay-white-10),var(--overlay-white-10))}
+.odin-btn--secondary{background-color:var(--color-secondary);color:var(--color-secondary-foreground)}
+.odin-btn--secondary:hover:not(:disabled){background-image:linear-gradient(var(--overlay-white-20),var(--overlay-white-20))}
+.odin-btn--destructive{background-color:var(--color-destructive);color:var(--color-destructive-foreground)}
+.odin-btn--destructive:focus-visible{border-color:var(--color-destructive);box-shadow:var(--focus-ring-destructive)}
+.odin-btn--outline{background-color:var(--color-background);border-color:var(--color-border);box-shadow:var(--shadow-xs);color:var(--color-foreground)}
+.odin-btn--outline:hover:not(:disabled){background-color:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-btn--outline:focus-visible{border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-btn--ghost{color:var(--color-foreground)}
+.odin-btn--ghost:hover:not(:disabled){background-color:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-btn--link{color:var(--color-foreground);padding-left:0;padding-right:0}
+.odin-btn--link:hover:not(:disabled){text-decoration:underline;text-underline-offset:2px}
+
+/* ---- Spinner (shared) §13.21 ---- */
+.odin-spinner{display:inline-block;border-radius:9999px;border:2px solid currentColor;border-top-color:transparent;animation:odin-spin .8s linear infinite;flex:0 0 auto}
+@keyframes odin-spin{to{transform:rotate(360deg)}}
+
+/* ---- Input §13.4 ---- */
+.odin-input-wrap{display:flex;align-items:center;gap:4px;height:36px;padding:4px 12px;border-radius:var(--radius-control);border:1px solid var(--color-input);background:var(--color-background);box-shadow:var(--shadow-xs);color:var(--color-text-body);transition:border-color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out)}
+.odin-input-wrap:focus-within{border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-input-wrap[data-invalid="true"]{border-color:var(--color-destructive);box-shadow:none}
+.odin-input-wrap[data-invalid="true"]:focus-within{box-shadow:var(--focus-ring-destructive)}
+.odin-input-wrap[data-disabled="true"]{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-filled)}
+.odin-input::placeholder{color:var(--color-text-body)}
+.odin-input:disabled{cursor:not-allowed}
+.odin-input-file-btn{display:inline-flex;align-items:center;height:26px;padding:1px 6px;margin-left:-6px;border-radius:var(--radius-control);background:var(--color-secondary);color:var(--color-secondary-foreground);font:500 0.75rem/1rem var(--font-sans)}
+
+/* ---- InputGroup §13.5 ---- */
+.odin-igroup{display:flex;align-items:center;gap:8px;min-height:36px;padding:4px 12px;border-radius:var(--radius-control);border:1px solid var(--color-input);background:var(--color-background);box-shadow:var(--shadow-xs)}
+.odin-igroup:focus-within{border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-igroup--textarea{flex-direction:column;align-items:stretch;gap:0;padding:0;border-radius:var(--radius-menu)}
+.odin-igroup__block{display:flex;align-items:center;gap:8px;padding:12px 12px 6px}
+.odin-igroup__block--end{padding:6px 12px 12px;justify-content:space-between}
+.odin-igroup__addon{display:inline-flex;align-items:center;gap:4px;color:var(--color-text-body);font:500 0.875rem/1.25rem var(--font-sans);flex:0 0 auto}
+.odin-igroup__check{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:var(--radius-control);background:var(--color-primary);color:var(--color-on-fill)}
+.odin-igroup__sep{height:1px;background:var(--color-border);margin:0}
+.odin-igbtn{display:inline-flex;align-items:center;justify-content:center;gap:4px;border:1px solid transparent;border-radius:var(--radius-control);font-family:var(--font-sans);font-weight:var(--font-medium);cursor:pointer;background:transparent}
+.odin-igbtn--xs{height:24px;padding:0 8px;gap:4px;font-size:0.875rem;line-height:20px}
+.odin-igbtn--sm{height:28px;padding:0 10px;gap:6px;font-size:0.75rem;line-height:16px}
+.odin-igbtn--icon-xs{height:24px;width:24px;padding:0}
+.odin-igbtn--icon-sm{height:28px;width:28px;padding:0}
+.odin-igbtn:focus-visible{outline:none;border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-igbtn:active:not(:disabled){opacity:var(--state-pressed-opacity)}
+.odin-igbtn:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+
+/* ---- Textarea §13.7 ---- */
+.odin-textarea{display:block;width:100%;min-height:110px;padding:8px 12px;border-radius:var(--radius-menu);border:1px solid var(--color-input);background:var(--color-background);box-shadow:var(--shadow-xs);font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-filled);resize:vertical;outline:none}
+.odin-textarea::placeholder{color:var(--color-text-body)}
+.odin-textarea:focus-visible{border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-textarea[data-invalid="true"]{border-color:var(--color-destructive)}
+.odin-textarea:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-textarea-count{display:block;text-align:right;font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body);margin-top:4px}
+
+/* ---- Select §13.6 ---- */
+.odin-select{position:relative;display:inline-block}
+.odin-select__trigger{display:flex;align-items:center;gap:8px;height:40px;width:100%;padding:8px 12px;border-radius:var(--radius-menu);border:1px solid var(--color-input);background:var(--color-background);box-shadow:var(--shadow-xs);font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);cursor:pointer;text-align:left}
+.odin-select__trigger[data-filled="true"]{color:var(--color-text-filled)}
+.odin-select__trigger[data-open="true"]{background:var(--color-surface-hover);border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-select__trigger:focus-visible{outline:none;border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-select__trigger:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-select__value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.odin-select__chev{transition:transform var(--duration-normal) var(--ease-out)}
+.odin-select__trigger[data-open="true"] .odin-select__chev{transform:rotate(180deg)}
+.odin-menu{position:absolute;z-index:var(--z-dropdown);min-width:100%;margin-top:4px;padding:4px;display:flex;flex-direction:column;background:var(--color-popover);border:1px solid var(--color-border);border-radius:var(--radius-menu);box-shadow:var(--shadow-md);max-height:296px;overflow:auto}
+.odin-menu__item{display:flex;align-items:center;gap:8px;padding:6px 32px 6px 8px;border-radius:var(--radius-control);font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-popover-foreground);cursor:pointer;border:0;background:transparent;width:100%;text-align:left;position:relative}
+.odin-menu__item:hover,.odin-menu__item[data-active="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-menu__item[data-destructive="true"]{color:var(--color-destructive)}
+.odin-menu__item[aria-disabled="true"]{opacity:var(--state-disabled-opacity);pointer-events:none}
+.odin-menu__shortcut{margin-left:auto;font:400 0.75rem/1rem var(--font-sans);opacity:.6}
+.odin-menu__check{position:absolute;right:8px}
+.odin-menu__label{padding:6px 8px;border-radius:var(--radius-xs);font:500 0.75rem/1rem var(--font-sans);color:var(--color-text-body)}
+.odin-menu__sep{height:1px;background:var(--color-border);margin:4px 6px}
+
+/* ---- Checkbox §13.8 / Radio §13.9 ---- */
+.odin-check-row{display:flex;align-items:flex-start;gap:8px;padding:2px 0;cursor:pointer}
+.odin-check-row[data-placement="end"]{flex-direction:row-reverse;justify-content:space-between}
+.odin-check-row[data-disabled="true"]{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-check{appearance:none;-webkit-appearance:none;margin:0;flex:0 0 auto;width:16px;height:16px;border-radius:4px;border:1px solid var(--color-input);background:var(--color-background);box-shadow:var(--shadow-xs);cursor:pointer;display:inline-grid;place-content:center;position:relative;transition:background-color var(--duration-fast) var(--ease-out)}
+.odin-check:checked,.odin-check:indeterminate{background:var(--color-primary);border-color:var(--color-primary)}
+.odin-check:checked::after{content:"";width:9px;height:5px;border-left:2px solid var(--color-on-fill);border-bottom:2px solid var(--color-on-fill);transform:rotate(-45deg) translateY(-1px)}
+.odin-check:indeterminate::after{content:"";width:8px;height:2px;background:var(--color-on-fill)}
+.odin-check:focus-visible{outline:none;border-color:var(--color-ring);box-shadow:0 0 0 3px var(--custom-outline)}
+.odin-radio{appearance:none;-webkit-appearance:none;margin:0;flex:0 0 auto;width:16px;height:16px;border-radius:9999px;border:1px solid var(--color-input);background:var(--color-background);box-shadow:var(--shadow-xs);cursor:pointer;display:inline-grid;place-content:center}
+.odin-radio:checked::after{content:"";width:8px;height:8px;border-radius:9999px;background:var(--color-primary)}
+.odin-radio:focus-visible{outline:none;border-color:var(--color-ring);box-shadow:0 0 0 3px var(--custom-outline)}
+.odin-check-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.odin-check-label{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground)}
+.odin-check-desc{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body)}
+.odin-check-box{display:flex;align-items:flex-start;gap:8px;padding:16px;border-radius:var(--radius-menu);border:1px solid var(--color-input);cursor:pointer}
+.odin-check-box[data-checked="true"]{background:var(--color-surface-hover);border-color:var(--color-primary)}
+.odin-check-box[data-shape="radio"]{border-radius:var(--radius-card)}
+.odin-check-group{display:flex;flex-direction:column;gap:12px}
+
+/* ---- Switch §13.10 ---- */
+.odin-switch{appearance:none;-webkit-appearance:none;margin:0;flex:0 0 auto;position:relative;width:36px;height:20px;border-radius:9999px;background:var(--color-input);border:2px solid var(--color-background);cursor:pointer;transition:background-color var(--duration-normal) var(--ease-out)}
+.odin-switch::after{content:"";position:absolute;top:1px;left:2px;width:14px;height:14px;border-radius:9999px;background:var(--color-on-fill);transition:transform var(--duration-normal) var(--ease-out)}
+.odin-switch:checked{background:var(--color-primary)}
+.odin-switch:checked::after{transform:translateX(16px)}
+.odin-switch:focus-visible{outline:none;border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+.odin-switch:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-switch-box{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-radius:var(--radius-card);border:1px solid var(--color-input);background:var(--color-background)}
+.odin-switch-box[data-checked="true"]{background:var(--color-surface-hover);border-color:var(--color-primary)}
+.odin-switch-group{display:flex;flex-direction:column;gap:16px}
+
+/* ---- Field §13.11 ---- */
+.odin-field{display:flex;flex-direction:column;gap:12px}
+.odin-field--horizontal{flex-direction:row;align-items:center;gap:12px}
+.odin-field__head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.odin-label{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground)}
+.odin-field[data-invalid="true"] .odin-label,.odin-field[data-invalid="true"] .odin-field__desc{color:var(--color-destructive)}
+.odin-field__desc{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);margin:0}
+.odin-fieldset{display:flex;flex-direction:column;gap:28px;border:0;margin:0;padding:0;min-width:0}
+.odin-legend{display:flex;flex-direction:column;gap:4px;padding:0 0 12px}
+.odin-legend__title{font:500 1rem/1.5rem var(--font-sans);color:var(--color-foreground)}
+.odin-legend__label{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground)}
+.odin-field-buttons{display:flex;gap:12px}
+.odin-field-buttons--vertical{flex-direction:column;align-items:stretch}
+.odin-sep-text{display:flex;align-items:center;gap:8px;color:var(--color-text-body);font:400 0.875rem/1.25rem var(--font-sans)}
+.odin-sep-text::before,.odin-sep-text::after{content:"";flex:1;height:1px;background:var(--color-border)}
+
+/* ---- Kbd §13.12 ---- */
+.odin-kbd{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:20px;padding:0 4px;border-radius:var(--radius-control);background:var(--color-secondary);color:var(--color-secondary-foreground);font:500 0.75rem/1rem var(--font-sans)}
+.odin-kbd--primary{background:var(--overlay-white-20);color:var(--color-on-fill)}
+.odin-kbd-group{display:inline-flex;align-items:center;gap:4px}
+.odin-kbd-group__plus{font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body)}
+
+/* ---- Slider §13.21 ---- */
+.odin-slider{appearance:none;-webkit-appearance:none;width:100%;height:6px;border-radius:9999px;background:var(--color-muted);outline:none;cursor:pointer}
+.odin-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:9999px;background:var(--color-background);border:2px solid var(--color-primary);box-shadow:var(--shadow-xs);cursor:pointer}
+.odin-slider::-moz-range-thumb{width:16px;height:16px;border-radius:9999px;background:var(--color-background);border:2px solid var(--color-primary);box-shadow:var(--shadow-xs);cursor:pointer}
+.odin-slider:focus-visible::-webkit-slider-thumb{box-shadow:var(--focus-ring)}
+.odin-slider:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+
+/* ---- Input OTP §13.21 ---- */
+.odin-otp{display:inline-flex;gap:8px}
+.odin-otp__cell{width:36px;height:36px;border-radius:var(--radius-control);border:1px solid var(--color-input);background:var(--color-background);box-shadow:var(--shadow-xs);text-align:center;font:500 20px/1 var(--font-sans);color:var(--color-text-filled);outline:none}
+.odin-otp__cell:focus-visible{border-color:var(--color-ring);box-shadow:var(--focus-ring)}
+
+/* Odin display primitives — design.md §13.2, §13.3, §13.13, §13.18, §13.19, §13.21 */
+
+/* ---- Badge §13.2 ---- */
+.odin-badge{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:2px 8px;border-radius:var(--radius-menu);border:1px solid var(--color-background);font:600 0.75rem/1rem var(--font-sans);white-space:nowrap}
+.odin-badge--default{background:var(--color-primary);color:var(--color-primary-foreground)}
+.odin-badge--secondary{background:var(--color-secondary);color:var(--color-secondary-foreground)}
+.odin-badge--outline{background:var(--color-background);border-color:var(--color-border);color:var(--color-foreground)}
+.odin-badge--destructive{background:var(--color-destructive);color:var(--color-on-fill)}
+.odin-badge--verified{background:var(--custom-verified);color:var(--color-on-fill)}
+.odin-badge--positive{background:var(--color-positive);color:var(--color-primary-foreground)}
+.odin-badge--neutral{background:var(--color-neutral-status);color:var(--color-on-neutral-status)}
+/* inverse: the app's locked-row marker. Near-black on light, near-white on dark, always the
+   opposite of the surface it sits on. Built on the accent pair so it can never collide with
+   --color-card the way a raw --neutral-900 does. Fully rounded, per the app. */
+.odin-badge--inverse{background:var(--color-accent-foreground);color:var(--color-accent);border-color:transparent;border-radius:var(--radius-pill)}
+.odin-badge-number{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 4px;border-radius:var(--radius-pill);border:1px solid var(--color-background);font:600 0.75rem/1rem var(--font-sans)}
+
+/* ---- Avatar §13.3 ---- */
+.odin-avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-pill);background:var(--color-secondary);color:var(--color-secondary-foreground);font:400 0.875rem/1.25rem var(--font-sans);overflow:hidden;flex:0 0 auto}
+.odin-avatar img{width:100%;height:100%;object-fit:cover}
+.odin-avatar-group{display:inline-flex;align-items:center}
+.odin-avatar-group>*{margin-left:-8px;box-shadow:0 0 0 2px var(--color-background)}
+.odin-avatar-group>*:first-child{margin-left:0}
+.odin-avatar--overflow{background:var(--color-primary);color:var(--color-primary-foreground)}
+.odin-avatar-field{display:flex;align-items:center;gap:16px}
+
+/* ---- Card §13.19 ---- */
+.odin-card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-xs);color:var(--color-card-foreground)}
+.odin-card--clickable{cursor:pointer;transition:border-color var(--duration-normal) var(--ease-out)}
+.odin-card--clickable:hover{border-color:var(--color-ring)}
+.odin-card__header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--color-border)}
+.odin-card__title{font:600 0.875rem/1.25rem var(--font-sans);color:var(--color-card-foreground);margin:0}
+.odin-card__desc{font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body);margin:2px 0 0}
+.odin-card__body{display:flex;flex-direction:column;gap:24px;padding:24px}
+
+/* ---- Separator §13.13 ---- */
+.odin-separator{background:var(--color-border);border:0;flex:0 0 auto}
+.odin-separator--horizontal{height:1px;width:100%}
+.odin-separator--vertical{width:1px;align-self:stretch;min-height:16px}
+
+/* ---- Alert §13.21 ---- */
+.odin-alert{display:flex;gap:10px;padding:12px 14px;border-radius:var(--radius-menu);border:1px solid transparent}
+.odin-alert__title{font:600 0.875rem/1.25rem var(--font-sans);margin:0}
+.odin-alert__body{font:400 0.8125rem/1.125rem var(--font-sans);margin:2px 0 0;color:var(--color-text-body)}
+.odin-alert--destructive{background:var(--red-50);border-color:var(--color-destructive);color:var(--red-700)}
+.odin-alert--positive{background:var(--green-50);border-color:var(--color-positive);color:var(--color-positive)}
+.odin-alert--warning{background:var(--yellow-50);border-color:var(--yellow-700);color:var(--yellow-700)}
+.odin-alert--info{background:var(--color-accent);border-color:var(--color-foreground);color:var(--color-foreground)}
+[data-theme="dark"] .odin-alert--info{color:var(--color-accent-foreground);border-color:var(--color-accent-foreground)}
+
+/* ---- Progress §13.21 ---- */
+.odin-progress{height:6px;border-radius:var(--radius-pill);background:var(--color-muted);overflow:hidden;width:100%}
+.odin-progress__fill{height:100%;background:var(--color-primary);border-radius:var(--radius-pill);transition:width var(--duration-slow) var(--ease-out)}
+.odin-progress__fill--indeterminate{width:40%;animation:odin-sweep 1.4s linear infinite}
+@keyframes odin-sweep{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+
+/* ---- Skeleton §13.21 ---- */
+.odin-skeleton{position:relative;overflow:hidden;background:color-mix(in srgb,var(--color-muted) 50%,transparent);border-radius:var(--radius-control)}
+.odin-skeleton::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,var(--overlay-white-60),transparent);animation:odin-shimmer 1.4s linear infinite}
+@keyframes odin-shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+/* ---- Typography §13.18 ---- */
+.odin-h1{font-family:var(--heading-xl-family);font-weight:var(--heading-xl-weight);font-size:var(--heading-xl-size);line-height:var(--heading-xl-leading);color:var(--color-foreground);margin:0}
+.odin-h2{font-family:var(--heading-lg-family);font-weight:var(--heading-lg-weight);font-size:var(--heading-lg-size);line-height:var(--heading-lg-leading);color:var(--color-foreground);margin:0}
+.odin-h3{font-family:var(--heading-md-family);font-weight:var(--heading-md-weight);font-size:var(--heading-md-size);line-height:var(--heading-md-leading);color:var(--color-foreground);margin:0}
+.odin-h4{font-family:var(--heading-sm-family);font-weight:var(--heading-sm-weight);font-size:var(--heading-sm-size);line-height:var(--heading-sm-leading);color:var(--color-foreground);margin:0}
+.odin-p{font:400 1rem/1.5rem var(--font-sans);color:var(--color-text-body);margin:0;max-width:70ch;text-wrap:pretty}
+.odin-lead{font:400 1.25rem/1.75rem var(--font-sans);color:var(--color-text-body);margin:0}
+.odin-large{font:600 1.125rem/1.75rem var(--font-sans);color:var(--color-foreground)}
+.odin-small{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground)}
+.odin-muted{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body)}
+.odin-blockquote{border-left:2px solid var(--color-border);padding-left:16px;font:400 1rem/1.5rem var(--font-sans);font-style:italic;color:var(--color-text-body);margin:0}
+.odin-inline-code{font:400 0.8125rem/1.25rem var(--font-mono);background:var(--color-muted);color:var(--color-secondary-foreground);border-radius:4px;padding:1px 5px}
+.odin-code{display:block;font:400 0.8125rem/1.25rem var(--font-mono);background:var(--color-muted);color:var(--color-secondary-foreground);border-radius:var(--radius-menu);padding:12px 14px;overflow:auto}
+.odin-list{font:400 1rem/1.5rem var(--font-sans);color:var(--color-text-body);margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* ---- LP Icon frame §13.19 ---- */
+.odin-lp-icon{display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;padding:16px;border-radius:var(--radius-icon-frame);background:var(--color-background);border:1px solid var(--color-border);box-shadow:var(--shadow-xs);color:var(--color-foreground)}
+
+/* ---- Empty state §15.6 ---- */
+.odin-empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:48px 24px}
+.odin-empty__icon{display:flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:var(--radius-pill);background:var(--color-accent);color:var(--color-accent-foreground);margin-bottom:4px}
+.odin-empty__title{font-family:var(--heading-xs-family);font-weight:var(--heading-xs-weight);font-size:var(--heading-xs-size);line-height:var(--heading-xs-leading);color:var(--color-foreground);margin:0}
+.odin-empty__body{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);margin:0;max-width:44ch}
+.odin-empty__cta{margin-top:8px}
+
+/* Odin overlays — design.md §13.16, §13.21. z: dropdown 30, overlay 40, toast 60. */
+.odin-scrim{position:fixed;inset:0;background:var(--color-scrim);opacity:.8;z-index:var(--z-overlay)}
+.odin-dialog{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:var(--z-overlay);width:calc(100% - 32px);max-width:var(--container-md);background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-lg);padding:24px;display:flex;flex-direction:column;gap:16px;animation:odin-pop var(--duration-slow) var(--ease-spring)}
+@keyframes odin-pop{from{opacity:0;transform:translate(-50%,-46%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+.odin-dialog__title{font-family:var(--heading-xs-family);font-weight:var(--heading-xs-weight);font-size:var(--heading-xs-size);line-height:var(--heading-xs-leading);color:var(--color-foreground);margin:0}
+.odin-dialog__desc{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);margin:6px 0 0}
+.odin-dialog__foot{display:flex;justify-content:flex-end;gap:8px}
+@media (max-width:639px){.odin-dialog__foot{flex-direction:column-reverse}.odin-dialog__foot>*{width:100%}}
+
+.odin-drawer{position:fixed;left:0;right:0;bottom:0;top:96px;z-index:var(--z-overlay);display:flex;flex-direction:column;align-items:center;background:var(--color-background);border:1px solid var(--color-border);border-bottom:0;border-radius:var(--radius-card) var(--radius-card) 0 0;padding:0 16px calc(16px + env(safe-area-inset-bottom));animation:odin-up var(--duration-slow) var(--ease-spring)}
+@keyframes odin-up{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+.odin-drawer__grip{width:64px;height:5px;border-radius:9999px;background:var(--color-border);margin:12px 0 8px}
+.odin-drawer__inner{width:100%;max-width:var(--container-md);display:flex;flex-direction:column;gap:16px;overflow:auto;padding-bottom:8px}
+
+.odin-sheet{position:fixed;top:0;right:0;bottom:0;z-index:var(--z-overlay);width:min(420px,100%);background:var(--color-card);border-left:1px solid var(--color-border);box-shadow:var(--shadow-xl);display:flex;flex-direction:column;gap:16px;padding:24px;animation:odin-slide var(--duration-slow) var(--ease-out)}
+@keyframes odin-slide{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.odin-popover{position:absolute;z-index:var(--z-dropdown);margin-top:6px;background:var(--color-popover);border:1px solid var(--color-border);border-radius:var(--radius-menu);box-shadow:var(--shadow-md);padding:14px;max-width:320px;color:var(--color-popover-foreground)}
+.odin-popover--menu{padding:4px;min-width:200px}
+.odin-anchor{position:relative;display:inline-block}
+
+.odin-tooltip{position:absolute;z-index:var(--z-dropdown);background:var(--color-primary);color:var(--color-primary-foreground);font:400 0.75rem/1rem var(--font-sans);border-radius:var(--radius-menu);padding:6px 12px;white-space:nowrap;pointer-events:none;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%)}
+
+.odin-toast-region{position:fixed;right:24px;bottom:24px;z-index:var(--z-toast);display:flex;flex-direction:column;gap:12px;width:min(360px,calc(100vw - 48px))}
+.odin-toast{display:flex;gap:10px;padding:14px;border-radius:var(--radius-menu);border:1px solid var(--color-border);background:var(--color-popover);box-shadow:var(--shadow-lg);animation:odin-up var(--duration-slow) var(--ease-spring)}
+.odin-toast__title{font:600 0.875rem/1.25rem var(--font-sans);color:var(--color-popover-foreground);margin:0}
+.odin-toast__body{font:400 0.8125rem/1.125rem var(--font-sans);color:var(--color-text-body);margin:2px 0 0}
+.odin-toast__action{margin-left:auto;align-self:flex-start;border:0;background:transparent;cursor:pointer;font:600 0.8125rem/1.125rem var(--font-sans);color:var(--color-foreground)}
+
+.odin-hovercard{display:flex;gap:12px;align-items:flex-start}
+.odin-hovercard__name{font:600 0.8125rem/1.125rem var(--font-sans);color:var(--color-popover-foreground);margin:0}
+.odin-hovercard__meta{font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body);margin:2px 0 0}
+
+.odin-command{display:flex;flex-direction:column;padding:0;gap:0;max-width:var(--container-lg)}
+.odin-command__search{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--color-border)}
+.odin-command__search input{flex:1;border:0;outline:none;background:transparent;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-filled)}
+.odin-command__list{padding:4px;max-height:320px;overflow:auto}
+.odin-command__item{display:flex;align-items:center;gap:8px;width:100%;padding:7px 10px;border:0;background:transparent;border-radius:var(--radius-control);font:400 0.8125rem/1.125rem var(--font-sans);color:var(--color-popover-foreground);cursor:pointer;text-align:left}
+.odin-command__item:hover,.odin-command__item[data-active="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-command__shortcut{margin-left:auto;font:400 0.6875rem/1rem var(--font-mono);color:var(--color-text-body)}
+
+/* Odin navigation — design.md §13.21 */
+.odin-tabs{display:inline-flex;gap:2px;padding:4px;border-radius:var(--radius-menu);background:var(--color-muted)}
+.odin-tab{border:0;background:transparent;padding:6px 14px;border-radius:var(--radius-control);font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);cursor:pointer;white-space:nowrap}
+.odin-tab[aria-selected="true"]{background:var(--color-background);color:var(--color-foreground);box-shadow:var(--shadow-xs)}
+.odin-tab:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+
+.odin-breadcrumb{display:flex;align-items:center;gap:8px;font:400 0.875rem/1.25rem var(--font-sans);flex-wrap:wrap}
+.odin-breadcrumb a{color:var(--color-text-body);text-decoration:none}
+.odin-breadcrumb a:hover{color:var(--color-accent-foreground);text-decoration:underline}
+.odin-breadcrumb__sep{color:var(--neutral-400)}
+.odin-breadcrumb__current{color:var(--color-foreground);font-weight:var(--font-medium)}
+
+.odin-pagination{display:flex;align-items:center;gap:4px}
+.odin-page{min-width:36px;height:36px;padding:0 8px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:var(--radius-control);font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);cursor:pointer}
+.odin-page:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-page[aria-current="page"]{background:var(--color-surface-hover);color:var(--color-accent-foreground);font-weight:var(--font-medium)}
+.odin-page:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-page--ellipsis{pointer-events:none}
+
+.odin-navmenu{display:flex;align-items:center;gap:20px}
+.odin-navmenu__link{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);text-decoration:none;padding-bottom:6px;border-bottom:2px solid transparent;border-radius:2px}
+.odin-navmenu__link:hover{color:var(--color-accent-foreground)}
+.odin-navmenu__link[aria-current="page"]{color:var(--color-foreground);border-bottom-color:var(--color-foreground)}
+
+.odin-menubar{display:inline-flex;align-items:center;gap:2px;padding:2px;border:1px solid var(--color-border);border-radius:var(--radius-menu);background:var(--color-background)}
+.odin-menubar__item{border:0;background:transparent;padding:6px 12px;border-radius:var(--radius-control);font:400 0.8125rem/1.125rem var(--font-sans);color:var(--color-popover-foreground);cursor:pointer}
+.odin-menubar__item:hover,.odin-menubar__item[data-open="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+
+.odin-toggle{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:var(--radius-control);color:var(--color-foreground);cursor:pointer}
+.odin-toggle:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-toggle[aria-pressed="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-toggle:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.odin-toggle-group{display:inline-flex;border:1px solid var(--color-border);border-radius:var(--radius-control);overflow:hidden}
+.odin-toggle-group>*+*{border-left:1px solid var(--color-border)}
+.odin-toggle-group .odin-toggle{border-radius:0}
+
+.odin-accordion{display:flex;flex-direction:column}
+.odin-accordion__item{border-bottom:1px solid var(--color-border)}
+.odin-accordion__head{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px 0;border:0;background:transparent;cursor:pointer;font:500 0.9375rem/1.375rem var(--font-sans);color:var(--color-foreground);text-align:left}
+.odin-accordion__chev{transition:transform var(--duration-slow) var(--ease-out);color:var(--color-text-body)}
+.odin-accordion__head[aria-expanded="true"] .odin-accordion__chev{transform:rotate(180deg)}
+.odin-accordion__body{font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body);margin:0 0 12px}
+
+.odin-sidebar{display:flex;flex-direction:column;gap:4px;width:260px;flex:0 0 auto;padding:12px;background:var(--color-sidebar);border-right:1px solid var(--color-sidebar-border);color:var(--color-sidebar-foreground)}
+.odin-sidebar__section{padding:12px 10px 6px;font:600 0.625rem/0.875rem var(--font-sans);letter-spacing:.06em;text-transform:uppercase;color:var(--color-sidebar-foreground);opacity:.6}
+.odin-sidebar__item{position:relative;display:flex;align-items:center;gap:10px;padding:8px 10px;border:0;background:transparent;border-radius:var(--radius-control);font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-sidebar-foreground);cursor:pointer;width:100%;text-align:left;text-decoration:none}
+.odin-sidebar__item:hover{background:var(--color-sidebar-accent);color:var(--color-sidebar-accent-foreground)}
+.odin-sidebar__item[aria-current="page"]{background:var(--color-sidebar-accent);color:var(--color-sidebar-accent-foreground);font-weight:var(--font-medium)}
+.odin-sidebar__item[aria-current="page"]::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--color-sidebar-primary)}
+.odin-sidebar__item:focus-visible{outline:none;box-shadow:0 0 0 3px var(--color-sidebar-ring)}
+.odin-sidebar__count{margin-left:auto}
+
+/* Odin data display — design.md §13.14, §13.15, §11 */
+.odin-table-wrap{border:1px solid var(--color-border);border-radius:var(--radius-card);overflow-x:auto;background:var(--color-card)}
+.odin-table{width:100%;border-collapse:collapse;font-family:var(--font-sans)}
+.odin-table caption{caption-side:top;text-align:left;padding:12px;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body)}
+.odin-table th{padding:8px;text-align:left;font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground);border-bottom:1px solid var(--color-border);white-space:nowrap}
+.odin-table th:hover{background:color-mix(in srgb,var(--color-secondary) 50%,var(--color-background))}
+.odin-table td{padding:8px;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-card-foreground);border-bottom:1px solid var(--color-border);vertical-align:middle}
+.odin-table tbody tr:last-child td{border-bottom:0}
+.odin-table tbody tr:hover td{background:var(--color-surface-hover)}
+.odin-table--compact th,.odin-table--compact td{padding:6px 8px;font-size:0.8125rem;height:36px}
+.odin-table--comfortable td{height:48px}
+.odin-table td[data-numeric="true"],.odin-table th[data-numeric="true"]{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.odin-table tfoot td{font-weight:var(--font-medium);border-top:1px solid var(--color-border)}
+.odin-dt{display:flex;flex-direction:column;gap:16px}
+.odin-dt__toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.odin-dt__foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-text-body)}
+
+/* ---- Calendar §13.15 ---- */
+.odin-cal{width:248px;padding:12px;display:flex;flex-direction:column;gap:16px;background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-card);box-shadow:var(--shadow-sm)}
+.odin-cal--range{width:488px}
+.odin-cal__head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.odin-cal__title{font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground)}
+.odin-cal__nav{width:32px;height:32px;padding:8px;display:inline-flex;align-items:center;justify-content:center;border:0;background:transparent;border-radius:var(--radius-menu);color:var(--color-foreground);cursor:pointer}
+.odin-cal__nav:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__nav--outline{background:var(--color-background);border:1px solid var(--color-border);box-shadow:var(--shadow-xs)}
+.odin-cal__nav:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-cal__grid{display:grid;grid-template-columns:repeat(7,32px);gap:0}
+.odin-cal__dow{width:32px;height:32px;display:grid;place-content:center;font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body)}
+.odin-cal__day{width:32px;height:32px;border:0;background:transparent;border-radius:var(--radius-menu);font:400 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground);cursor:pointer;padding:0}
+.odin-cal__day:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__day[data-outside="true"]{color:var(--color-text-body)}
+.odin-cal__day[data-selected="true"]{background:var(--color-primary);color:var(--color-primary-foreground)}
+.odin-cal__day[data-today="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__day[data-in-range="true"]{background:var(--color-surface-hover);color:var(--color-accent-foreground);border-radius:0}
+.odin-cal__day:disabled{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.odin-cal__day:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.odin-cal__presets{display:flex;flex-direction:column;gap:4px;padding-right:12px;border-right:1px solid var(--color-border)}
+.odin-cal__preset{width:109px;height:36px;padding:8px 16px;text-align:left;border:0;background:var(--color-background);border-radius:var(--radius-menu);font:500 0.875rem/1.25rem var(--font-sans);color:var(--color-foreground);cursor:pointer}
+.odin-cal__preset:hover{background:var(--color-surface-hover);color:var(--color-accent-foreground)}
+.odin-cal__preset[aria-pressed="true"]{background:var(--color-primary);color:var(--color-primary-foreground)}
+
+/* ---- Chart §11 ---- */
+.odin-chart{display:flex;flex-direction:column;gap:16px}
+.odin-chart__plot{position:relative;display:flex;align-items:flex-end;gap:8px;height:180px;padding-top:8px}
+.odin-chart__grid{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none}
+.odin-chart__grid span{height:1px;background:var(--color-border);opacity:.7}
+.odin-chart__bar{flex:1;border-radius:4px 4px 0 0;position:relative;min-width:6px;transition:opacity var(--duration-fast) var(--ease-out)}
+.odin-chart__bar:hover{opacity:.85}
+.odin-chart__axis{display:flex;gap:8px;font:400 0.625rem/0.875rem var(--font-mono);color:var(--color-text-body)}
+.odin-chart__axis span{flex:1;text-align:center}
+.odin-chart__legend{display:flex;flex-wrap:wrap;gap:16px;font:400 0.75rem/1rem var(--font-sans);color:var(--color-text-body)}
+.odin-chart__legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+.odin-chart__tip{position:absolute;background:var(--color-popover);border:1px solid var(--color-border);border-radius:var(--radius-menu);box-shadow:var(--shadow-md);padding:8px 10px;font:400 0.75rem/1rem var(--font-sans);color:var(--color-popover-foreground);pointer-events:none;white-space:nowrap;transform:translate(-50%,-100%)}

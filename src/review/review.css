@@ -33,6 +33,11 @@
   font-weight: var(--font-semibold);
 }
 
+html[data-proto] #review-root .review-toggle {
+  left: auto;
+  right: 16px;
+}
+
 .review-toggle--anchored {
   bottom: auto;
   transform: translateX(-50%);
@@ -159,6 +164,7 @@
 .review-popover__role { display: block; margin-top: 8px; color: var(--color-muted-foreground); font-size: var(--text-xs); }
 
 .review-modal-layer { position: fixed; z-index: var(--review-z-modal); isolation: isolate; inset: 0; }
+html[data-proto] #review-root .review-modal-layer { z-index: 2147483001; }
 .review-modal-layer .review-scrim { position: fixed; z-index: 0; inset: 0; background: var(--color-scrim); opacity: .8; }
 .review-dialog { z-index: 1; max-width: 480px; max-height: min(90vh, 760px); overflow-y: auto; }
 .review-dialog__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }

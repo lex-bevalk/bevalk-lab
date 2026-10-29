@@ -4,7 +4,11 @@ import {
   COMMENT_STATUSES,
   COMMENT_STATUS_LABELS,
   COMMENT_PLAN_LABELS,
-  SCREEN_LABELS,
+  ALL_SCREEN_LABELS,
+  COMMENT_PROTO_LABELS,
+  SCREEN_LABELS_BY_PROTO,
+  type CommentProto,
+  type CommentScreen,
   type CommentStatus
 } from '../comments/constants';
 import { deleteTokenFor, forgetDeleteToken } from '../comments/deleteTokens';
@@ -17,6 +21,7 @@ interface CommentItem {
   updated_at: string;
   author: string;
   body: string;
+  proto: CommentProto;
   screen: string;
   tpl: string | null;
   x: number;
@@ -32,6 +37,13 @@ interface CommentsResponse {
   items: CommentItem[];
 }
 
+type ProtoFilter = CommentProto | 'all';
+
+function initialProtoFilter(): ProtoFilter {
+  const value = new URLSearchParams(window.location.search).get('proto');
+  return value === 'concept' || value === 'all' ? value : 'current';
+}
+
 const dateFormatter = new Intl.DateTimeFormat('es-ES', {
   day: 'numeric',
   month: 'short',
@@ -45,7 +57,8 @@ function reviewHref(item: CommentItem): string {
   if (item.flow) params.set('flow', item.flow);
   if (item.plan) params.set('plan', item.plan);
   params.set('c', item.id);
-  return `/review?${params.toString()}`;
+  const path = item.proto === 'concept' ? '/concept/review' : '/review';
+  return `${path}?${params.toString()}`;
 }
 
 function CommentsHeader() {
@@ -112,6 +125,7 @@ function CommentCard({
         <div className="comments-card__author">
           <h2>{item.author}</h2>
           <time dateTime={item.created_at}>{dateFormatter.format(new Date(item.created_at))}</time>
+          <span className={`comments-proto comments-proto--${item.proto}`}>{COMMENT_PROTO_LABELS[item.proto]}</span>
         </div>
         <div className="comments-card__state">
           {owner ? (
@@ -198,6 +212,7 @@ function CommentCard({
 }
 
 export default function CommentsPage() {
+  const [proto, setProto] = useState<ProtoFilter>(initialProtoFilter);
   const [screen, setScreen] = useState('');
   const [status, setStatus] = useState('');
   const [author, setAuthor] = useState('');
@@ -207,6 +222,24 @@ export default function CommentsPage() {
   const [error, setError] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
   const noticeRef = useRef<HTMLParagraphElement>(null);
+  const screenLabels = proto === 'current'
+    ? SCREEN_LABELS_BY_PROTO.current
+    : proto === 'concept'
+      ? SCREEN_LABELS_BY_PROTO.concept
+      : ALL_SCREEN_LABELS;
+  const validScreen = screenLabels.includes(screen as CommentScreen) ? screen : '';
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('proto') !== proto) {
+      url.searchParams.set('proto', proto);
+      window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+    }
+  }, [proto]);
+
+  useEffect(() => {
+    if (screen && !screenLabels.includes(screen as CommentScreen)) setScreen('');
+  }, [proto]);
 
   useEffect(() => {
     if (successNotice) noticeRef.current?.focus();
@@ -215,7 +248,8 @@ export default function CommentsPage() {
   useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams();
-    if (screen) params.set('screen', screen);
+    if (proto !== 'all') params.set('proto', proto);
+    if (validScreen) params.set('screen', validScreen);
     if (status) params.set('status', status);
     if (author.trim()) params.set('author', author.trim());
     setLoading(true);
@@ -239,7 +273,7 @@ export default function CommentsPage() {
       });
 
     return () => controller.abort();
-  }, [screen, status, author]);
+  }, [proto, screen, status, author]);
 
   async function updateStatus(id: string, nextStatus: CommentStatus) {
     const response = await fetch('/api/comments', {
@@ -285,11 +319,19 @@ export default function CommentsPage() {
           <p>Notas del equipo sobre el prototipo.</p>
         </div>
         <section className="comments-filters" aria-label="Filtrar comentarios">
+          <div className="comments-filter">
+            <label htmlFor="comments-proto-filter">Prototipo</label>
+            <NativeSelect id="comments-proto-filter" value={proto} onChange={event => setProto(event.currentTarget.value as ProtoFilter)}>
+              <option value="current">Current version</option>
+              <option value="concept">Concept</option>
+              <option value="all">Todos</option>
+            </NativeSelect>
+          </div>
           <label>
             <span>Pantalla</span>
               <NativeSelect value={screen} onChange={event => setScreen(event.currentTarget.value)}>
               <option value="">Todas</option>
-              {SCREEN_LABELS.map(label => <option key={label} value={label}>{label}</option>)}
+              {screenLabels.map(label => <option key={label} value={label}>{label}</option>)}
               </NativeSelect>
           </label>
           <label>
